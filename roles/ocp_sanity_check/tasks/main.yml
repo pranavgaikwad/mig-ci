@@ -1,0 +1,4 @@
+# Sanity checks for OCP go here, import tasks as necessary and use tags
+
+- import_tasks: nginx.yml
+  tags: nginx

@@ -1,0 +1,4 @@
+- name: Run OCP sanity checks
+  hosts: localhost
+  roles:
+  - ocp_sanity_check

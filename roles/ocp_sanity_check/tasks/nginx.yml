@@ -1,0 +1,12 @@
+- name: Obtain nginx route
+  k8s_facts:
+    kind: Route
+    namespace: nginx-example
+    label_selectors: "app=nginx"
+  register: nginx_route
+
+- name: Verify nginx is available
+  uri:
+    url: "http://{{ nginx_route.resources[0].spec.host }}"
+    method: GET
+  register: uri

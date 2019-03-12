@@ -54,7 +54,7 @@ node {
                         ansiColor('xterm') {
                             ansiblePlaybook(
                                 playbook: 'deploy.yml',
-                                extras: "-e ec2_key=$EC2_KEY -e ec2_private_key_file=$KEYS_DIR/$EC2_PRIVATE_KEY_FILE -e ec2_region=$EC2_REGION -e openshift_setup_client_version=$OPENSHIFT_VERSION -e ec2_repo_create=false -e openshift_setup_remote_auto_login=true",
+                                extras: "-e ec2_key=$EC2_KEY -e ec2_private_key_file=$KEYS_DIR/$EC2_PRIVATE_KEY_FILE -e ec2_region=$EC2_REGION -e openshift_setup_client_version=$OPENSHIFT_VERSION -e ec2_repo_create=false -e openshift_setup_remote_auto_login=true -e openshift_setup_cluster_retries=3",
                                 hostKeyChecking: false,
                                 unbuffered: true,
                                 colorized: true)

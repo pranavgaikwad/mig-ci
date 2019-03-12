@@ -1,4 +1,7 @@
 # Sanity checks for OCP go here, import tasks as necessary and use tags
 
+- import_tasks: router.yml
+  tags: router
+
 - import_tasks: nginx.yml
   tags: nginx

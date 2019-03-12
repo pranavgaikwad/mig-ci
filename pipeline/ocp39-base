@@ -9,7 +9,7 @@ credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCre
 string(defaultValue: 'ci', description: 'EC2 SSH key name to deploy on instances for remote access ', name: 'EC2_KEY', trim: false),
 string(defaultValue: 'ci.pem', description: 'EC2 SSH private key filename to access instances', name: 'EC2_PRIVATE_KEY_FILE', trim: false),
 string(defaultValue: 'us-east-1', description: 'EC2 region to deploy instances', name: 'EC2_REGION', trim: false)]),
-pipelineTriggers([cron('@midnight')])])
+pipelineTriggers([cron('H(30-40) 23 * * *')])])
 
 echo "Running job ${env.JOB_NAME}, build ${env.BUILD_ID} on ${env.JENKINS_URL}"
 echo "Build URL ${env.BUILD_URL}"

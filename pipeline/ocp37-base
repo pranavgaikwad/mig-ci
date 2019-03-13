@@ -8,8 +8,13 @@ credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringC
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl', defaultValue: 'ci_ec2_key', description: 'EC2 private key needed to access instances, from Jenkins credentials store', name: 'EC2_PRIV_KEY', required: true),
 string(defaultValue: 'ci', description: 'EC2 SSH key name to deploy on instances for remote access ', name: 'EC2_KEY', trim: false),
 string(defaultValue: 'ci.pem', description: 'EC2 SSH private key filename to access instances', name: 'EC2_PRIVATE_KEY_FILE', trim: false),
-string(defaultValue: 'us-east-1', description: 'EC2 region to deploy instances', name: 'EC2_REGION', trim: false)]),
+string(defaultValue: 'us-east-1', description: 'EC2 region to deploy instances', name: 'EC2_REGION', trim: false),
+string(defaultValue: 'm4.large', description: 'EC2 instance type to deploy', name: 'EC2_INSTANCE_TYPE', trim: false),
+booleanParam(defaultValue: true, description: 'EC2 terminate instances after build', name: 'EC2_TERMINATE_INSTANCES')]),
 pipelineTriggers([cron('H(0-10) 23 * * *')])])
+
+// true/false build parameter that defines if we terminate instances once build is done
+def EC2_TERMINATE_INSTANCES = params.EC2_TERMINATE_INSTANCES
 
 echo "Running job ${env.JOB_NAME}, build ${env.BUILD_ID} on ${env.JENKINS_URL}"
 echo "Build URL ${env.BUILD_URL}"
@@ -95,8 +100,27 @@ node {
                 }
             }
         } 
-    
-        stage('Clean Up Environment') {
+    	stage('Clean Up Environment') {
+            
+            	if (EC2_TERMINATE_INSTANCES) {
+                
+                	withCredentials([
+                    		string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
+				string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
+                    	]) 
+                {
+                    dir('origin3-dev') {
+                        ansiColor('xterm') {
+                            ansiblePlaybook(
+                                playbook: 'terminate.yml',
+                                extras: '-e "ec2_force_terminate_instances=true"',
+                                hostKeyChecking: false,
+                                unbuffered: true,
+                                colorized: true)
+                        }
+                    }
+                }
+            }
             cleanWs cleanWhenFailure: false, notFailBuild: true
         }
         

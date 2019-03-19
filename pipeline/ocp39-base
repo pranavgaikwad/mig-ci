@@ -28,9 +28,6 @@ node {
             echo 'Cloning origin3-dev repo'
             checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'origin3-dev']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/fusor/origin3-dev.git']]])
             
-            dir('origin3-dev') {
-                sh 'cp -f config.yml.example config.yml'
-            }
             // Prepare EC2 key for ansible consumption
             KEYS_DIR = "${env.WORKSPACE}" + '/keys'
             sh "mkdir -p ${KEYS_DIR}"
@@ -40,6 +37,20 @@ node {
                 sh "cat ${SSH_PRIV_KEY} > ${KEYS_DIR}/${EC2_PRIVATE_KEY_FILE}"
                 sh "chmod 600 ${KEYS_DIR}/${EC2_PRIVATE_KEY_FILE}"
             }
+
+            dir('origin3-dev') {
+                sh 'cp -f config.yml.example config.yml'
+                sh 'rm -f overrides.yml'
+                def overrides = ['ec2_key': "$EC2_KEY",
+                    'ec2_private_key_file': "$KEYS_DIR/$EC2_PRIVATE_KEY_FILE",
+                    'ec2_region': "$EC2_REGION",
+                    'ec2_repo_create': false,
+                    'openshift_setup_client_version': "$OPENSHIFT_VERSION",
+                    'openshift_setup_remote_auto_login': true,
+                    'openshift_setup_cluster_retries': 5]
+                writeYaml file: 'overrides.yml', data: overrides
+            }
+
             echo 'Cloning ocp-mig-test-data repo'
             checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'ocp-mig-test-data']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/fusor/ocp-mig-test-data.git']]])
             
@@ -59,7 +70,7 @@ node {
                         ansiColor('xterm') {
                             ansiblePlaybook(
                                 playbook: 'deploy.yml',
-                                extras: "-e ec2_key=$EC2_KEY -e ec2_private_key_file=$KEYS_DIR/$EC2_PRIVATE_KEY_FILE -e ec2_region=$EC2_REGION -e openshift_setup_client_version=$OPENSHIFT_VERSION -e ec2_repo_create=false -e openshift_setup_remote_auto_login=true -e openshift_setup_cluster_retries=5",
+                                extras: "-e @overrides.yml",
                                 hostKeyChecking: false,
                                 unbuffered: true,
                                 colorized: true)

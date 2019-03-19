@@ -44,6 +44,7 @@ node {
                 def overrides = ['ec2_key': "$EC2_KEY",
                     'ec2_private_key_file': "$KEYS_DIR/$EC2_PRIVATE_KEY_FILE",
                     'ec2_region': "$EC2_REGION",
+                    'ec2_instance_type': "$EC2_INSTANCE_TYPE",
                     'ec2_repo_create': false,
                     'openshift_setup_client_version': "$OPENSHIFT_VERSION",
                     'openshift_setup_remote_auto_login': true,

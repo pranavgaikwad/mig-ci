@@ -1,0 +1,4 @@
+- hosts: localhost
+  roles:
+  - ocp4_prereqs
+  - ocp4_cluster_deploy

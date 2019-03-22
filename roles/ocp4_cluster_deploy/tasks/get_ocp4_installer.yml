@@ -1,0 +1,6 @@
+---
+- name: get installer
+  get_url:
+    url: "{{ openshift_installer_release_url }}"
+    dest: "{{ playbook_dir }}/openshift-install"
+    mode: 0775

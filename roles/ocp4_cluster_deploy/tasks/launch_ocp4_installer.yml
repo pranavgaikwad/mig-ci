@@ -1,3 +1,9 @@
 ---
 - name: launch cluster
   shell: "{{ playbook_dir }}/openshift-install create cluster"
+
+- name: dump cluster address to auth/kube-addr
+  shell: >
+    oc config current-context |
+    sed -r 's/^.*\/([^\/]+)\/.*$/https:\/\/\1/' |
+    tr - . > {{ playbook_dir }}/auth/kube-addr

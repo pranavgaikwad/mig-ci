@@ -22,16 +22,13 @@ node {
     try {
         notifyBuild('STARTED')   
         stage('Prepare Build Environment') {
+            
             echo 'Cloning mig-ci repo'
             checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'mig-ci']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/fusor/mig-ci.git']]])
             
             // Create default keys dir
             KEYS_DIR = "${env.WORKSPACE}" + '/keys'
             sh "mkdir -p ${KEYS_DIR}"
-
-            // Set enviroment variables
-            EC2_REGION = "${EC2_REGION}"
-            OCP4_CLUSTER_NAME = "${OCP4_CLUSTER_NAME}"
             
             dir('mig-ci') {
                 // Prepare pull secret
@@ -42,7 +39,7 @@ node {
                 // Prepare EC2 pub key for ansible consumption
                 withCredentials([file(credentialsId: "$EC2_PUB_KEY", variable: "SSH_PUB_KEY")]) {
                     sh "cat ${SSH_PUB_KEY} > config/ocp4/${EC2_PUBLIC_KEY_FILE}"
-                }
+            }
             }
         }
         
@@ -52,33 +49,12 @@ node {
                 string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
                 ]) 
             {
-
                 dir('mig-ci') {
                     withEnv(['PATH+EXTRA=~/bin']) {
                         ansiColor('xterm') {
                             ansiblePlaybook(
                                 playbook: 'deploy_ocp4_cluster.yml',
-                                hostKeyChecking: false,
-                                unbuffered: true,
-                                colorized: true)
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Deploy Velero and configure S3 storage') {
-            withCredentials([
-                string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-                string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
-                ]) 
-            {
-                
-                withEnv(['PATH+EXTRA=~/bin']) {
-                    dir('mig-ci') {
-                        ansiColor('xterm') {
-                            ansiblePlaybook(
-                                playbook: 'setup_velero.yml',
+                                extras: "-e aws_region=${EC2_REGION} -e cluster_name=${OCP4_CLUSTER_NAME}",
                                 hostKeyChecking: false,
                                 unbuffered: true,
                                 colorized: true)
@@ -91,25 +67,16 @@ node {
     	stage('Clean Up Environment') {
             
             	if (EC2_TERMINATE_INSTANCES) {
+                
                 	withCredentials([
-                        string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-                        string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
+                    		string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
+				            string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
                     	]) 
-                    {
-                        withEnv(['PATH+EXTRA=~/bin']) {
-                            dir('mig-ci') {
-                                ansiColor('xterm') {
-                                    ansiblePlaybook(
-                                        playbook: 'destroy_ocp4_cluster.yml',
-                                        hostKeyChecking: false,
-                                        unbuffered: true,
-                                        colorized: true)
-                                }
-                            }
-                        }
-                    }
+                {
+                    // do something here for termination of OCP4
                 }
-            cleanWs cleanWhenFailure: false, notFailBuild: true
+            }
+               cleanWs cleanWhenFailure: false, notFailBuild: true
         }
         
     } catch (e) {

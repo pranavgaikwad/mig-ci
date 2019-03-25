@@ -1,3 +1,0 @@
----
-oc_binary_location: "{{ ansible_env.HOME }}/bin/"
-user: admin

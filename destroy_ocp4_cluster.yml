@@ -1,0 +1,9 @@
+- hosts: localhost
+  vars:
+    state: absent
+  environment:
+    KUBECONFIG: "{{ playbook_dir }}/auth/kubeconfig"
+  roles:
+  - login_ocp
+  - ocp4_velero_setup
+  - ocp4_cluster_destroy

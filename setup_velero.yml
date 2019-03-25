@@ -1,0 +1,9 @@
+- hosts: localhost
+  vars:
+    state: present
+  environment:
+    KUBECONFIG: "{{ playbook_dir }}/auth/kubeconfig"
+  roles:
+  - ocp4_velero_prereqs
+  - login_ocp
+  - ocp4_velero_setup

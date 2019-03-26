@@ -10,6 +10,3 @@
   retries: 10
   delay: 6
   until: login.rc == 0
-
-- name: dump cluster token to auth/kube-token
-  shell: "oc whoami -t > {{ playbook_dir }}/auth/kube-token"

@@ -6,6 +6,7 @@
   vars:
     kubeadmin_password: "{{ lookup('file', '{{ playbook_dir }}/auth/kubeadmin-password') }}"
   shell: "{{ oc_binary_location }}/oc login -u {{ user }} -p {{ kubeadmin_password }}"
-
-- name: dump cluster token to auth/kube-token
-  shell: "oc whoami -t > {{ playbook_dir }}/auth/kube-token"
+  register: login
+  retries: 10
+  delay: 6
+  until: login.rc == 0

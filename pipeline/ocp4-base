@@ -113,6 +113,23 @@ node {
         }
         
     } catch (e) {
+        withCredentials([
+            string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
+            string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
+            ]) 
+        {
+            withEnv(['PATH+EXTRA=~/bin']) {
+                dir('mig-ci') {
+                    ansiColor('xterm') {
+                        ansiblePlaybook(
+                            playbook: 'destroy_ocp4_cluster.yml',
+                            hostKeyChecking: false,
+                            unbuffered: true,
+                            colorized: true)
+                    }
+                }
+            }
+        }
         currentBuild.result = "FAILED"
         throw e
     } finally {

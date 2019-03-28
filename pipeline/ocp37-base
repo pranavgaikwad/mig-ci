@@ -11,7 +11,8 @@ string(defaultValue: 'ci.pem', description: 'EC2 SSH private key filename to acc
 string(defaultValue: 'us-east-1', description: 'EC2 region to deploy instances', name: 'EC2_REGION', trim: false),
 string(defaultValue: 'm4.large', description: 'EC2 instance type to deploy', name: 'EC2_INSTANCE_TYPE', trim: false),
 booleanParam(defaultValue: true, description: 'EC2 terminate instances after build', name: 'EC2_TERMINATE_INSTANCES')]),
-pipelineTriggers([cron('H(0-5) 23 * * *')])])
+[$class: 'ThrottleJobProperty', categories: ['OCP3'], limitOneJobWithMatchingParams: true, maxConcurrentPerNode: 0, maxConcurrentTotal: 0, paramsToUseForLimit: '', throttleEnabled: true, throttleOption: 'category'],
+pipelineTriggers([cron('@midnight')])])
 
 // true/false build parameter that defines if we terminate instances once build is done
 def EC2_TERMINATE_INSTANCES = params.EC2_TERMINATE_INSTANCES

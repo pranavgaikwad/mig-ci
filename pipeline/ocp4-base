@@ -85,17 +85,14 @@ node {
             }
         }
         
-    	stage('Clean Up Environment') {
-            
-            cleanWs cleanWhenFailure: false, notFailBuild: true
-        }
-        
     } catch (e) {
         currentBuild.result = "FAILED"
         throw e
     } finally {
         // Success or failure, always send notifications
         notifyBuild(currentBuild.result)
+
+	stage('Clean Up Environment') {
 	// Success or failure, always terminate instances if requested
             	if (EC2_TERMINATE_INSTANCES) {
                 	withCredentials([
@@ -116,6 +113,8 @@ node {
                         }
                     }
                 }
+		cleanWs cleanWhenFailure: false, notFailBuild: true
+	    }
 	}
 }
 

@@ -4,6 +4,6 @@
   environment:
     KUBECONFIG: "{{ playbook_dir }}/auth/kubeconfig"
   roles:
-  - ocp4_velero_prereqs
+  - mig_tools_prereqs
   - login_ocp
-  - ocp4_velero_setup
+  - mig_tools_setup

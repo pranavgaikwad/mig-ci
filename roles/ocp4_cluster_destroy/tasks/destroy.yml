@@ -18,6 +18,7 @@
 - name: Delete S3 bucket for backup storage of OpenShift resource definitions
   s3_bucket:
     state: absent
+    force: true
     name: "{{ aws_resource_name }}"
     region: "{{ aws_region }}"
     tags:

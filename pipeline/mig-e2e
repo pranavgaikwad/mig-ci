@@ -58,7 +58,7 @@ node {
             }
             
             echo 'Cloning mig-ci repo'
-            checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'mig-ci']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/fusor/mig-ci.git']]])
+            checkout([$class: 'GitSCM', branches: [[name: '*/add_ocp_nfs_pvs']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'mig-ci']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/fbladilo/mig-ci.git']]])
 
             // Set enviroment variables
             EC2_REGION = "${EC2_REGION}"

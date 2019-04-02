@@ -1,0 +1,38 @@
+- name: Remove hostPath pv's
+  shell: "for i in $(oc get pv --no-headers | awk '{ print $1 }'); do oc delete pv $i; done"
+
+- name: install nfs-utils
+  package:
+    name: nfs-utils
+    state: latest
+  become: true
+
+- name: create exports file
+  copy:
+    content: |
+             /var/lib/nfs/exports *(rw,no_root_squash)
+    dest: /etc/exports
+  become: true
+
+- name: Create pv dirs
+  file:
+    path: "/var/lib/nfs/exports/pv{{ item }}"
+    state: directory
+    mode: 0777
+  with_sequence: start=1 end=9 
+  become: true
+
+- name: Create pv.yml
+  template:
+    src: pv.yml.j2
+    dest: /tmp/pv.yml
+
+- name: Start and enable nfs-server
+  systemd:
+    name: nfs-server
+    state: started
+    enabled: true
+  become: true
+
+- name: Create nfs pv's
+  shell: "oc create -f /tmp/pv.yml"

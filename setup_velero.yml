@@ -1,9 +1,8 @@
 - hosts: localhost
   vars:
-    state: present
-  environment:
-    KUBECONFIG: "{{ playbook_dir }}/auth/kubeconfig"
+    cluster_version: '4'
   roles:
   - mig_tools_prereqs
-  - login_ocp
-  - mig_tools_setup
+  - role: mig_tools_setup
+    vars:
+      cluster_version: "{{ cluster_version }}"

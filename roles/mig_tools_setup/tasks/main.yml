@@ -1,2 +1,38 @@
-- import_tasks: launch_velero.yml
-  tags: launch_velero
+- name: Get defaults
+  include_vars:
+    file: "{{ playbook_dir }}/config/ocp4/defaults.yml"
+
+- name: launching velero on OCP-4
+  block:
+    - name: Logging to OCP4 and saving credentials
+      include_role:
+        name: login_ocp
+      vars:
+        source_kubeconfig: "{{ playbook_dir }}/auth/kubeconfig"
+        target_kubeconfig: "{{ ocp4_kubeconfig }}"
+
+    - import_tasks: launch_velero.yml
+      vars:
+        state: present
+      environment:
+        KUBECONFIG: "{{ ocp4_kubeconfig }}"
+      tags: launch_velero_ocp4
+  when: cluster_version == '4'
+
+- name: launching velero on OCP-3
+  block:
+    - name: Logging to OCP4 and saving credentials
+      include_role:
+        name: login_ocp
+      vars:
+        login: false # origin3-dev already logged in 
+        source_kubeconfig: "{{ ansible_env.KUBECONFIG }}"
+        target_kubeconfig: "{{ ocp3_kubeconfig }}"
+  
+    - import_tasks: launch_velero.yml
+      vars:
+        state: present
+      environment:
+        KUBECONFIG: "{{ ocp3_kubeconfig }}"
+      tags: launch_velero_ocp3
+  when: cluster_version == '3'

@@ -11,16 +11,6 @@
     state: "{{ state }}"
     definition: "{{ lookup('file', '{{ playbook_dir }}/velero/config/common/00-prereqs.yaml')}}"
 
-- name: Create aws backupstoragelocation for velero
-  k8s:
-    state: "{{ state }}"
-    definition: "{{ lookup('template', '05-ark-aws-backupstoragelocation.yaml.j2') | from_yaml }}"
-
-- name: Create aws volumesnapshotlocation for velero
-  k8s:
-    state: "{{ state }}"
-    definition: "{{ lookup('template', '06-ark-aws-volumesnapshotlocation.yaml.j2') | from_yaml }}"
-
 - name: Create aws bucket cloud creds
   k8s:
     state: "{{ state }}"
@@ -33,13 +23,27 @@
       data:
         cloud: "{{ lookup('template', 'cloud-credentials.j2') | b64encode }}"
 
-- name: Create velero deployment
+- name: Create aws backupstoragelocation for velero
   k8s:
     state: "{{ state }}"
-    definition: "{{ lookup('file', '{{ playbook_dir }}/velero/config/minio/20-deployment.yaml')}}"
-    
+    definition: "{{ lookup('template', '05-ark-aws-backupstoragelocation.yaml.j2') | from_yaml }}"
+
+- name: Create aws volumesnapshotlocation for velero
+  k8s:
+    state: "{{ state }}"
+    definition: "{{ lookup('template', '06-ark-aws-volumesnapshotlocation.yaml.j2') | from_yaml }}"
+
+- set_fact:
+    pods_hostpath: /tmp/openshift.local.clusterup/openshift.local.volumes/pods
+
 - name: Create restic daemonset
   k8s:
     state: "{{ state }}"
-    definition: "{{ lookup('file', '{{ playbook_dir }}/velero/config/minio/30-restic-daemonset.yaml')}}"
+    definition: "{{ lookup('template', '20-restic-daemonset.yaml.j2') | from_yaml }}"
+    
+- name: Create deployment
+  k8s:
+    state: "{{ state }}"
+    definition: "{{ lookup('template', '10-deployment.yaml.j2') | from_yaml }}"
+    
 

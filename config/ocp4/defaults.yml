@@ -7,4 +7,3 @@ cluster_name: "{{ lookup('env', 'OCP4_CLUSTER_NAME') or 'jenkins-ci'}}"
 oc_binary_location: "{{ ansible_env.HOME }}/bin/"
 ocp3_kubeconfig: "{{ ansible_env.HOME }}/kubeconfigs/ocp3-kubeconfig"
 ocp4_kubeconfig: "{{ ansible_env.HOME }}/kubeconfigs/ocp4-kubeconfig"
-pods_hostpath: /tmp/openshift.local.clusterup/openshift.local.volumes/pods # origin3-dev local deployment host path for pods

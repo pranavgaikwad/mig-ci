@@ -121,7 +121,20 @@ node {
                 }
             }
         }
-        
+
+	stage('Configure NFS storage on OCP3') {
+		dir('mig-ci') {
+                        ansiColor('xterm') {
+                            ansiblePlaybook(
+                                playbook: 'setup_nfs_storage.yml',
+                                extras: "-e ec2_private_key_file=$KEYS_DIR/$EC2_PRIVATE_KEY_FILE",
+                                hostKeyChecking: false,
+                                unbuffered: true,
+                                colorized: true)
+			}
+		}
+	}
+	
         stage('Deploy Velero and configure S3 storage on OCP3') {
             withCredentials([
                 string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),

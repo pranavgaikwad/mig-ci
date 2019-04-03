@@ -2,3 +2,6 @@
 
 - import_tasks: destroy.yml
   when: ocp_install.stat.exists
+
+- import_tasks: destroy_s3_bucket.yml
+

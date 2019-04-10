@@ -12,6 +12,11 @@
         group: ocp_nfs_servers
         ansible_user: "{{ ec2_user }}"
         ansible_ssh_private_key_file: "{{ ec2_private_key_file }}"
+    
+    - name: Template the PV reasources
+      template:
+        src: "{{ playbook_dir }}/roles/ocp_setup_nfs/templates/pv.yml.j2"
+        dest: "{{ playbook_dir}}/pv.yml"
   vars:
     ec2_user: "ec2-user"
     ec2_private_key_file: "../keys/ci.pem"

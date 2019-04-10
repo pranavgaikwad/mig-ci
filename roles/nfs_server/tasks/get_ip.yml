@@ -25,7 +25,7 @@
     search_regex: OpenSSH
     delay: 10
     timeout: 300
-    
+
 - debug:
     var: nfs_server_ip
   

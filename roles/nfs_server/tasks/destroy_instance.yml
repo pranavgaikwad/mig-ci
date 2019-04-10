@@ -1,0 +1,26 @@
+- name: Get AWS account information
+  aws_caller_facts:
+  register: caller_facts
+
+- ec2_instance_facts:
+      region: "{{ ec2_region }}"
+      filters:
+        "tag:Name": "{{ ansible_user }}-nfs-server"
+        "tag:creator_arn": "{{ caller_facts.arn }}"
+        "tag:user": "{{ ansible_user }}"
+        "tag:creator": "ocp4-extender"
+  register: ec2_metadata
+
+- set_fact:
+    instances: "{{ ec2_metadata.instances | map(attribute='instance_id') | list }}"
+
+- debug:
+    msg:
+    - "These instances will be terminated"
+    - "{{ instances }}"
+
+- local_action:
+    module: ec2
+    instance_ids: "{{ instances }}"
+    state: absent
+    region: "{{ ec2_region }}"

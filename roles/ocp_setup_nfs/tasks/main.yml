@@ -1,5 +1,6 @@
 - name: Remove hostPath pv's
   shell: "for i in $(oc get pv --no-headers | awk '{ print $1 }'); do oc delete pv $i; done"
+  delegate_to: localhost
 
 - name: install nfs-utils
   package:
@@ -22,11 +23,6 @@
   with_sequence: start=1 end=9 
   become: true
 
-- name: Create pv.yml
-  template:
-    src: pv.yml.j2
-    dest: /tmp/pv.yml
-
 - name: Start and enable nfs-server
   systemd:
     name: nfs-server
@@ -34,5 +30,17 @@
     enabled: true
   become: true
 
+- name: Create pv.yml
+  template:
+    src: pv.yml.j2
+    dest: "{{ playbook_dir}}/pv.yml"
+  delegate_to: localhost
+
 - name: Create nfs pv's
-  shell: "oc create -f /tmp/pv.yml"
+  shell: "oc create -f {{ playbook_dir}}/pv.yml"
+  delegate_to: localhost
+
+- file:
+    state: absent
+    path: "{{ playbook_dir}}/pv.yml"
+  delegate_to: localhost

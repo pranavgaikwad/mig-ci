@@ -1,5 +1,5 @@
 ---
-- name: Extract nfs server ip
+- name: Setup the nfs server
   hosts: localhost
   roles:
     - nfs_deploy
@@ -27,8 +27,3 @@
     - nfs_config
   environment:
     PATH: "{{ ansible_env.PATH }}:~/bin"
-
-- name: Provision the PVs on the cluster
-  hosts: localhost
-  roles:
-    - nfs_provision

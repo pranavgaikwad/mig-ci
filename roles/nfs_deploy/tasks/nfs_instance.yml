@@ -83,24 +83,36 @@
           from_port: -1
           to_port: -1
           cidr_ip: "0.0.0.0/0"
-        # portmapper and NFS ports allow
+        # rpcbind, mountd and NFS ports allow
         - proto: tcp
           ports:
             - 111
+            - 20048
             - 2049
           cidr_ip: "0.0.0.0/0"
         - proto: udp
           ports:
             - 111
+            - 20048
             - 2049
           cidr_ip: "0.0.0.0/0"
+
+    - name: Find a suitable ami
+      ec2_ami_facts:
+        region: "{{ ec2_region }}"
+        filters:
+          "name": "RHEL-7.6_HVM_GA*"
+      register: ami
+
+    - set_fact:
+        suggested_ami: "{{ ami.images | map(attribute='image_id') | list | first }}"
 
     - name: Create Instance
       ec2:
         key_name: "{{ ec2_key }}"
         instance_type: "m4.large"
         group: nfs-server
-        image: "ami-c86c3f23"
+        image: "{{ suggested_ami }}"
         count: 1
         region: "{{ ec2_region }}"
         vpc_subnet_id: "{{ ec2_subnet.subnet.id }}"

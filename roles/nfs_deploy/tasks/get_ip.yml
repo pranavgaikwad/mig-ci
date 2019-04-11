@@ -3,7 +3,7 @@
     module: aws_caller_facts
   register: caller_facts
   
-- name: Check that instance is running
+- name: Get instance info
   local_action:
     module: ec2_instance_facts
     region: "{{ ec2_region }}"
@@ -14,9 +14,9 @@
       "tag:creator": "ocp4-extender"
   register: ec2_instance
 
-- name: Save instanse public ip
+- name: Get instance public ip
   set_fact:
-    nfs_server_ip: "{{ (ec2_instance.instances | selectattr('state.name', 'equalto', 'running') | list )[0]['public_ip_address'] }}"
+    nfs_server_ip: "{{ (ec2_instance.instances | selectattr('state.name', 'match', '^running$') | list )[0]['public_ip_address'] }}"
   
 - name: Wait for SSH to be available on instance
   wait_for:
@@ -24,8 +24,7 @@
     port: 22
     search_regex: OpenSSH
     delay: 10
-    timeout: 300
+    timeout: 900
 
 - debug:
     var: nfs_server_ip
-  

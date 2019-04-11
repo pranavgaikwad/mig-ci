@@ -5,9 +5,9 @@
 - ec2_instance_facts:
       region: "{{ ec2_region }}"
       filters:
-        "tag:Name": "{{ ansible_user }}-nfs-server"
+        "tag:Name": "{{ ec2_user }}-nfs-server"
         "tag:creator_arn": "{{ caller_facts.arn }}"
-        "tag:user": "{{ ansible_user }}"
+        "tag:user": "{{ ec2_user }}"
         "tag:creator": "ocp4-extender"
   register: ec2_metadata
 

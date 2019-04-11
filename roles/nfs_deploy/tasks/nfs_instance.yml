@@ -112,11 +112,4 @@
           Name: "{{ ec2_user }}-nfs-server"
         wait: yes
     
-    - name: Wait for SSH to be available on instance
-      wait_for:
-        host: "{{ nfs_server_ip }}"
-        port: 22
-        search_regex: OpenSSH
-        delay: 10
-        timeout: 300
   when: not ec2_created

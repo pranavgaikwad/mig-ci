@@ -1,17 +1,17 @@
-- name: install nfs-utils
+- name: Install nfs-utils
   package:
     name: nfs-utils
     state: latest
   become: true
 
-- name: create exports file
+- name: Create exports file
   copy:
     content: |
              /var/lib/nfs/exports *(rw,no_root_squash)
     dest: /etc/exports
   become: true
 
-- name: Create pv dirs
+- name: Create PV dirs
   file:
     path: "/var/lib/nfs/exports/pv{{ item }}"
     state: directory

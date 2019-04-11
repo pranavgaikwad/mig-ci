@@ -1,0 +1,4 @@
+- name: Create nfs server instance
+  hosts: localhost
+  roles:
+    - nfs_deploy

@@ -1,0 +1,15 @@
+- name: Remove hostPath pv's
+  shell: "for i in $(oc get pv --no-headers | awk '{ print $1 }'); do oc delete pv $i; done"
+
+- name: Template the PV reasources
+  template:
+    src: "pv.yml.j2"
+    dest: "{{ role_path }}/files/pv.yml"
+
+- name: Create nfs pv's
+  shell: "oc create -f {{ role_path }}/files/pv.yml"
+
+- name: Remove the temp file
+  file:
+    state: absent
+    path: "{{ role_path }}/files/pv.yml"

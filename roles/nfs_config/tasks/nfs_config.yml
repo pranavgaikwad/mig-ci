@@ -1,7 +1,3 @@
-- name: Remove hostPath pv's
-  shell: "for i in $(oc get pv --no-headers | awk '{ print $1 }'); do oc delete pv $i; done"
-  delegate_to: localhost
-
 - name: install nfs-utils
   package:
     name: nfs-utils
@@ -29,12 +25,3 @@
     state: started
     enabled: true
   become: true
-
-- name: Create nfs pv's
-  shell: "oc create -f {{ playbook_dir}}/pv.yml"
-  delegate_to: localhost
-
-- file:
-    state: absent
-    path: "{{ playbook_dir}}/pv.yml"
-  delegate_to: localhost

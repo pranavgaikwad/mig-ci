@@ -21,7 +21,7 @@
 
 - name: launching velero on OCP-3
   block:
-    - name: Logging to OCP4 and saving credentials
+    - name: Logging to OCP3 and saving credentials
       include_role:
         name: login_ocp
       vars:

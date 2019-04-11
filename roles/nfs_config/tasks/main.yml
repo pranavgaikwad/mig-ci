@@ -1,0 +1,2 @@
+- name: Config the NFS server
+  import_tasks: nfs_config.yml

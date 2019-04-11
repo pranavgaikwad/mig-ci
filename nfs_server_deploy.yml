@@ -1,15 +1,14 @@
 ---
+- name: Setup the nfs server
+  hosts: localhost
+  roles:
+    - nfs_deploy
+
 - name: Add OCP EC2 instance host to in memory inventory
   hosts: localhost
   tasks:
-    - shell: "tail -1 {{ ansible_env.HOME }}/.ssh/known_hosts | cut -d ' ' -f1"
-      register: ocp_ip
-
-    - set_fact:
-        ec2_ip: "{{ ocp_ip.stdout }}"
-
     - add_host:
-        name: "{{ ec2_ip }}"
+        name: "{{ nfs_server_ip }}"
         group: ocp_nfs_servers
         ansible_user: "{{ ec2_user }}"
         ansible_ssh_private_key_file: "{{ ec2_private_key_file }}"
@@ -25,6 +24,6 @@
   vars:
     ansible_ssh_common_args: -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
   roles:
-    - { role: ocp_setup_nfs }
+    - nfs_config
   environment:
     PATH: "{{ ansible_env.PATH }}:~/bin"

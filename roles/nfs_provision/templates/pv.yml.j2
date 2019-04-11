@@ -12,7 +12,7 @@ spec:
     - ReadOnlyMany
   persistentVolumeReclaimPolicy: Retain
   nfs:
-    server: {{ ansible_default_ipv4.address }}
+    server: {{ nfs_server_ip }}
     path: "/var/lib/nfs/exports/pv1"
 
 ---
@@ -29,7 +29,7 @@ spec:
     - ReadOnlyMany
   persistentVolumeReclaimPolicy: Retain
   nfs:
-    server: {{ ansible_default_ipv4.address }}
+    server: {{ nfs_server_ip }}
     path: "/var/lib/nfs/exports/pv2"
 
 
@@ -47,7 +47,7 @@ spec:
     - ReadOnlyMany
   persistentVolumeReclaimPolicy: Retain
   nfs:
-    server: {{ ansible_default_ipv4.address }}
+    server: {{ nfs_server_ip }}
     path: "/var/lib/nfs/exports/pv3"
 
 
@@ -65,7 +65,7 @@ spec:
     - ReadOnlyMany
   persistentVolumeReclaimPolicy: Retain
   nfs:
-    server: {{ ansible_default_ipv4.address }}
+    server: {{ nfs_server_ip }}
     path: "/var/lib/nfs/exports/pv4"
 
 ---
@@ -82,7 +82,7 @@ spec:
     - ReadOnlyMany
   persistentVolumeReclaimPolicy: Retain
   nfs:
-    server: {{ ansible_default_ipv4.address }}
+    server: {{ nfs_server_ip }}
     path: "/var/lib/nfs/exports/pv5"
 
 ---
@@ -99,7 +99,7 @@ spec:
     - ReadOnlyMany
   persistentVolumeReclaimPolicy: Retain
   nfs:
-    server: {{ ansible_default_ipv4.address }}
+    server: {{ nfs_server_ip }}
     path: "/var/lib/nfs/exports/pv6"
 
 ---
@@ -116,7 +116,7 @@ spec:
     - ReadOnlyMany
   persistentVolumeReclaimPolicy: Retain
   nfs:
-    server: {{ ansible_default_ipv4.address }}
+    server: {{ nfs_server_ip }}
     path: "/var/lib/nfs/exports/pv7"
 
 ---
@@ -133,7 +133,7 @@ spec:
     - ReadOnlyMany
   persistentVolumeReclaimPolicy: Retain
   nfs:
-    server: {{ ansible_default_ipv4.address }}
+    server: {{ nfs_server_ip }}
     path: "/var/lib/nfs/exports/pv8"
 
 ---
@@ -150,6 +150,6 @@ spec:
     - ReadOnlyMany
   persistentVolumeReclaimPolicy: Retain
   nfs:
-    server: {{ ansible_default_ipv4.address }}
+    server: {{ nfs_server_ip }}
     path: "/var/lib/nfs/exports/pv9"
 

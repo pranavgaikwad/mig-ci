@@ -1,2 +1,7 @@
 *.retry
 *.swp
+velero/*
+\.openshift_install*
+metadata.json
+terraform*
+openshift-install

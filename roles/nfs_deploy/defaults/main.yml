@@ -1,0 +1,5 @@
+ec2_key: "{{ lookup('ENV', 'EC2_KEY') }}"
+ec2_region: "{{ lookup('ENV', 'EC2_REGION') }}"
+ec2_user: "{{ ansible_user }}"
+nfs_cidr: "10.1.0.0/16"
+nfs_subnet_cidr: "10.1.1.240/28"

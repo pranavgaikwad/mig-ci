@@ -1,0 +1,127 @@
+- name: Get AWS account information
+  local_action:
+    module: aws_caller_facts
+  register: caller_facts
+  
+- name: Check instance is running
+  local_action:
+    module: ec2_instance_facts
+    region: "{{ ec2_region }}"
+    filters:
+      "tag:Name": "{{ ansible_user }}-nfs-server"
+      "tag:creator_arn": "{{ caller_facts.arn }}"
+      "tag:user": "{{ ansible_user }}"
+      "tag:creator": "ocp4-extender"
+  register: ec2_instance
+
+- set_fact:
+    ec2_created: "{{ 'running' in (ec2_instance.instances | selectattr('state') | map(attribute='state.name') | list | unique) }}"
+
+- name: Create NFS server instance
+  block:
+    - name: Create VPC
+      ec2_vpc_net:
+        name: "nfs-server"
+        cidr_block: "{{ nfs_cidr }}"
+        region: "{{ ec2_region }}"
+        tags:
+          creator: "nfs-server"
+      register: ec2_vpc
+
+    - name: Create VPC subnet
+      ec2_vpc_subnet:
+        state: present
+        vpc_id: "{{ ec2_vpc.vpc.id }}"
+        cidr: "{{ nfs_subnet_cidr }}"
+        region: "{{ ec2_region }}"
+        resource_tags:
+          creator: nfs-server
+      register: ec2_subnet
+
+    - name: Create VPC Internet Gateway
+      ec2_vpc_igw:
+        vpc_id: "{{ ec2_vpc.vpc.id }}"
+        region: "{{ ec2_region }}"
+        tags:
+          Name: nfs-server
+      register: ec2_igw
+
+    - name: Create VPC Routing Table
+      ec2_vpc_route_table:
+        vpc_id: "{{ ec2_vpc.vpc.id }}"
+        region: "{{ ec2_region }}"
+        tags:
+          Name: nfs-server
+        subnets:
+        - "{{ ec2_subnet.subnet.id }}"
+        routes:
+        - dest: "0.0.0.0/0"
+          gateway_id: "{{ ec2_igw.gateway_id }}"
+
+    - name: Create Security Group
+      ec2_group:
+        name: nfs-server
+        description: nfs-server
+        vpc_id: "{{ ec2_vpc.vpc.id }}"
+        region: "{{ ec2_region }}"
+        rules_egress:
+        - proto: "all"
+          from_port: "0"
+          to_port: "65535"
+          cidr_ip: "0.0.0.0/0"
+        rules:
+        - proto: "tcp"
+          from_port: "22"
+          to_port: "22"
+          cidr_ip: "0.0.0.0/0"
+        - proto: "tcp"
+          from_port: "80"
+          to_port: "80"
+          cidr_ip: "0.0.0.0/0"
+        # Allow icmp 
+        - proto: icmp
+          from_port: -1
+          to_port: -1
+          cidr_ip: "0.0.0.0/0"
+        # rpcbind, mountd and NFS ports allow
+        - proto: tcp
+          ports:
+            - 111
+            - 20048
+            - 2049
+          cidr_ip: "0.0.0.0/0"
+        - proto: udp
+          ports:
+            - 111
+            - 20048
+            - 2049
+          cidr_ip: "0.0.0.0/0"
+
+    - name: Find a suitable ami
+      ec2_ami_facts:
+        region: "{{ ec2_region }}"
+        filters:
+          "name": "RHEL-7.6_HVM_GA*"
+      register: ami
+
+    - set_fact:
+        suggested_ami: "{{ ami.images | map(attribute='image_id') | list | first }}"
+
+    - name: Create Instance
+      ec2:
+        key_name: "{{ ec2_key }}"
+        instance_type: "m4.large"
+        group: nfs-server
+        image: "{{ suggested_ami }}"
+        count: 1
+        region: "{{ ec2_region }}"
+        vpc_subnet_id: "{{ ec2_subnet.subnet.id }}"
+        assign_public_ip: yes
+        instance_tags:
+          creator: ocp4-extender
+          creator_arn: "{{ caller_facts.arn }}"
+          user: "{{ ec2_user }}"
+          Name: "{{ ec2_user }}-nfs-server"
+        wait: yes
+    
+  when: not ec2_created

@@ -3,7 +3,7 @@
     module: aws_caller_facts
   register: caller_facts
   
-- name: Check instance is running
+- name: Check if NFS instance already exists
   local_action:
     module: ec2_instance_facts
     region: "{{ ec2_region }}"
@@ -97,7 +97,7 @@
             - 2049
           cidr_ip: "0.0.0.0/0"
 
-    - name: Find a suitable ami
+    - name: Find a Suitable AMI
       ec2_ami_facts:
         region: "{{ ec2_region }}"
         filters:

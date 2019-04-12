@@ -1,2 +1,2 @@
-- name: Config the NFS server
+- name: Configure the NFS instance
   import_tasks: nfs_config.yml

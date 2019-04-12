@@ -1,4 +1,4 @@
 - name: Provision the PVs on the cluster
   hosts: localhost
   roles:
-    - nfs_provision
+    - nfs_provision_pv

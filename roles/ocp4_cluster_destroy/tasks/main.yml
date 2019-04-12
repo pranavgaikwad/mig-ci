@@ -5,6 +5,3 @@
 
 - import_tasks: destroy_s3_bucket.yml
 
-- include_role:
-    name: nfs_deploy
-    tasks_from: destroy_instance

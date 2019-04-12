@@ -1,0 +1,6 @@
+# mig-ci common variables to all roles and plays
+
+# Jenkins WORKSPACE or assume parent dir
+workspace: "{{ lookup('env', 'WORKSPACE') or '../'}}"
+ec2_private_key_file: "{{ workspace }}/keys/ci.pem"
+ec2_ssh_user: "ec2-user"

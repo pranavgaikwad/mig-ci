@@ -1,9 +1,9 @@
-- name: Run tasks/other.yaml instead of 'main'
+- name: Obtain NFS instance IP
   import_role:
     name: nfs_deploy
     tasks_from: get_ip
 
-- name: Remove hostPath pv's
+- name: Remove existing PVs
   shell: "for i in $(oc get pv --no-headers | awk '{ print $1 }'); do oc delete pv $i; done"
 
 - name: Template the PV resources
@@ -11,10 +11,10 @@
     src: "pv.yml.j2"
     dest: "{{ role_path }}/files/pv.yml"
 
-- name: Create nfs pv's
+- name: Create NFS PVs
   shell: "oc create -f {{ role_path }}/files/pv.yml"
 
-- name: Remove the temp file
+- name: Remove template tmp file
   file:
     state: absent
     path: "{{ role_path }}/files/pv.yml"

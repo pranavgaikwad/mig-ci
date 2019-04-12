@@ -1,5 +1,5 @@
-- name: Start instance
-  import_tasks: nfs_instance.yml
+- name: Provision NFS instance
+  import_tasks: provision_instance.yml
 
-- name: Get instance ip
+- name: Obtain NFS instance IP
   import_tasks: get_ip.yml

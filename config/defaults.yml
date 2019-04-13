@@ -1,6 +1,8 @@
-# mig-ci common variables to all roles and plays
+# default common variables for mig-ci roles/plays
 
 # Jenkins WORKSPACE or assume parent dir
 workspace: "{{ lookup('env', 'WORKSPACE') or '../'}}"
 ec2_private_key_file: "{{ workspace }}/keys/ci.pem"
 ec2_ssh_user: "ec2-user"
+ec2_region: "{{ lookup('env', 'EC2_REGION') or 'us-east-2' }}"
+cluster_version: "{{ lookup('env', 'CLUSTER_VERSION') or '4'}}"

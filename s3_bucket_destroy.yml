@@ -1,0 +1,5 @@
+- hosts: localhost
+  tasks:
+    - include_role:
+        name: mig_tools_setup
+        tasks_from: destroy_s3_bucket.yml

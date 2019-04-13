@@ -2,5 +2,5 @@
   roles:
   - mig_tools_prereqs
   - role: mig_tools_setup
-    vars:
-      cluster_version: "{{ lookup('env', 'CLUSTER_VERSION') or '4'}}"
+  vars_files:
+    - "{{ playbook_dir }}/config/defaults.yml"

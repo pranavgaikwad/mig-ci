@@ -1,6 +1,7 @@
 *.retry
 *.swp
 velero/*
+auth/*
 config/velero_aws_creds*
 \.openshift_install*
 metadata.json

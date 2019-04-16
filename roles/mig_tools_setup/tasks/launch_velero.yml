@@ -46,7 +46,11 @@
 - name: Integrate velero plugin
   shell: "{{ playbook_dir }}/velero/velero plugin add quay.io/ocpmigrate/velero-plugin"
 
-- name: Check velero deployment is finished
+# Pause and allow velero plugin to settle to avoid false positive on deployment check
+- pause:
+    seconds: 15
+
+- name: Check status of velero deployment
   k8s_facts:
     kind: Deployment
     api_version: extensions/v1beta1

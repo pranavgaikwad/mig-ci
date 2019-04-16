@@ -13,6 +13,6 @@ spec:
     - ReadOnlyMany
   persistentVolumeReclaimPolicy: {{ nfs_provision_pv_reclaim_policy }}
   nfs:
-    server: {{ nfs_server_ip }}
+    server: {{ ec2_instance_ip }}
     path: "{{ nfs_provision_pv_export_path }}/pv{{i}}"
 {% endfor %}

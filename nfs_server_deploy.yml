@@ -2,7 +2,7 @@
 - name: Deploy NFS EC2 instance
   hosts: localhost
   roles:
-    - nfs_deploy
+    - ec2_provision
 
 - name: Add NFS EC2 instance host to in memory inventory
   hosts: localhost

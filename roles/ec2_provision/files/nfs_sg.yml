@@ -1,0 +1,38 @@
+- name: Create NFS instance security group
+  ec2_group:
+    name: "{{ instance_name }}"
+    description: "{{ instance_name }}"
+    vpc_id: "{{ ec2_vpc.vpc.id }}"
+    region: "{{ ec2_region }}"
+    rules_egress:
+    - proto: "all"
+      from_port: "0"
+      to_port: "65535"
+      cidr_ip: "0.0.0.0/0"
+    rules:
+    - proto: "tcp"
+      from_port: "22"
+      to_port: "22"
+      cidr_ip: "0.0.0.0/0"
+    - proto: "tcp"
+      from_port: "80"
+      to_port: "80"
+      cidr_ip: "0.0.0.0/0"
+    # Allow icmp
+    - proto: icmp
+      from_port: -1
+      to_port: -1
+      cidr_ip: "0.0.0.0/0"
+    # rpcbind, mountd and NFS ports allow
+    - proto: tcp
+      ports:
+        - 111
+        - 20048
+        - 2049
+      cidr_ip: "0.0.0.0/0"
+    - proto: udp
+      ports:
+        - 111
+        - 20048
+        - 2049
+      cidr_ip: "0.0.0.0/0"

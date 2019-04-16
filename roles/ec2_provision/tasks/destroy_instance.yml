@@ -8,7 +8,6 @@
         "tag:Name": "{{ ec2_user }}-{{ instance_name }}"
         "tag:creator_arn": "{{ caller_facts.arn }}"
         "tag:user": "{{ ec2_user }}"
-        "tag:creator": "ocp4-extender"
   register: ec2_metadata
 
 - set_fact:

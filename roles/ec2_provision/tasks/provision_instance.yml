@@ -11,7 +11,6 @@
       "tag:Name": "{{ ansible_user }}-{{ instance_name }}"
       "tag:creator_arn": "{{ caller_facts.arn }}"
       "tag:user": "{{ ansible_user }}"
-      "tag:creator": "ocp4-extender"
   register: ec2_instance
 
 - set_fact:
@@ -59,7 +58,7 @@
           gateway_id: "{{ ec2_igw.gateway_id }}"
 
     - name: Create Security Group
-      include_tasks: "{{ role_path }}/files/{{ security_group_type }}.yml"
+      include_tasks: "{{ security_group_type }}_security_group.yml"
 
     - name: Find a Suitable AMI
       ec2_ami_facts:
@@ -74,7 +73,7 @@
     - name: Create Instance
       ec2:
         key_name: "{{ ec2_key }}"
-        instance_type: "m4.large"
+        instance_type: "{{ instance_type }}"
         group: "{{ instance_name }}"
         image: "{{ suggested_ami }}"
         count: 1
@@ -82,7 +81,6 @@
         vpc_subnet_id: "{{ ec2_subnet.subnet.id }}"
         assign_public_ip: yes
         instance_tags:
-          creator: ocp4-extender
           creator_arn: "{{ caller_facts.arn }}"
           user: "{{ ec2_user }}"
           Name: "{{ ec2_user }}-{{ instance_name }}"

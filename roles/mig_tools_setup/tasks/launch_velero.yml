@@ -53,7 +53,7 @@
   delay: 5
 
 - set_fact:
-    is_plugin: deploy.resources | length > 0 and deploy.resources[0].spec.template.spec.get('initContainers', [{}])[0].get('image', '') == 'quay.io/ocpmigrate/velero-plugin'
+    is_plugin: "{{ deploy.resources | length > 0 and deploy.resources[0].spec.template.spec.get('initContainers', [{}])[0].get('image', '') == 'quay.io/ocpmigrate/velero-plugin' }}"
 
 - name: Integrate velero plugin
   shell: "{{ playbook_dir }}/velero/velero plugin add quay.io/ocpmigrate/velero-plugin"

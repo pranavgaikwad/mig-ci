@@ -61,9 +61,9 @@
   delay: 5
 
 - name: Fix restic pod dir mount for oc cluster up install
-  shell: "oc set volume -n velero ds/restic --add --name=host-pods --path /tmp/openshift.local.clusterup/openshift.local.volumes/pods --overwrite"
+  shell: "{{ oc_binary_location }}/oc set volume -n velero ds/restic --add --name=host-pods --path /tmp/openshift.local.clusterup/openshift.local.volumes/pods --overwrite"
   when: cluster_version == '3'
 
 - name: Fix restic pod dir mount for openshift-ansible install
-  shell: "oc set volume -n velero ds/restic --add --name=host-pods --path /var/lib/origin/openshift.local.volumes/pods --overwrite"
+  shell: "{{ oc_binary_location }}/oc set volume -n velero ds/restic --add --name=host-pods --path /var/lib/origin/openshift.local.volumes/pods --overwrite"
   when: cluster_version == '4'

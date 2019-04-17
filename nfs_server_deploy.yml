@@ -3,6 +3,8 @@
   hosts: localhost
   roles:
     - ec2_provision
+  vars_files:
+    - "{{ playbook_dir }}/config/defaults.yml"
 
 - name: Add NFS EC2 instance host to in memory inventory
   hosts: localhost

@@ -3,3 +3,5 @@
     - include_role:
         name: ec2_provision
         tasks_from: destroy_instance
+  vars_files:
+    - "{{ playbook_dir }}/config/defaults.yml"

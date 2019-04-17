@@ -82,8 +82,8 @@
         assign_public_ip: yes
         instance_tags:
           creator_arn: "{{ caller_facts.arn }}"
-          user: "{{ ec2_user }}"
-          Name: "{{ ec2_user }}-{{ instance_name }}"
+          user: "{{ ansible_user }}"
+          Name: "{{ ansible_user }}-{{ instance_name }}"
         wait: yes
 
   when: not ec2_created

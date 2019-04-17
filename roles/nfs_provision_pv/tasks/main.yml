@@ -1,6 +1,6 @@
 - name: Obtain NFS instance IP
   import_role:
-    name: nfs_deploy
+    name: ec2_provision
     tasks_from: get_ip
 
 - name: Remove existing PVs

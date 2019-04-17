@@ -2,29 +2,28 @@
   local_action:
     module: aws_caller_facts
   register: caller_facts
-  
+
 - name: Get instance info
   local_action:
     module: ec2_instance_facts
     region: "{{ ec2_region }}"
     filters:
-      "tag:Name": "{{ ec2_user }}-nfs-server"
+      "tag:Name": "{{ ansible_user }}-nfs-server"
       "tag:creator_arn": "{{ caller_facts.arn }}"
-      "tag:user": "{{ ec2_user }}"
-      "tag:creator": "ocp4-extender"
+      "tag:user": "{{ ansible_user }}"
   register: ec2_instance
 
 - name: Get instance public ip
   set_fact:
-    nfs_server_ip: "{{ (ec2_instance.instances | selectattr('state.name', 'match', '^running$') | list )[0]['public_ip_address'] }}"
-  
+    ec2_instance_ip: "{{ (ec2_instance.instances | selectattr('state.name', 'match', '^running$') | list )[0]['public_ip_address'] }}"
+
 - name: Wait for SSH to be available on instance
   wait_for:
-    host: "{{ nfs_server_ip }}"
+    host: "{{ ec2_instance_ip }}"
     port: 22
     search_regex: OpenSSH
     delay: 10
     timeout: 900
 
 - debug:
-    var: nfs_server_ip
+    var: ec2_instance_ip

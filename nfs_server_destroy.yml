@@ -1,5 +1,7 @@
 - hosts: localhost
   tasks:
     - include_role:
-        name: nfs_deploy
+        name: ec2_provision
         tasks_from: destroy_instance
+  vars_files:
+    - "{{ playbook_dir }}/config/defaults.yml"

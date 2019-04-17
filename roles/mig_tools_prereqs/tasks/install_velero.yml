@@ -25,3 +25,15 @@
   - aws/20-restic-daemonset.yaml
   - aws/10-deployment.yaml
   - aws/10-deployment-kube2iam.yaml
+
+- name: Set imagePullPolicy to Always
+  lineinfile:
+    path: "{{ playbook_dir }}/velero/config/{{ item }}"
+    insertafter: "^ *image: quay.io/ocpmigrate/velero.*$"
+    line: "          imagePullPolicy: Always"
+  with_items:
+  - ibm/10-deployment.yaml
+  - minio/20-deployment.yaml
+  - azure/00-deployment.yaml
+  - gcp/10-deployment.yaml
+  - aws/10-deployment.yaml

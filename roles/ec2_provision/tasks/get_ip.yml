@@ -8,7 +8,7 @@
     module: ec2_instance_facts
     region: "{{ ec2_region }}"
     filters:
-      "tag:Name": "{{ ansible_user }}-nfs-server"
+      "tag:Name": "{{ ansible_user }}-{{ instance_name }}"
       "tag:creator_arn": "{{ caller_facts.arn }}"
       "tag:user": "{{ ansible_user }}"
   register: ec2_instance

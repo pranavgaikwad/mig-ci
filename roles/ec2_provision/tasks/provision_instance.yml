@@ -62,9 +62,10 @@
 
     - name: Find a Suitable AMI
       ec2_ami_facts:
+        owners: 309956199498
         region: "{{ ec2_region }}"
         filters:
-          "name": "RHEL-7.6_HVM_GA*"
+          "name": "RHEL-{{ rhel_version }}_HVM_GA*"
       register: ami
 
     - set_fact:

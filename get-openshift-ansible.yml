@@ -1,0 +1,8 @@
+- hosts: localhost
+  vars_files: "{{ playbook_dir }}/config/defaults.yml"
+  tasks:
+    - name: Clone the openshift-ansible repo
+      git:
+        repo: 'https://github.com/openshift/openshift-ansible'
+        dest: "{{ workspace }}/openshift-ansible" # TODO: rethink destination
+        version: "release-3.11"

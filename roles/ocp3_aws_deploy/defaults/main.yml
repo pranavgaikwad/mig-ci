@@ -1,0 +1,4 @@
+ocp_version: '3.11'
+aws_name_suffix: "aws-ocp-{{ ocp_version }}"
+org_id: "{{ lookup('env', 'ORG_ID') }}"
+act_key_name: "{{ lookup('env', 'ACT_KEY_NAME') }}"

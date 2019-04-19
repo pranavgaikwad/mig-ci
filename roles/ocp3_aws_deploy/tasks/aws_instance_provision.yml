@@ -1,0 +1,25 @@
+- name: Provision an AWS EC2 instance
+  include_role:
+    name: ec2_provision
+    tasks_from: provision_instance
+  vars:
+    instance_name: "{{ aws_name_suffix }}"
+    instance_type: t2.xlarge
+    rhel_version: '7.5'
+    security_group_type: ocp3
+    additional_tags: "{{ aws_tags }}"
+
+- name: Get AWS EC2 instance ip
+  include_role:
+    name: ec2_provision
+    tasks_from: get_ip
+  vars:
+    instance_name: "{{ aws_name_suffix }}"
+
+- name: Add target EC2 host ip to group aws
+  add_host:
+    groups: "aws"
+    name: "{{ ec2_instance_ip }}"
+    ansible_user: ec2-user
+    ansible_ssh_private_key_file: "{{ ec2_private_key_file }}"
+    ansible_become: yes

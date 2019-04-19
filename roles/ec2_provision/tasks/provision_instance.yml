@@ -71,6 +71,16 @@
     - set_fact:
         suggested_ami: "{{ ami.images | map(attribute='image_id') | list | first }}"
 
+    - set_fact:
+        inst_tags:
+          creator_arn: "{{ caller_facts.arn }}"
+          user: "{{ ansible_user }}"
+          Name: "{{ ansible_user }}-{{ instance_name }}"
+
+    - set_fact:
+        inst_tags: "{{ inst_tags | combine(additional_tags) }}"
+      when: additional_tags
+
     - name: Create Instance
       ec2:
         key_name: "{{ ec2_key }}"
@@ -81,10 +91,7 @@
         region: "{{ ec2_region }}"
         vpc_subnet_id: "{{ ec2_subnet.subnet.id }}"
         assign_public_ip: yes
-        instance_tags:
-          creator_arn: "{{ caller_facts.arn }}"
-          user: "{{ ansible_user }}"
-          Name: "{{ ansible_user }}-{{ instance_name }}"
+        instance_tags: "{{ inst_tags }}"
         wait: yes
 
   when: not ec2_created

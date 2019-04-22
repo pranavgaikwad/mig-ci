@@ -79,7 +79,7 @@
 
     - set_fact:
         inst_tags: "{{ inst_tags | combine(additional_tags) }}"
-      when: additional_tags
+      when: additional_tags is defined
 
     - name: Create Instance
       ec2:

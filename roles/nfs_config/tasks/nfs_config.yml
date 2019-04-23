@@ -7,7 +7,7 @@
 - name: Create exports file
   copy:
     content: |
-             /var/lib/nfs/exports *(rw,no_root_squash)
+             /var/lib/nfs/exports *(rw,no_root_squash,insecure)
     dest: /etc/exports
   become: true
 

@@ -53,26 +53,46 @@
   delay: 5
 
 - set_fact:
-    is_plugin: "{{ deploy.resources | length > 0 and deploy.resources[0].spec.template.spec.get('initContainers', [{}])[0].get('image', '') == 'quay.io/ocpmigrate/velero-plugin' }}"
+    plugin: "{{ deploy.resources | length > 0 and deploy.resources[0].spec.template.spec.get('initContainers', [{}])[0].get('image', '') == 'quay.io/ocpmigrate/velero-plugin' }}"
 
 - name: Integrate velero plugin
-  shell: "{{ playbook_dir }}/velero/velero plugin add quay.io/ocpmigrate/velero-plugin"
-  when: not is_plugin
+  block:
 
-- name: Check status of plugin integration
-  k8s_facts:
-    kind: Deployment
-    api_version: extensions/v1beta1
-    namespace: velero
-    name: velero
-    label_selectors: "component=velero"
-  register: deploy
-  until:  deploy.get("resources", [])
-          and deploy.resources[0].get("spec", {}).get("replicas", -1) == deploy.resources[0].get("status", {}).get("availableReplicas", 0)
-  retries: 60
-  delay: 5
-  when: not is_plugin
+    - name: Run velero plugin add
+      shell: "{{ playbook_dir }}/velero/velero plugin add quay.io/ocpmigrate/velero-plugin"
+
+    - name: Allow velero plugin to settle
+      pause:
+        seconds: 5
+
+    - name: Check status of velero plugin integration
+      k8s_facts:
+        kind: Deployment
+        api_version: extensions/v1beta1
+        namespace: velero
+        name: velero
+        label_selectors: "component=velero"
+      register: deploy
+      until:  deploy.get("resources", [])
+              and deploy.resources[0].get("spec", {}).get("replicas", -1) == deploy.resources[0].get("status", {}).get("availableReplicas", 0)
+      retries: 60
+      delay: 5
+
+  when: not plugin
 
 - name: Fix restic pod dir mount for oc cluster up install
   shell: "{{ oc_binary_location }}/oc set volume -n velero ds/restic --add --name=host-pods --path /tmp/openshift.local.clusterup/openshift.local.volumes/pods --overwrite"
   when: cluster_version == '3'
+
+- name: Check status of restic deployment
+  k8s_facts:
+    kind: DaemonSet
+    api_version: extensions/v1beta1
+    namespace: velero
+    name: restic
+    label_selectors: "name=restic"
+  register: dset
+  until: dset.get("resources", [])
+         and dset.resources[0].get("status", {}).get("desiredNumberScheduled", -1) == dset.resources[0].get("status", {}).get("numberReady", 0)
+  retries: 60
+  delay: 5

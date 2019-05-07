@@ -1,3 +1,7 @@
+- set_fact:
+    rand_id: "{{ 100000 | random }}"
+  run_once: true
+
 - name: Provision an AWS EC2 instance
   include_role:
     name: ec2_provision
@@ -8,6 +12,9 @@
     rhel_version: '7.5'
     security_group_type: ocp3
     additional_tags: "{{ aws_tags }}"
+    sec_group_additional_tags: "{{ aws_tags }}"
+    volume_additional_tags: "{{ aws_tags }}"
+    ec2_volume_size: 250
 
 - name: Get AWS EC2 instance ip
   include_role:

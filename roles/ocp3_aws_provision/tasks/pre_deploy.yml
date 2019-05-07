@@ -5,8 +5,8 @@
 - name: Setup RHEL subscription for openshift
   redhat_subscription:
     state: present
-    org_id: "{{ org_id }}" # TODO: change
-    activationkey: "{{ act_key_name }}" # TODO: change
+    username: "{{ sub_user }}"
+    password: "{{ sub_pass }}"
     auto_attach: true
     force_register: true
 
@@ -20,7 +20,7 @@
     name:
       - rhel-7-server-rpms
       - rhel-7-server-extras-rpms
-      - rhel-7-server-ose-3.11-rpms
+      - "rhel-7-server-ose-{{ ocp_version }}-rpms"
       - rhel-7-server-ansible-2.6-rpms
     state: enabled
 

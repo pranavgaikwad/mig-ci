@@ -1,6 +1,5 @@
 ocp_version: '3.11'
 aws_name_suffix: "aws-ocp-{{ ocp_version }}"
-org_id: "{{ lookup('env', 'ORG_ID') }}"
-act_key_name: "{{ lookup('env', 'ACT_KEY_NAME') }}"
-rand_id: "{{ 100000 | random  }}"
+sub_user: "{{ lookup('env', 'SUB_USER') or 'undefined' }}"
+sub_pass: "{{ lookup('env', 'SUB_PASS') or 'undefined' }}"
 aws_tags: "{{ {'kubernetes.io/cluster/' ~ rand_id: 'owned', 'clusterid': rand_id } }}"

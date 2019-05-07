@@ -10,7 +10,6 @@
       to_port: "65535"
       cidr_ip: "0.0.0.0/0"
     rules:
-<<<<<<< HEAD
     - proto:        "tcp"
       from_port:    "22"
       to_port:      "22"
@@ -102,23 +101,4 @@
     - proto:        "tcp"
       from_port:    "10250"
       to_port:      "10250"
-=======
-    - proto: tcp
-      ports:
-        - 80
-        - 22
-        - 8443 # Web console
-        - 443 # API calls
-        - 53 # DNS resolution for enviroment upgrades
-        - 8053 # DNS for new environments
-        - 10250 # Master -> nodes communication
-        - 4789 # Nodes -> master communication
-      cidr_ip: "0.0.0.0/0"
-    - proto: udp
-      ports:
-        - 8443
-        - 443
-        - 53
-        - 8053
->>>>>>> WIP - Changed security group rules, added AWS cloud provider.
       cidr_ip: "0.0.0.0/0"

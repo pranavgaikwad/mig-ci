@@ -1,0 +1,12 @@
+- hosts: localhost
+  tasks:
+    - include_vars:
+        file: "{{ playbook_dir }}/roles/ocp3_aws_deploy/defaults/main.yml"
+
+    - include_role:
+        name: ec2_provision
+        tasks_from: destroy_instance
+      vars:
+        instance_name: "{{ aws_name_suffix }}"
+  vars_files:
+    - "{{ playbook_dir }}/config/defaults.yml"

@@ -1,1 +1,5 @@
 - include: pre_deploy.yml
+  when: post_deploy is not defined
+
+- include: post_deploy.yml
+  when: post_deploy is defined

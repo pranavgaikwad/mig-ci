@@ -29,125 +29,15 @@
     name: '*'
     state: latest
 
-# - name: Configure docker storage
-#   copy:
-#     content: |
-#               STORAGE_DRIVER=""
-#     dest: /etc/sysconfig/docker-storage-setup
-#   become: true
+- name: Reboot the machine
+  reboot:
+      pre_reboot_delay: 5
+      test_command: whoami
+      reboot_timeout: 600
 
-# - name: Create pv exports
-#   copy:
-#     content: |
-#               /var/lib/exports/pv *(rw,root_squash,sync,no_wdelay)
-#     dest: /etc/exports.d/pv.exports
-
-# - name: Create pv directories
-#   file:
-#     dest: /var/lib/exports/pv/{{ item }}
-#     state: directory
-#     mode: 0777
-#   with_sequence: count=20
-
-# - name: Workaround NetworkManager insisting on adding nip.io to search
-#   copy:
-#     content: |
-#               #!/bin/bash
-#               sed -i 's/search.*.nip\.io/search cluster.local/g' /etc/resolv.conf
-#     dest: /etc/NetworkManager/dispatcher.d/98-nip.io.sh
-#     mode: 0755
-
-# -----------------------------------------
-
-# - name: set admin permissions
-#   command: oc adm policy add-cluster-role-to-user cluster-admin admin
-
-# - name: log in as admin
-#   command: oc login -u admin -p admin
-
-# - name: switch to openshift-ansible-service-broker project
-#   command: oc project openshift-ansible-service-broker
-
-# - name:  get route name for broker
-#   shell: oc get routes --no-headers | awk '{print $2}'
-#   register: asb_route
-
-# - name: get token for bearer auth
-#   command: oc whoami -t
-#   register: token
-
-# - name: wait for broker to come up
-#   uri:
-#     url: https://{{ asb_route.stdout }}/osb/v2/catalog
-#     method: GET
-#     headers:
-#       Authorization: Bearer {{ token.stdout }}
-#     validate_certs: no
-#   register: services_response
-#   until: '{{ services_response.status|int == 200 }}'
-#   retries: 100
-
-# - name: get hostname
-#   command: hostname -f
-#   register: hostname
-
-# - name: Install python-openshift
-#   yum:
-#     name: 'python-openshift'
-#     state: latest
-
-# - name: Create pv objects
-#   k8s_v1_persistent_volume:
-#     name: "{{ item }}"
-#     state: present
-#     capacity:
-#       storage: '100Gi'
-#     access_modes:
-#       - ReadWriteOnce
-#     persistent_volume_reclaim_policy: Recycle
-#     nfs_path: /var/lib/exports/pv/{{ item }}
-#     nfs_server: "{{ hostname.stdout }}"
-#   async: 120
-#   poll: 0
-#   with_sequence: count=20
-
-# - when: not("bob" in ruser)
-#   block:
-#   - name: Login to registry.redhat.io
-#     shell: docker login registry.redhat.io -u '{{ ruser }}' -p {{ rpass }}
-
-#   - file:
-#       path: /var/lib/origin/.docker/
-#       state: directory
-#       mode: 0755
-
-#   #Work around https://bugzilla.redhat.com/show_bug.cgi?id=1620112
-#   - name: Copy docker credentials to /var/lib/origin
-#     copy:
-#       src: /root/.docker/config.json
-#       dest: /var/lib/origin/.docker/config.json
-
-#   - name: Create imagestream secret
-#     shell: "oc create secret docker-registry imagestreamsecret --docker-server=registry.redhat.io --docker-username='{{ ruser }}' --docker-email=openshift@openshift.com --docker-password={{ rpass }} --config=/etc/origin/master/admin.kubeconfig -n openshift"
-
-#   - name: List imagestreams
-#     shell: oc get imagestreams -n openshift -o custom-columns=.name:.metadata.name --no-headers
-#     register: imagestreams
-
-#   - name: reimport image-streams
-#     shell: oc import-image -n openshift --all=true {{ item }}
-#     with_items: "{{ imagestreams.stdout_lines }}"
-
-# - debug:
-#     msg: "{{ msg | to_nice_yaml }}"
-#   vars:
-#     msg:
-#       - "########################################################################"
-#       - "Your openshift env is at https://{{ hostname.stdout }}:8443"
-#       - "To login run:"
-#       - "    oc login https://{{ hostname.stdout }}:8443 -u admin -p admin"
-#       - "The broker is at {{ asb_route.stdout }}"
-#       - ""
-#       - "Discovered Ansible Playbook Bundles:"
-#       - "    {{ services_response.json.services | map(attribute='name') | list | join(', ') }}"
-#       - "########################################################################"
+- name: Configure docker storage
+  copy:
+    content: |
+              STORAGE_DRIVER=""
+    dest: /etc/sysconfig/docker-storage-setup
+  become: true

@@ -1,4 +1,4 @@
-ocp_version: '3.11'
+ocp_version: "{{ lookup('env', 'CLUSTER_VERSION') or '3.11' }}"
 aws_name_suffix: "aws-ocp-{{ ocp_version }}"
 sub_user: "{{ lookup('env', 'SUB_USER') or 'undefined' }}"
 sub_pass: "{{ lookup('env', 'SUB_PASS') or 'undefined' }}"

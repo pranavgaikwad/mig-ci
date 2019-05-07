@@ -1,0 +1,23 @@
+- name: set admin permissions
+  command: oc adm policy add-cluster-role-to-user cluster-admin admin
+
+# - name: Create the storage class
+#   command: |
+#     oc create -f - <<EOF
+#     kind: StorageClass
+#     apiVersion: storage.k8s.io/v1
+#     metadata:
+#       name: nfs-sc
+#       provisioner: no-provisioning
+#     EOF
+
+- name: Login info
+  debug:
+    msg:
+    - "Console address https://{{ inventory_hostname }}.xip.io/console"
+    - 'User: admin, Password: admin'
+    - "You can login with 'oc login -u admin -p admin https://{{ inventory_hostname }}.xip.io:8443 --insecure-skip-tls-verify=true'"
+
+- name: Login to cluster
+  delegate_to: localhost
+  command: "{{ oc_binary_location }}/oc login -u admin -p admin https://{{ inventory_hostname }}.xip.io:8443 --insecure-skip-tls-verify=true"

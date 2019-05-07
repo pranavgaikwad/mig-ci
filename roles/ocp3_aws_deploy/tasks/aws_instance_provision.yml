@@ -1,14 +1,10 @@
-- set_fact:
-    rand_id: "{{ 100000 | random }}"
-  run_once: true
-
 - name: Provision an AWS EC2 instance
   include_role:
     name: ec2_provision
     tasks_from: provision_instance
   vars:
     instance_name: "{{ aws_name_suffix }}"
-    instance_type: t2.xlarge
+    instance_type: m4.xlarge
     rhel_version: '7.5'
     security_group_type: ocp3
     additional_tags: "{{ aws_tags }}"

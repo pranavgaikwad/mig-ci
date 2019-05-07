@@ -1,3 +1,7 @@
+- set_fact:
+    rand_id: "{{ 100000 | random }}"
+  run_once: true
+
 - include_tasks: aws_instance_provision.yml
 
 - include_tasks: add_oa_host_inventory.yml

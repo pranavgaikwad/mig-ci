@@ -1,4 +1,3 @@
-# TODO: move to separate location
 - hosts: localhost
   roles:
     - ocp3_aws_deploy
@@ -12,29 +11,18 @@
   vars_files:
     - "{{ playbook_dir }}/config/defaults.yml"
 
-# FIX_THIS: openshift-ansible should be on host before running this playbook
 - name: Run prerequisites
-  import_playbook: "../openshift-ansible/playbooks/prerequisites.yml"
+  import_playbook: "{{ lookup('env', 'WORKSPACE') or '../'}}/openshift-ansible/playbooks/prerequisites.yml"
 
 - name: Run depoyment
-  import_playbook: "../openshift-ansible/playbooks/deploy_cluster.yml"
+  import_playbook: "{{ lookup('env', 'WORKSPACE') or '../'}}/openshift-ansible/playbooks/deploy_cluster.yml"
 
 # Post tasks
 - hosts: aws
   vars_files:
     - "{{ playbook_dir }}/config/defaults.yml"
-  tasks:
-    - name: set admin permissions
-      command: oc adm policy add-cluster-role-to-user cluster-admin admin
-
-    - name: Login info
-      debug:
-        msg:
-        - "Console address https://{{ inventory_hostname }}.xip.io/console"
-        - 'User: admin, Password: admin'
-        - "You can login with 'oc login -u admin -p admin https://{{ inventory_hostname }}.xip.io --insecure-skip-tls-verify=true'"
-
-    - name: Login to cluster
-      when: remote_auto_login
-      delegate_to: localhost
-      command: "{{ oc_binary_location }}/oc login -u admin -p admin https://{{ inventory_hostname }}.xip.io --insecure-skip-tls-verify=true"
+  vars:
+    post_deploy: true
+  roles:
+    - ocp3_aws_provision
+  become: true

@@ -1,4 +1,10 @@
 ocp_version: "{{ lookup('env', 'CLUSTER_VERSION') or '3.11' }}"
+ocp_release:
+  '3.11': '3.11'
+  '3.10': '3.10'
+  '3.9': 'v3.9'
+  '3.7': 'v3.7'
+ocp_image_tag: "v{{ ocp_version }}.0"
 aws_name_suffix: "aws-ocp-{{ ocp_version }}"
 sub_user: "{{ lookup('env', 'SUB_USER') or 'undefined' }}"
 sub_pass: "{{ lookup('env', 'SUB_PASS') or 'undefined' }}"

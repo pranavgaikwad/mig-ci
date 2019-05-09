@@ -31,9 +31,9 @@
         kind: AllowAllPasswordIdentityProvider
     openshift_schedulable: true
     os_update: true
-    openshift_release: "{{ ocp_version }}"
+    openshift_release: "{{ ocp_release[ocp_version] }}"
     openshift_portal_net: 172.30.0.0/16
-    openshift_image_tag: "v{{ ocp_version }}"
+    openshift_image_tag: "{{ ocp_image_tag }}"
     openshift_node_groups:
     - name: 'node-config-all-in-one'
       labels:

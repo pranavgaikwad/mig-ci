@@ -21,11 +21,13 @@ In order to execute an all-in-one deployment, firstly you should specify several
 
 RHEL subscriptions:
 
-- SUB_USER -- redhat subscription username for account, which have access to the openshift bits.
+- `SUB_USER` -- redhat subscription username for account, which have access to the openshift bits.
 
-- SUB_PASS -- password for the redhat subscriprion account.
+- `SUB_PASS` -- password for the redhat subscriprion account.
 
-  
+Run specific:
+
+- `OPENSHIFT_VERSION` -- verison of cluster to be provisioned. Should be specified as 'v3\.[0-9]+'. If not set, will be used 'v3.11'.
 
 Steps to reproduce the deployment in CI:
 

@@ -20,7 +20,7 @@
     name:
       - rhel-7-server-rpms
       - rhel-7-server-extras-rpms
-      - "rhel-7-server-ose-{{ ocp_version }}-rpms"
+      - "rhel-7-server-ose-{{ ocp_version[1:] }}-rpms"
       - rhel-7-server-ansible-2.6-rpms
     state: enabled
 

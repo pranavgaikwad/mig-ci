@@ -5,5 +5,5 @@
       git:
         repo: 'https://github.com/openshift/openshift-ansible'
         dest: "{{ workspace }}/openshift-ansible"
-        version: "release-{{ cluster_version }}"
+        version: "release-{{ (lookup('env', 'OPENSHIFT_VERSION') or 'v3.11')[1:] }}"
         force: yes

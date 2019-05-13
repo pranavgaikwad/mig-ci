@@ -1,3 +1,5 @@
+# Source: https://gitlab.sat.engineering.redhat.com/rhci/vm_env/tree/master/openshift/aos-3.11
+# Creator: Jason Montleon - https://gitlab.sat.engineering.redhat.com/jmontleo
 - name: Add openshift all-in-one inventory
   add_host:
     name: "{{ ec2_instance_ip }}.xip.io"

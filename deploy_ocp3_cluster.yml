@@ -8,21 +8,23 @@
 - hosts: aws
   roles:
     - ocp3_aws_provision
+  vars:
+    pre_deploy: true
   vars_files:
     - "{{ playbook_dir }}/config/defaults.yml"
 
-- name: Run prerequisites
+- name: Run openshift-ansible prerequisites
   import_playbook: "{{ lookup('env', 'WORKSPACE') or '../'}}/openshift-ansible/playbooks/prerequisites.yml"
 
-- name: Run depoyment
+- name: Run the openshift-ansible depoyment
   import_playbook: "{{ lookup('env', 'WORKSPACE') or '../'}}/openshift-ansible/playbooks/deploy_cluster.yml"
 
 # Post tasks
 - hosts: aws
-  vars_files:
-    - "{{ playbook_dir }}/config/defaults.yml"
-  vars:
-    post_deploy: true
   roles:
     - ocp3_aws_provision
+  vars:
+    post_deploy: true
+  vars_files:
+    - "{{ playbook_dir }}/config/defaults.yml"
   become: true

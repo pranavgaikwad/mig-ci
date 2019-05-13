@@ -1,5 +1,5 @@
 - include: pre_deploy.yml
-  when: post_deploy is not defined
+  when: pre_deploy | default(false) | bool  == true
 
 - include: post_deploy.yml
-  when: post_deploy is defined
+  when: post_deploy | default(false) | bool == true

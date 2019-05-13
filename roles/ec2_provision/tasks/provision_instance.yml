@@ -100,7 +100,7 @@
       ec2:
         key_name: "{{ ec2_key }}"
         instance_type: "{{ instance_type }}"
-        group: "{{ instance_name }}"
+        group: "{{ ansible_user }}-{{ instance_name }}"
         image: "{{ suggested_ami }}"
         count: 1
         region: "{{ ec2_region }}"
@@ -112,7 +112,7 @@
 
     - name: Create and attach volume
       ec2_vol:
-        name: "{{ instance_name }}"
+        name: "{{ ansible_user }}-{{ instance_name }}"
         instance: "{{ ec2_inst.instances[0].id }}"
         region: "{{ ec2_region }}"
         volume_size: "{{ ec2_volume_size }}"

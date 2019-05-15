@@ -37,6 +37,7 @@
     openshift_portal_net: 172.30.0.0/16
     openshift_image_tag: "{{ ocp_image_tag }}"
     openshift_repos_enable_testing: true
+    docker_version: "1.13.1"
     openshift_node_groups:
     - name: 'node-config-all-in-one'
       labels:

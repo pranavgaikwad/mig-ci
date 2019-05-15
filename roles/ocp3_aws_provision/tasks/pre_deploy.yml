@@ -18,8 +18,70 @@
       - rhel-7-server-rpms
       - rhel-7-server-extras-rpms
       - "rhel-7-server-ose-{{ ocp_version[1:] }}-rpms"
+      - rhel-7-fast-datapath-rpms
       - rhel-7-server-ansible-2.6-rpms
     state: enabled
+
+- name: Enable EPEL
+  package:
+    name: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
+    state: present
+
+
+- name: Install boto and boto3 through yum
+  yum:
+    name:
+    - python2-boto
+    - python2-botocore
+    - python2-boto3
+    state: latest
+
+- name: Install RPM-based OCP installer for v3.9
+  yum:
+    name:
+    - atomic-openshift-utils
+    state: present
+  when: ocp_version == 'v3.9'
+
+- name: Install RPM-based OCP installer for v3.10
+  yum:
+    name: openshift-ansible
+    state: present
+  when: ocp_version == 'v3.10'
+
+- name: Ensure base packages exist
+  yum:
+    name:
+    - git
+    - ansible
+    - python-openshift
+    - wget
+    - net-tools
+    - bind-utils
+    - yum-utils
+    - iptables-services
+    - bridge-utils
+    - bash-completion
+    - kexec-tools
+    - sos
+    - psacct
+    - python-docker-py
+    - docker
+    state: latest
+
+- name: Install docker for v3.10 and v3.9
+  yum:
+    name:
+    - docker-1.13.1*
+    state: present
+  when: ocp_version == 'v3.10' or ocp_version == 'v3.9'
+
+- name: Start and enable docker
+  systemd:
+    state: restarted
+    enabled: true
+    daemon_reload: true
+    name: docker
 
 - name: Update installed packages
   yum:

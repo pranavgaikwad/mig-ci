@@ -21,7 +21,7 @@
     os_sdn_network_plugin_name: 'redhat/openshift-ovs-multitenant'
     ansible_service_broker_install: false
     openshift_deployment_type: origin
-    openshift_disable_check: 'disk_availability,memory_availability,docker_storage'
+    openshift_disable_check: "{{ ocp_skip_check[ocp_version] }}"
     openshift_public_hostname: "{{ ec2_instance_ip }}.xip.io"
     openshift_public_ip: "{{ ec2_instance_ip }}"
     openshift_master_cluster_public_hostname: "{{ ec2_instance_ip }}.xip.io"
@@ -35,7 +35,6 @@
     os_update: true
     openshift_release: "{{ ocp_release[ocp_version] }}"
     openshift_portal_net: 172.30.0.0/16
-    openshift_image_tag: "{{ ocp_image_tag }}"
     openshift_repos_enable_testing: true
     docker_version: "1.13.1"
     openshift_node_groups:
@@ -45,3 +44,4 @@
       - 'node-role.kubernetes.io/infra=true'
       - 'node-role.kubernetes.io/compute=true'
     openshift_node_group_name: "node-config-all-in-one"
+  args: "{{ ocp_additional_tags[ocp_version] }}"

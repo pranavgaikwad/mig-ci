@@ -10,8 +10,6 @@ sub_pass: "{{ lookup('env', 'SUB_PASS') or 'undefined' }}"
 aws_tags: "{{ {'kubernetes.io/cluster/' ~ rand_id: 'owned', 'clusterid': rand_id } }}"
 ocp_additional_tags:
   'v3.9':
-    template_service_broker_prefix: "registry.example.com/openshift3/ose-"
-    template_service_broker_version: "{{ ocp_version }}"
     openshift_node_labels:
         region: infra
         zone: default

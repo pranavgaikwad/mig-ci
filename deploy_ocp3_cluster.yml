@@ -1,0 +1,30 @@
+- hosts: localhost
+  roles:
+    - ocp3_aws_deploy
+  vars_files:
+    - "{{ playbook_dir }}/config/defaults.yml"
+
+# AWS group is created in previous role
+- hosts: aws
+  roles:
+    - ocp3_aws_provision
+  vars:
+    pre_deploy: true
+  vars_files:
+    - "{{ playbook_dir }}/config/defaults.yml"
+
+- name: Run openshift-ansible prerequisites
+  import_playbook: "{{ lookup('env', 'WORKSPACE') or '../'}}/openshift-ansible/playbooks/prerequisites.yml"
+
+- name: Run the openshift-ansible depoyment
+  import_playbook: "{{ lookup('env', 'WORKSPACE') or '../'}}/openshift-ansible/playbooks/deploy_cluster.yml"
+
+# Post tasks
+- hosts: aws
+  roles:
+    - ocp3_aws_provision
+  vars:
+    post_deploy: true
+  vars_files:
+    - "{{ playbook_dir }}/config/defaults.yml"
+  become: true

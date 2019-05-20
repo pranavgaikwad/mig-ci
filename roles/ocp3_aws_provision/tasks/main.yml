@@ -1,0 +1,8 @@
+- include_vars:
+    file: "{{ playbook_dir }}/roles/ocp3_aws_deploy/defaults/main.yml"
+
+- include: pre_deploy.yml
+  when: pre_deploy | default(false) | bool  == true
+
+- include: post_deploy.yml
+  when: post_deploy | default(false) | bool == true

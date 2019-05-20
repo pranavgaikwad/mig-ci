@@ -1,0 +1,13 @@
+- set_fact:
+    rand_id: "{{ 100000 | random }}"
+  run_once: true
+
+- include_tasks: aws_instance_provision.yml
+
+- include_tasks: add_oa_host_inventory.yml
+
+- name: "Checkout OA release under {{ ocp_version }}"
+  git:
+    repo: 'https://github.com/openshift/openshift-ansible'
+    dest: "{{ workspace }}/openshift-ansible"
+    version: "release-{{ ocp_version[1:] }}"

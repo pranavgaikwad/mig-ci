@@ -1,0 +1,24 @@
+ocp_version: "{{ lookup('env', 'OPENSHIFT_VERSION') or 'v3.11' }}"
+ocp_release:
+  'v3.11': '3.11'
+  'v3.10': '3.10'
+  'v3.9': 'v3.9'
+  'v3.7': 'v3.7'
+aws_name_suffix: "aws-ocp-{{ ocp_version }}"
+sub_user: "{{ lookup('env', 'SUB_USER') or 'undefined' }}"
+sub_pass: "{{ lookup('env', 'SUB_PASS') or 'undefined' }}"
+aws_tags: "{{ {'kubernetes.io/cluster/' ~ rand_id: 'owned', 'clusterid': rand_id } }}"
+ocp_additional_tags:
+  'v3.9':
+    openshift_node_labels:
+        region: infra
+        zone: default
+  'v3.11': {}
+  'v3.10': {}
+  'v3.7': {}
+common_check_excluder: 'disk_availability,memory_availability,docker_storage'
+ocp_skip_check:
+  'v3.9': "{{ common_check_excluder }}"
+  'v3.11': "{{ common_check_excluder }}"
+  'v3.10': "{{ common_check_excluder }},docker_image_availability"
+  'v3.7': "{{ common_check_excluder }}"

@@ -9,8 +9,6 @@
     security_group_type: ocp3
     additional_tags: "{{ aws_tags }}"
     sec_group_additional_tags: "{{ aws_tags }}"
-    volume_additional_tags: "{{ aws_tags }}"
-    ec2_volume_size: 250
 
 - name: Get AWS EC2 instance ip
   include_role:

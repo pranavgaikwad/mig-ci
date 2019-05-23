@@ -1,0 +1,8 @@
+- name: Deploy mig controller and ui
+  command: "{{ mig_controller_location }}/hack/deploy/deploy_mig.sh"
+  register: deploy
+
+- debug:
+    var: deploy.stdout_lines
+
+- include: check.yml

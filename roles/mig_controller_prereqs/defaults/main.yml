@@ -1,0 +1,4 @@
+---
+mig_controller_location: "{{ workspace }}/mig-controller"
+mig_controller_namespace: "mig"
+mig_controller_sa_name: "mig"

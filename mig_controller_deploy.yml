@@ -1,0 +1,6 @@
+- hosts: localhost
+  roles:
+    - mig_controller_prereqs
+    - mig_controller_deploy
+  vars_files:
+    - "{{ playbook_dir }}/config/defaults.yml"

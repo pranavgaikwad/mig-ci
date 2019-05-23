@@ -10,7 +10,7 @@
   block:
 
     - name: Extract SA token
-      shell: "{{ oc_binary_location }}/oc sa get-token -n {{ mig_controller_namespace }} {{ mig_controller_sa_name }} | base64 -w 0"
+      shell: "{{ oc_binary }} sa get-token -n {{ mig_controller_namespace }} {{ mig_controller_sa_name }} | base64 -w 0"
       register: oc_sa_output
 
     - set_fact:
@@ -20,7 +20,7 @@
      # Current context always returns only one entry 
 
     - name: Extract cluster URL from current context
-      shell: "{{ oc_binary_location }}/oc  project | sed 's/.*\\(https:\\)/\\1/' | cut -d \\\" -f1"
+      shell: "{{ oc_binary }} project | sed 's/.*\\(https:\\)/\\1/' | cut -d \\\" -f1"
       register: oc_config_output
      
     - set_fact:

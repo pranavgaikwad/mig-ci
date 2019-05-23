@@ -88,8 +88,7 @@
 - name: Clone the mig-ci repo
   git:
     dest: "/var/tmp/mig-ci"
-    repo: https://github.com/Danil-Grigorev/mig-ci.git
-    version: get-ip-fix
+    repo: https://github.com/fusor/mig-ci.git
     force: true
 
 - name: Clone the openshift-ansible repo

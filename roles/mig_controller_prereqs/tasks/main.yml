@@ -25,7 +25,7 @@
      # Current context always returns only one entry 
 
     - name: Extract cluster URL from current context
-      shell: "{{ oc_binary_location }}/oc config current-context | cut -d / -f2"
+      shell: "{{ oc_binary_location }}/oc  project | sed 's/.*\\(https:\\)/\\1/' | cut -d \\\" -f1"
       register: oc_config_output
      
     - set_fact:

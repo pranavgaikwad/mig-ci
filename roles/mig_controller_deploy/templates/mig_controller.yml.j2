@@ -1,6 +1,6 @@
 mig_controller_remote_cluster_url: {{ dest_cluster_url }}
-mig_controller_aws_access_key: {{ velero_aws_access_key }}
-mig_controller_aws_secret_key: {{ velero_aws_secret_key }}
+mig_controller_aws_access_key: {{ velero_aws_access_key | b64encode }}
+mig_controller_aws_secret_key: {{ velero_aws_secret_key | b64encode }}
 mig_controller_aws_bucket_name: {{ velero_aws_bucket_name }}
 mig_controller_aws_bucket_region: {{ ec2_region }}
 mig_controller_sa_token: {{ sa_token }}

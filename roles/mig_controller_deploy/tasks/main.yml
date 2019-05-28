@@ -9,6 +9,7 @@
 
 - name: Deploy mig controller
   import_tasks: deploy.yml
+  when: with_controller
 
 - name: Process mig controller deployment summary
   import_tasks: summary.yml

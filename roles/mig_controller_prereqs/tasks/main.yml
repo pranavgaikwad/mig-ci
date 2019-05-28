@@ -1,38 +1,13 @@
 ---
-- name: Logging to OCP4 and saving credentials
-  include_role:
-    name: login_ocp
-  vars:
-    source_kubeconfig: "{{ playbook_dir }}/auth/kubeconfig"
-    target_kubeconfig: "{{ ocp4_kubeconfig }}"
 
-- name: Start remote cluster tasks
-  block:
+- name: Create AWS backup storage
+  import_tasks: create_aws_backup_storage.yml
 
-    - name: Create mig controller SA and role binding on remote cluster
-      k8s:
-        state: present
-        definition: "{{ lookup('template', 'mig_controller_sa.yml.j2') }}"
+- name: Apply velero OCP3 fixes
+  import_tasks: apply_ocp3_fixes.yml
 
-    - name: Extract SA token
-      shell: "{{ oc_binary_location }}/oc sa get-token -n {{ mig_controller_namespace }} {{ mig_controller_sa_name }} | base64 -w 0"
-      register: oc_sa_output
+- name: Deploy velero
+  import_tasks: deploy_velero.yml
 
-    - set_fact:
-        sa_token: "{{ oc_sa_output.stdout }}"
-
-     # Fix me: need to find a better way to obtain the master API url from k8s_facts
-     # Current context always returns only one entry 
-
-    - name: Extract cluster URL from current context
-      shell: "{{ oc_binary_location }}/oc  project | sed 's/.*\\(https:\\)/\\1/' | cut -d \\\" -f1"
-      register: oc_config_output
-     
-    - set_fact:
-       dest_cluster_url: "{{ oc_config_output.stdout }}"
-
-    - debug:
-        msg: "Destination cluster URL set to: {{ dest_cluster_url }}"
-
-  environment:
-    KUBECONFIG: "{{ ocp4_kubeconfig }}"
+- name: Prepare remote cluster
+  import_tasks: prepare_remote_cluster.yml

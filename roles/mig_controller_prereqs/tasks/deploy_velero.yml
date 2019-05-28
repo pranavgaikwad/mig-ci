@@ -1,0 +1,37 @@
+- name: Deploy velero
+  command: "{{ mig_controller_location }}/hack/deploy/deploy_velero.sh"
+  register: deploy
+
+- debug:
+    var: deploy.stdout_lines
+
+- name: Check status of velero deployment
+  k8s_facts:
+    kind: Deployment
+    api_version: extensions/v1beta1
+    namespace: velero
+    name: velero
+    label_selectors: "component=velero"
+  register: deploy
+  until:  deploy.get("resources", [])
+          and deploy.resources[0].get("spec", {}).get("replicas", -1) == deploy.resources[0].get("status", {}).get("availableReplicas", 0)
+  retries: 60
+  delay: 5
+
+# Fix me: reconfigure when we move to OA based installations
+- name: Fix restic pod dir mount for oc cluster up install
+  shell: "{{ oc_binary_location }}/oc set volume -n velero ds/restic --add --name=host-pods --path /tmp/openshift.local.clusterup/openshift.local.volumes/pods --overwrite"
+  when: cluster_version == '3'
+
+- name: Check status of restic deployment
+  k8s_facts:
+    kind: DaemonSet
+    api_version: extensions/v1beta1
+    namespace: velero
+    name: restic
+    label_selectors: "name=restic"
+  register: dset
+  until: dset.get("resources", [])
+         and dset.resources[0].get("status", {}).get("desiredNumberScheduled", -1) == dset.resources[0].get("status", {}).get("numberReady", 0)
+  retries: 60
+  delay: 5

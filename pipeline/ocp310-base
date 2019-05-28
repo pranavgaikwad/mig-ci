@@ -46,7 +46,6 @@ node {
                 sh 'rm -f overrides.yml'
                 def overrides = ['ec2_key': "$EC2_KEY",
                     'ec2_private_key_file': "$KEYS_DIR/$EC2_PRIVATE_KEY_FILE",
-                    'ec2_region': "$EC2_REGION",
                     'ec2_instance_type': "$EC2_INSTANCE_TYPE",
                     'ec2_repo_create': false,
                     'openshift_setup_client_version': "$OPENSHIFT_VERSION",
@@ -65,7 +64,8 @@ node {
         stage('Deploy OCP3') {
             withCredentials([
                 string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-                string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
+                string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY'),
+                string(credentialsId: "$EC2_REGION", variable: 'AWS_REGION')
                 ]) 
             {
                 dir('origin3-dev') {
@@ -121,7 +121,8 @@ node {
                 
                 	withCredentials([
                     		string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-				string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
+                            string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY'),
+                            string(credentialsId: "$EC2_REGION", variable: 'AWS_REGION')
                     	]) 
                 {
                     dir('origin3-dev') {

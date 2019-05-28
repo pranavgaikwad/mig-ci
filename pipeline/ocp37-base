@@ -64,8 +64,7 @@ node {
         stage('Deploy OCP3') {
             withCredentials([
                 string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-                string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY'),
-                string(credentialsId: "$EC2_REGION", variable: 'AWS_REGION')
+                string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
                 ]) 
             {
                 dir('origin3-dev') {
@@ -121,8 +120,7 @@ node {
                 
                 	withCredentials([
                     		string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-                            string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY'),
-                            string(credentialsId: "$EC2_REGION", variable: 'AWS_REGION')
+                            string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
                     	]) 
                 {
                     dir('origin3-dev') {

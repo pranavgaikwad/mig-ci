@@ -1,5 +1,1 @@
-- import_tasks: install_oc_binary.yml
-  tags: install_oc_binary
-
 - import_tasks: ocp4_prereqs.yml
-  tags: ocp4_prereqs

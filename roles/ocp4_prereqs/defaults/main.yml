@@ -1,8 +1,10 @@
 ---
-api_version: v1beta3
+api_version: v1
 base_domain: mg.dog8code.com # Default mg.dog8code.com
+network_type: OpenShiftSDN # Default is OpenShiftSDN
 master_replicas: 1 # Default 1
 worker_replicas: 1 # Default 1
+
 generate_config: true
-pull_secret: "{{ lookup('file', '{{ playbook_dir }}/config/pull-secret') | from_json }}"
-ssh_key: "{{ lookup('file', '{{ playbook_dir }}/config/ci.pub')  }}"
+pull_secret: "{{ lookup('file', '{{ workspace }}/keys/pull-secret') | from_json }}"
+ssh_key: "{{ lookup('file', '{{ workspace }}/keys/{{ ec2_key }}.pub') }}"

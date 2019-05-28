@@ -1,6 +1,7 @@
 ---
 - name: get installer
-  get_url:
-    url: "{{ openshift_installer_release_url }}"
-    dest: "{{ playbook_dir }}/openshift-install"
+  unarchive:
+    src: "{{ openshift_installer_release_url }}"
+    dest: "{{ playbook_dir }}"
     mode: 0775
+    remote_src: true

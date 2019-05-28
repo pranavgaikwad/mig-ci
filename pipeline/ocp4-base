@@ -7,7 +7,7 @@ credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringC
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_aws_secret_access_key', description: 'EC2 private key needed to access instances, from Jenkins credentials store', name: 'EC2_SECRET_ACCESS_KEY', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl', defaultValue: 'ci_pull_secret', description: 'Pull secret needed for OCP4 deployments', name: 'OCP4_PULL_SECRET', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl', defaultValue: 'ci_pub_key', description: 'EC2 public key needed for OCP4 instances', name: 'EC2_PUB_KEY', required: true),
-string(defaultValue: 'ci.pub', description: 'EC2 SSH public key filename to access instances', name: 'EC2_PUBLIC_KEY_FILE', trim: false),
+string(defaultValue: 'ci', description: 'EC2 SSH key name to deploy on instances for remote access ', name: 'EC2_KEY', trim: false),
 string(defaultValue: 'us-east-2', description: 'EC2 region to deploy instances', name: 'EC2_REGION', trim: false),
 string(defaultValue: 'https://github.com/fusor/mig-ci.git', description: 'MIG CI repo URL to checkout', name: 'MIG_CI_REPO', trim: false),
 string(defaultValue: 'master', description: 'MIG CI repo branch to checkout', name: 'MIG_CI_BRANCH', trim: false),
@@ -36,16 +36,14 @@ node {
             KEYS_DIR = "${env.WORKSPACE}" + '/keys'
             sh "mkdir -p ${KEYS_DIR}"
 
-            dir('mig-ci') {
-                // Prepare pull secret
-                withCredentials([file(credentialsId: "$OCP4_PULL_SECRET", variable: "PULL_SECRET")]) {
-                    sh 'cat ${PULL_SECRET} > config/pull-secret'
-                }
-                
-                // Prepare EC2 pub key for ansible consumption
-                withCredentials([file(credentialsId: "$EC2_PUB_KEY", variable: "SSH_PUB_KEY")]) {
-                    sh "cat ${SSH_PUB_KEY} > config/${EC2_PUBLIC_KEY_FILE}"
-                }
+            // Prepare pull secret
+            withCredentials([file(credentialsId: "$OCP4_PULL_SECRET", variable: "PULL_SECRET")]) {
+                sh "cat ${PULL_SECRET} > ${KEYS_DIR}/pull-secret"
+            }
+            
+            // Prepare EC2 pub key for ansible consumption
+            withCredentials([file(credentialsId: "$EC2_PUB_KEY", variable: "SSH_PUB_KEY")]) {
+                sh "cat ${SSH_PUB_KEY} > ${KEYS_DIR}/${EC2_KEY}.pub"
             }
         }
         

@@ -22,8 +22,11 @@
     host: "{{ ec2_instance_ip }}"
     port: 22
     search_regex: OpenSSH
-    delay: 10
-    timeout: 900
+    delay: 20
+    timeout: 300
+  register: result
+  until: result is succeeded
+  retries: 5
 
 - debug:
     var: ec2_instance_ip

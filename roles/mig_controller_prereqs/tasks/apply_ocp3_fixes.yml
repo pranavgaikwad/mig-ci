@@ -10,10 +10,8 @@
     - name: Get instance info
       local_action:
         module: ec2_instance_facts
-        region: "{{ ec2_region }}"
         filters:
           "tag:Name": "{{ ansible_user }}-origin3-dev"
-          "tag:creator_arn": "{{ caller_facts.arn }}"
       register: ec2_instance
 
     - name: Extract public ip

@@ -1,0 +1,16 @@
+- hosts: localhost
+  tasks:
+    - set_fact:
+        inventory: "{{ lookup('file', '/var/tmp/master-hosts') | from_yaml }}"
+
+    - add_host:
+        hostname: "{{ inventory.host_name }}"
+        groups: "{{ inventory.groups }}"
+      args: "{{ inventory.host_vars }}"
+      register: inv
+
+    - debug:
+        var: inv
+
+- name: Run the openshift-ansible deployment
+  import_playbook: "/var/tmp/openshift-ansible/playbooks/byo/config.yml"

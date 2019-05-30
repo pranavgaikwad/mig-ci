@@ -1,13 +1,15 @@
 - name: Get AWS account information
-  aws_caller_facts:
+  local_action:
+    module: aws_caller_facts
   register: caller_facts
 
+- set_fact:
+    aws_resource_tag: "{{ prefix + instance_name + caller_facts.arn | hash('md5') }}"
+
 - ec2_instance_facts:
-      region: "{{ ec2_region }}"
-      filters:
-        "tag:Name": "{{ ansible_user }}-{{ instance_name }}"
-        "tag:creator_arn": "{{ caller_facts.arn }}"
-        "tag:user": "{{ ansible_user }}"
+    filters:
+      "tag:Name": "{{ prefix }}-{{ instance_name }}"
+      "tag:creator": "{{ aws_resource_tag }}"
   register: ec2_metadata
 
 - set_fact:
@@ -22,4 +24,5 @@
     module: ec2
     instance_ids: "{{ instances }}"
     state: absent
-    region: "{{ ec2_region }}"
+    wait: yes
+

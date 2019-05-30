@@ -16,7 +16,6 @@
     state: absent
     force: true
     name: "{{ aws_resource_name }}"
-    region: "{{ ec2_region }}"
     tags:
       owner: "{{ aws_account_arn }}"
 

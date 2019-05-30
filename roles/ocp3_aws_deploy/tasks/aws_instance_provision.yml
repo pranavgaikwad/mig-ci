@@ -1,3 +1,6 @@
+- set_fact:
+    rand_id: "{{ 100000 | random }}"
+
 - name: Provision an AWS EC2 instance
   include_role:
     name: ec2_provision
@@ -5,10 +8,11 @@
   vars:
     instance_name: "{{ aws_name_suffix }}"
     instance_type: m4.xlarge
-    rhel_version: '7.5'
-    security_group_type: ocp3
+    security_group_type: oa
     additional_tags: "{{ aws_tags }}"
     sec_group_additional_tags: "{{ aws_tags }}"
+    ec2_volume_size: 100
+    volume_additional_tags: "{{ aws_tags }}"
 
 - name: Get AWS EC2 instance ip
   include_role:
@@ -24,3 +28,19 @@
     ansible_user: ec2-user
     ansible_ssh_private_key_file: "{{ ec2_private_key_file }}"
     ansible_become: yes
+
+- block:
+  - name: Check if cluster id was set
+    stat:
+      path: "/var/tmp/clusterid"
+    register: id_file
+
+  - name: Copy the cluster id to master instance
+    copy:
+      content: "{{ rand_id }}"
+      dest: "/var/tmp/clusterid"
+    when: not id_file.stat.exists
+
+  - name: Add SSH key to known hosts
+    shell: "ssh-keyscan {{ ec2_instance_ip }} >> ~/.ssh/known_hosts"
+  delegate_to: "{{ ec2_instance_ip }}"

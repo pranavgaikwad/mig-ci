@@ -8,35 +8,6 @@
 - hosts: aws
   roles:
     - ocp3_aws_provision
-  vars:
-    pre_deploy: true
-  vars_files:
-    - "{{ playbook_dir }}/config/defaults.yml"
-
-- name: Run the openshift-ansible prerequisites for OCP-3.9-3.11
-  import_playbook: "{{ lookup('env', 'WORKSPACE') or '../'}}/openshift-ansible/playbooks/prerequisites.yml"
-  vars:
-    ocp: "{{ lookup('env', 'OPENSHIFT_VERSION') or 'v3.11' }}"
-  when: ocp != "v3.7"
-
-- name: Run the openshift-ansible deployment for OCP-3.9-3.11
-  import_playbook: "{{ lookup('env', 'WORKSPACE') or '../'}}/openshift-ansible/playbooks/deploy_cluster.yml"
-  vars:
-    ocp: "{{ lookup('env', 'OPENSHIFT_VERSION') or 'v3.11' }}"
-  when: ocp != "v3.7"
-
-- name: Run the openshift-ansible deployment for OCP-3.7
-  import_playbook: "{{ lookup('env', 'WORKSPACE') or '../'}}/openshift-ansible/playbooks/byo/config.yml"
-  vars:
-    ocp: "{{ lookup('env', 'OPENSHIFT_VERSION') or 'v3.11' }}"
-  when: ocp == "v3.7"
-
-# Post tasks
-- hosts: aws
-  roles:
-    - ocp3_aws_provision
-  vars:
-    post_deploy: true
   vars_files:
     - "{{ playbook_dir }}/config/defaults.yml"
   become: true

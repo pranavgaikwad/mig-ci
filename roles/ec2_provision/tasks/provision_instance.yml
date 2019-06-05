@@ -3,14 +3,15 @@
     module: aws_caller_facts
   register: caller_facts
 
+- set_fact:
+    aws_resource_tag: "{{ prefix + instance_name + caller_facts.arn | hash('md5') }}"
+
 - name: Check if selected instance already exists
   local_action:
     module: ec2_instance_facts
-    region: "{{ ec2_region }}"
     filters:
-      "tag:Name": "{{ ansible_user }}-{{ instance_name }}"
-      "tag:creator_arn": "{{ caller_facts.arn }}"
-      "tag:user": "{{ ansible_user }}"
+      "tag:Name": "{{ prefix }}-{{ instance_name }}"
+      "tag:creator": "{{ aws_resource_tag }}"
   register: ec2_instance
 
 - set_fact:
@@ -20,11 +21,10 @@
   block:
     - name: Create VPC
       ec2_vpc_net:
-        name: "{{ instance_name }}"
+        name: "{{ prefix }}-{{ instance_name }}"
         cidr_block: "{{ cidr }}"
-        region: "{{ ec2_region }}"
         tags:
-          creator: "{{ instance_name }}"
+          creator: "{{ aws_resource_tag }}"
       register: ec2_vpc
 
     - name: Create VPC subnet
@@ -32,25 +32,24 @@
         state: present
         vpc_id: "{{ ec2_vpc.vpc.id }}"
         cidr: "{{ subnet_cidr }}"
-        region: "{{ ec2_region }}"
         resource_tags:
-          creator: "{{ instance_name }}"
+          creator: "{{ aws_resource_tag }}"
       register: ec2_subnet
 
     - name: Create VPC Internet Gateway
       ec2_vpc_igw:
         vpc_id: "{{ ec2_vpc.vpc.id }}"
-        region: "{{ ec2_region }}"
         tags:
-          Name: "{{ instance_name }}"
+          Name: "{{ prefix }}-{{ instance_name }}"
+          creator: "{{ aws_resource_tag }}"
       register: ec2_igw
 
     - name: Create VPC Routing Table
       ec2_vpc_route_table:
         vpc_id: "{{ ec2_vpc.vpc.id }}"
-        region: "{{ ec2_region }}"
         tags:
-          Name: "{{ instance_name }}"
+          Name: "{{ prefix }}-{{ instance_name }}"
+          creator: "{{ aws_resource_tag }}"
         subnets:
         - "{{ ec2_subnet.subnet.id }}"
         routes:
@@ -63,22 +62,18 @@
     - name: Add additional tags to the Security Group
       block:
         - ec2_group_facts:
-            region: "{{ ec2_region }}"
             filters:
-              group-name: "{{ instance_name }}"
+              group-name: "{{ prefix }}-{{ instance_name }}"
           register: ec2_sec_gr
 
         - ec2_tag:
             resource: "{{ ec2_sec_gr.security_groups[0].group_id }}"
-            region: "{{ ec2_region }}"
             tags: "{{ sec_group_additional_tags }}"
-            purge_tags: true
       when: sec_group_additional_tags is defined
 
     - name: Find a Suitable AMI
       ec2_ami_facts:
         owners: 309956199498
-        region: "{{ ec2_region }}"
         filters:
           "name": "RHEL-{{ rhel_version }}_HVM_GA*"
       register: ami
@@ -88,44 +83,45 @@
 
     - set_fact:
         inst_tags:
-          creator_arn: "{{ caller_facts.arn }}"
-          user: "{{ ansible_user }}"
-          Name: "{{ ansible_user }}-{{ instance_name }}"
+          Name: "{{ prefix }}-{{ instance_name }}"
+          creator: "{{ aws_resource_tag }}"
 
     - set_fact:
         inst_tags: "{{ inst_tags | combine(additional_tags) }}"
       when: additional_tags is defined
 
+    - name: Prepare instance additional tags
+      set_fact:
+        volume_path: '/dev/sda1' # Default mount path for block storage
+        instance_args: {}
+
+    - set_fact:
+        instance_args:
+          volumes:
+          - device_name: "{{ volume_path }}"
+            volume_type: gp2
+            volume_size: "{{ ec2_volume_size }}"
+            delete_on_termination: true
+      when: ec2_volume_size is defined
+
     - name: Create Instance
       ec2:
         key_name: "{{ ec2_key }}"
         instance_type: "{{ instance_type }}"
-        group: "{{ instance_name }}"
+        group: "{{ prefix }}-{{ instance_name }}"
         image: "{{ suggested_ami }}"
         count: 1
-        region: "{{ ec2_region }}"
         vpc_subnet_id: "{{ ec2_subnet.subnet.id }}"
         assign_public_ip: yes
         instance_tags: "{{ inst_tags }}"
         wait: yes
+      args: "{{ instance_args }}"
       register: ec2_inst
-
-    - name: Create and attach volume
-      ec2_vol:
-        name: "{{ instance_name }}"
-        instance: "{{ ec2_inst.instances[0].id }}"
-        region: "{{ ec2_region }}"
-        volume_size: "{{ ec2_volume_size }}"
-        volume_type: gp2
-        delete_on_termination: true
-      register: ec2_volume
-      when: ec2_volume_size is defined
 
     - name: Add additional tags to a volume
       ec2_tag:
-        resource: "{{ ec2_volume.volume.id }}"
-        region: "{{ ec2_region }}"
+        resource: "{{ item.block_device_mapping[volume_path].volume_id }}"
         tags: "{{ volume_additional_tags }}"
-        purge_tags: false
       when: volume_additional_tags is defined
+      with_items: "{{ ec2_inst.instances }}"
   when: not ec2_created

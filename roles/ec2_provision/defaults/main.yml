@@ -4,3 +4,4 @@ instance_name: nfs-server
 security_group_type: nfs
 instance_type: m4.large
 rhel_version: '7.6'
+prefix: "{{ ansible_user }}"

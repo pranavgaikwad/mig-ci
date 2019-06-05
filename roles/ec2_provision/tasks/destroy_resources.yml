@@ -1,0 +1,49 @@
+- name: Get AWS account information
+  local_action:
+    module: aws_caller_facts
+  register: caller_facts
+
+- set_fact:
+    aws_resource_tag: "{{ prefix + instance_name + caller_facts.arn | hash('md5') }}"
+
+- ec2_vpc_net_facts:
+    filters:
+      "tag:creator": "{{ aws_resource_tag }}"
+  register: vpc
+
+- ec2_group_facts:
+    filters:
+      "tag:creator": "{{ aws_resource_tag }}"
+  register: sec_group
+
+- ec2_vpc_route_table_facts:
+    filters:
+      "vpc-id": "{{ vpc.vpcs[0].id }}"
+      "tag:creator": "{{ aws_resource_tag }}"
+  register: route
+
+- block:
+  - ec2_vpc_subnet:
+      state: absent
+      cidr: "{{ subnet_cidr }}"
+      vpc_id: "{{ vpc.vpcs[0].id }}"
+
+  - ec2_vpc_route_table:
+      state: absent
+      route_table_id: "{{ route.route_tables[0].id }}"
+      lookup: id
+
+  - ec2_vpc_igw:
+      state: absent
+      vpc_id: "{{ vpc.vpcs[0].id }}"
+
+  - ec2_group:
+      group_id: "{{ sec_group.security_groups[0].group_id }}"
+      state: absent
+
+  - ec2_vpc_net:
+      name: "{{ prefix }}-{{ instance_name }}"
+      cidr_block: "{{ cidr }}"
+      purge_cidrs: true
+      state: absent
+  delegate_to: localhost

@@ -1,0 +1,5 @@
+- include_role:
+    name: ec2_provision
+    tasks_from: destroy_resources
+  vars:
+    instance_name: "{{ aws_name_suffix }}"

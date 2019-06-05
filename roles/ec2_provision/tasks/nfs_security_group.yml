@@ -1,9 +1,10 @@
 - name: Create NFS instance security group
   ec2_group:
-    name: "{{ instance_name }}"
-    description: "{{ instance_name }}"
+    name: "{{ prefix }}-{{ instance_name }}"
+    description: "{{ instance_name }}-NFS-sg"
     vpc_id: "{{ ec2_vpc.vpc.id }}"
-    region: "{{ ec2_region }}"
+    tags:
+      creator: "{{ aws_resource_tag }}"
     rules_egress:
     - proto: "all"
       from_port: "0"

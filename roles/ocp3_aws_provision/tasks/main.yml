@@ -2,7 +2,7 @@
     file: "{{ playbook_dir }}/roles/ocp3_aws_deploy/defaults/main.yml"
 
 - include: pre_deploy.yml
-  when: pre_deploy | default(false) | bool  == true
+
+- include: deploy.yml
 
 - include: post_deploy.yml
-  when: post_deploy | default(false) | bool == true

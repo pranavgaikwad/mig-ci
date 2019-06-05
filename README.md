@@ -1,13 +1,9 @@
 
 # OCP MIG CI
 
-  
-
 ## Purpose
 
-  
-
-This repo contains ansible and CI related assets used for the OCP 3 to 4 migration project, the primary use case for these tools is to integrate with Jenkins and allow the creation of all necessary CI workflows. It will consist of several ansible playbooks, which will prepare a environment for migration purposes. This involves provisioning customer-like cluster deployments, and setup of the migration tools from [mig-controller](https://github.com/fusor/mig-controller).
+This repo contains ansible and CI related assets used for the OCP 3 to 4 migration project, the primary use case for these tools is to integrate with Jenkins and allow the creation of all necessary CI workflows. It will consist of several ansible playbooks, which will prepare a environment for migration purposes. This involves provisioning customer-like cluster deployments with [OA installer](https://github.com/openshift/openshift-ansible), and setup of the migration tools from [mig-controller](https://github.com/fusor/mig-controller).
 
 ## External NFS server setup on AWS
 
@@ -25,37 +21,44 @@ When you are finished, just run the playbook to destroy NFS AWS instance:
 
 Functionality of this tool is tested with both [all-in-one](https://github.com/fusor/mig-ci#ocp3-all-in-one-deployment-on-aws) AWS deployment, and [origin3-dev](https://github.com/fusor/origin3-dev/).
 
+## Migration controller CI deployment
+
+Source: https://github.com/fusor/mig-controller
+
+(TODO)
+
 ## OCP3 all-in-one deployment on AWS
 
 In order to execute an all-in-one deployment, firstly you should specify several environment variables.
 
 Customer environment is expected to be based on RHEL distributions. By default the RHEL 7 does not have an access to the [official OpenShift bits](https://docs.openshift.com/enterprise/3.0/install_config/install/prerequisites.html#software-prerequisites) for the OA deployment, so you need to setup a valid account with those subscriptions by following variables:
 
-- `SUB_USER` - redhat subscription username for account, which have access to the openshift bits.
+Task specific:
+
+- `AWS_ACCESS_KEY_ID` - AWS access key id for AWS deployment.
+
+- `AWS_SECRET_ACCESS_KEY` - secret, used for AWS deployment.
+
+- `SUB_USER` - redhat subscription username for account, which have access to the openshift bits. Allows to setup an `enterprise` and `origin` OA deployment.
 
 - `SUB_PASS` - password for the redhat subscriprion account.
-
-Task specific:
 
 - `OPENSHIFT_VERSION` - verison of cluster to be provisioned. Should be specified as 'v3\.[0-9]+'. If not set, will be used 'v3.11'.
 
 - `WORKSPACE` - from [other variables](https://github.com/fusor/mig-ci#list-of-other-environment-variables). You should create a directory `$WORKSPACE/keys` and place there your AWS ssh private key, which will be supplied to the newly created instance. The name of the key is captured from `$EC2_KEY`.
-  - The result ssh private key file will should be discoverable in `${WORKSPACE}/keys/${EC2_KEY}.pem`
+  - The result ssh private key file will should be discoverable in `${WORKSPACE}/keys/${EC2_KEY}.pem`. You can use it after that, to access the instance via ssh.
 
-Steps to reproduce the deployment:
+Deployment steps:
 
-* Setup all of the [environment variables](https://github.com/fusor/mig-ci#list-of-other-environment-variables), including specific for this task, mentioned in the previous paragraph.
+- Setup all of the [environment variables](https://github.com/fusor/mig-ci#list-of-other-environment-variables), including specific for this task, mentioned in the previous paragraph.
 
-* Get the `openshift-ansible` repo by executing:
-  - `ansible-playbook get_ocp3_oa.yml`.
-  This playbook will clone the repo into the `$WORKSPACE/openshift-ansible` directory, and checkout the selected OA release from 3.7 to 3.11. The version of the cluster is fetched from `$OPENSHIFT_VERSION` variable.
+- To deploy an OA `ansible-playbook deploy_ocp3_cluster.yml -e prefix=name_for_instance`. You can specify deployment type with `-e deployment_type=openshift-enterprise/origin`. Default is the enterprise one. When prefix is not specified, you `ansible_user` variable will be used.
 
-* Deploy the EC2 instance and the all-in-one configuration by running:
-  - `ansible-playbook deploy_ocp3_cluster.yml`.
+If you want to select the downstream version of openshift, you can add `-e deployment_type=origin` tag to previous step.
 
-If you decide to destroy the EC2 instance, then run:
-  - `ansible-playbook destroy_ocp3_cluster.yml`.
+- To destroy the instance and all attached resources `ansible-playbook destroy_ocp3_cluster.yml -e prefix=name_for_instance`.
 
+Deployment usually takes around 40-80 minutes to complete. Logs are written in `$WORKSPACE/.install.log` file upon completion.
 
 ## List of other environment variables:
 

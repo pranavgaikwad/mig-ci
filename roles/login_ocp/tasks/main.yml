@@ -3,6 +3,8 @@
 
 - import_tasks: download_oc_binary.yml
 
+- import_tasks: pre_login.yml
+
 - name: Check the status of the session
   shell: "{{ oc_binary }} whoami"
   register: oc_status

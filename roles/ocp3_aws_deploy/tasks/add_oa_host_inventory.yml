@@ -41,7 +41,7 @@
 
         os_sdn_network_plugin_name: "{{ network_plugin }}"
         ansible_service_broker_install: false
-        openshift_deployment_type: "{{ deployment_type }}"
+        openshift_deployment_type: "{{ oa_deployment_type }}"
         openshift_disable_check: "{{ common_check_excluder }}"
         openshift_public_hostname: "{{ ec2_instance_ip }}.xip.io"
         openshift_public_ip: "{{ ec2_instance_ip }}"
@@ -53,9 +53,9 @@
             challenge: true
             kind: AllowAllPasswordIdentityProvider
         openshift_schedulable: true
-        openshift_release: "{{ ocp_release[ocp_version] }}"
+        openshift_release: "{{ ocp_release[ocp3_version] }}"
         openshift_portal_net: 172.30.0.0/16
-        docker_version: "{{ docker_versions[ocp_version] }}"
+        docker_version: "{{ docker_versions[ocp3_version] }}"
 
   - set_fact:
       h_vars: "{{ h_vars | combine(ocp_additional_tags) }}"
@@ -65,10 +65,6 @@
         host_name: "{{ host }}"
         groups: "{{ h_groups }}"
         host_vars: "{{ h_vars }}"
-
-  - debug:
-      var: master_hosts
-
 
   - name: Copy the inventory to master node
     copy:

@@ -1,16 +1,16 @@
-# - hosts: localhost
-#   roles:
-#     - ocp3_aws_deploy
-#   vars_files:
-#     - "{{ playbook_dir }}/config/defaults.yml"
+- hosts: localhost
+  roles:
+    - ocp3_aws_deploy
+  vars_files:
+    - "{{ playbook_dir }}/config/defaults.yml"
 
-# # AWS group is created in previous role
-# - hosts: aws
-#   roles:
-#     - ocp3_aws_provision
-#   vars_files:
-#     - "{{ playbook_dir }}/config/defaults.yml"
-#   become: true
+# AWS group is created in previous role
+- hosts: aws
+  roles:
+    - ocp3_aws_provision
+  vars_files:
+    - "{{ playbook_dir }}/config/defaults.yml"
+  become: true
 
 - hosts: localhost
   tasks:

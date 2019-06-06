@@ -12,17 +12,19 @@
       "tag:creator": "{{ aws_resource_tag }}"
   register: ec2_metadata
 
-- set_fact:
-    instances: "{{ ec2_metadata.instances | map(attribute='instance_id') | list }}"
+- block:
+  - set_fact:
+      instances: "{{ ec2_metadata.instances | map(attribute='instance_id') | list }}"
 
-- debug:
-    msg:
-    - "These instances will be terminated"
-    - "{{ instances }}"
+  - debug:
+      msg:
+      - "These instances will be terminated"
+      - "{{ instances }}"
 
-- local_action:
-    module: ec2
-    instance_ids: "{{ instances }}"
-    state: absent
-    wait: yes
+  - local_action:
+      module: ec2
+      instance_ids: "{{ instances }}"
+      state: absent
+      wait: yes
+  ignore_errors: true
 

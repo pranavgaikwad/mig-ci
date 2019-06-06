@@ -9,11 +9,6 @@ force_login: False # Login into cluster anyway with provided credentials
 source_kubeconfig: "{{ default_kubeconfig }}"
 target_kubeconfig: "{{ default_kubeconfig }}"
 
-kubeconfig_content: "{{ lookup('file', source_kubeconfig) | from_yaml }}"
-current_context: "{{ kubeconfig_content['current-context'].split('/')[1] | replace('-', '.') }}"
-server_addr: "{{ lookup('file', source_kubeconfig) | regex_search(' +server:.*' + current_context) }}"
-kubeconfig_addr: "{{ server_addr | regex_replace('^ *server: *(.*)$', '\\1') }}"
-
 # Download section
 system_types:
   "Darwin": "mac"

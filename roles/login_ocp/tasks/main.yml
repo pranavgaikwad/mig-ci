@@ -3,16 +3,6 @@
 
 - import_tasks: download_oc_binary.yml
 
-- import_tasks: pre_login.yml
-
-- name: Check the status of the session
-  shell: "{{ oc_binary }} whoami"
-  register: oc_status
-  environment:
-    KUBECONFIG: "{{ source_kubeconfig }}"
-  ignore_errors: true
-
 - import_tasks: login.yml
-  when: oc_status is failed or oc_status.rc != 0 or force_login == True
 
 - import_tasks: copy_kubeconfig.yml

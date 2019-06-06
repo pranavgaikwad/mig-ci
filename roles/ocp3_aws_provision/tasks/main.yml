@@ -1,4 +1,7 @@
 - include_vars:
+    file: "{{ playbook_dir }}/config/defaults.yml"
+
+- include_vars:
     file: "{{ playbook_dir }}/roles/ocp3_aws_deploy/defaults/main.yml"
 
 - include: pre_deploy.yml

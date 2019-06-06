@@ -1,8 +1,23 @@
-- name: Login to cluster
-  shell: "{{ oc_binary }} login -u {{ user }} -p {{ passwd }} {{ console_addr }} --insecure-skip-tls-verify=true"
-  register: login
-  retries: 10
-  delay: 6
-  until: login.rc == 0
+- name: Check the status of the session
+  shell: "{{ oc_binary }} whoami"
+  register: oc_status
   environment:
     KUBECONFIG: "{{ source_kubeconfig }}"
+  ignore_errors: true
+
+- block:
+  - assert:
+      that: console_addr != ''
+
+  - debug:
+      msg: "Logging into cluster: '{{ console_addr }} as user '{{ user }}', with '{{ passwd }}' password."
+
+  - name: Login to cluster
+    shell: "{{ oc_binary }} login -u {{ user }} -p {{ passwd }} {{ console_addr }} --insecure-skip-tls-verify=true"
+    register: login
+    retries: 10
+    delay: 6
+    until: login.rc == 0
+    environment:
+      KUBECONFIG: "{{ source_kubeconfig }}"
+  when: oc_status is failed or oc_status.rc != 0 or force_login == True

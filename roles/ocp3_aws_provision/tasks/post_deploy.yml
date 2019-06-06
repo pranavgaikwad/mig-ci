@@ -7,7 +7,3 @@
     - "Console address https://{{ inventory_hostname }}.xip.io:8443/console"
     - 'User: admin, Password: admin'
     - "You can login with 'oc login -u admin -p admin https://{{ inventory_hostname }}.xip.io:8443 --insecure-skip-tls-verify=true'"
-
-- name: Login to cluster
-  delegate_to: localhost
-  command: "{{ oc_binary_location }}/oc login -u admin -p admin https://{{ inventory_hostname }}.xip.io:8443 --insecure-skip-tls-verify=true"

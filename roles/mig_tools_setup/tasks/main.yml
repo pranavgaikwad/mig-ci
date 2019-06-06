@@ -21,10 +21,9 @@
       include_role:
         name: login_ocp
       vars:
-        login: false # origin3-dev already logged in 
         source_kubeconfig: "{{ ansible_env.KUBECONFIG }}"
         target_kubeconfig: "{{ ocp3_kubeconfig }}"
-  
+
     - import_tasks: launch_velero.yml
       vars:
         state: present

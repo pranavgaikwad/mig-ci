@@ -1,8 +1,5 @@
-- debug:
-    msg: "Logging into cluster using KUBECONFIG: {{ source_kubeconfig }}"
-
-- name: login to cluster
-  shell: "{{ oc_binary_location }}/oc login -u {{ user }} -p {{ pass }} --insecure-skip-tls-verify=true"
+- name: Login to cluster
+  shell: "{{ oc_binary }} login -u {{ user }} -p {{ passwd }} {{ console_addr }} --insecure-skip-tls-verify=true"
   register: login
   retries: 10
   delay: 6

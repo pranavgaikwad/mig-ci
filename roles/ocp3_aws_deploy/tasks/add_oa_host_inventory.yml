@@ -20,47 +20,55 @@
       fail_msg: AWS deployment needs to have SUB_USER and SUB_PASS set in the env.
 
   - name: Add openshift all-in-one inventory to master node
-    add_host:
-      name: localhost
-      groups:
+    set_fact:
+      host: localhost
+      h_groups:
         - OSEv3
         - masters
         - nodes
         - etcd
-      ansible_connection: local
-      ansible_become: yes
-      ansible_user: ec2-user
-      ansible_ssh_private_key_file: "{{ ssh_private_key }}"
+      h_vars:
+        ansible_connection: local
+        ansible_become: yes
+        ansible_user: ec2-user
+        ansible_ssh_private_key_file: "{{ ssh_private_key }}"
 
-      # AWS provider setup
-      openshift_cloudprovider_kind: aws
-      openshift_clusterid: "{{ clusterid.stdout }}"
-      openshift_cloudprovider_aws_access_key: "{{ aws_access_key_id }}"
-      openshift_cloudprovider_aws_secret_key: "{{ aws_secret_access_key }}"
+        # AWS provider setup
+        openshift_cloudprovider_kind: aws
+        openshift_clusterid: "{{ clusterid.stdout }}"
+        openshift_cloudprovider_aws_access_key: "{{ aws_access_key_id }}"
+        openshift_cloudprovider_aws_secret_key: "{{ aws_secret_access_key }}"
 
-      os_sdn_network_plugin_name: "{{ network_plugin }}"
-      ansible_service_broker_install: false
-      openshift_deployment_type: "{{ deployment_type }}"
-      openshift_disable_check: "{{ common_check_excluder }}"
-      openshift_public_hostname: "{{ ec2_instance_ip }}.xip.io"
-      openshift_public_ip: "{{ ec2_instance_ip }}"
-      openshift_master_cluster_public_hostname: "{{ ec2_instance_ip }}.xip.io"
-      openshift_master_default_subdomain: "apps.{{ ec2_instance_ip }}.xip.io"
-      openshift_master_identity_providers:
-        - name: allow_all
-          login: true
-          challenge: true
-          kind: AllowAllPasswordIdentityProvider
-      openshift_schedulable: true
-      openshift_release: "{{ ocp_release[ocp_version] }}"
-      openshift_portal_net: 172.30.0.0/16
-      docker_version: "{{ docker_versions[ocp_version] }}"
-    register: out
-    args: "{{ ocp_additional_tags }}"
+        os_sdn_network_plugin_name: "{{ network_plugin }}"
+        ansible_service_broker_install: false
+        openshift_deployment_type: "{{ oa_deployment_type }}"
+        openshift_disable_check: "{{ common_check_excluder }}"
+        openshift_public_hostname: "{{ ec2_instance_ip }}.xip.io"
+        openshift_public_ip: "{{ ec2_instance_ip }}"
+        openshift_master_cluster_public_hostname: "{{ ec2_instance_ip }}.xip.io"
+        openshift_master_default_subdomain: "apps.{{ ec2_instance_ip }}.xip.io"
+        openshift_master_identity_providers:
+          - name: allow_all
+            login: true
+            challenge: true
+            kind: AllowAllPasswordIdentityProvider
+        openshift_schedulable: true
+        openshift_release: "{{ ocp_release[ocp3_version] }}"
+        openshift_portal_net: 172.30.0.0/16
+        docker_version: "{{ docker_versions[ocp3_version] }}"
+
+  - set_fact:
+      h_vars: "{{ h_vars | combine(ocp_additional_tags) }}"
+
+  - set_fact:
+      master_hosts:
+        host_name: "{{ host }}"
+        groups: "{{ h_groups }}"
+        host_vars: "{{ h_vars }}"
 
   - name: Copy the inventory to master node
     copy:
-      content: "{{ out.add_host }}"
+      content: "{{ master_hosts }}"
       dest: "/var/tmp/master-hosts"
       remote_src: true
   delegate_to: "{{ ec2_instance_ip }}"

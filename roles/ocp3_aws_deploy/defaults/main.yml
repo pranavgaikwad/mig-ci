@@ -1,4 +1,3 @@
-ocp_version: "{{ lookup('env', 'OPENSHIFT_VERSION') or 'v3.11' }}"
 ocp_release:
   'v3.11': '3.11'
   'v3.10': '3.10'
@@ -9,8 +8,8 @@ ansible_rpms:
   'v3.10': '2.4'
   'v3.9': '2.4'
   'v3.7': '2.4'
-ansible_rpm: "{{ ansible_rpms[ocp_version] }}"
-aws_name_suffix: "aws-ocp-{{ ocp_version }}"
+ansible_rpm: "{{ ansible_rpms[ocp3_version] }}"
+aws_name_suffix: "aws-ocp-{{ ocp3_version }}"
 sub_user: "{{ lookup('env', 'SUB_USER') or 'undefined' }}"
 sub_pass: "{{ lookup('env', 'SUB_PASS') or 'undefined' }}"
 aws_tags: "{{ {'kubernetes.io/cluster/' ~ rand_id: 'owned', 'clusterid': rand_id } }}"
@@ -46,13 +45,13 @@ deployment_specific_tags:
   'openshift-enterprise':
     oreg_auth_user: "{{ sub_user }}"
     oreg_auth_password: "{{ sub_pass }}"
-ocp_additional_tags: "{{ cluster_additional_tags[ocp_version] | combine(deployment_specific_tags[deployment_type]) }}"
+ocp_additional_tags: "{{ cluster_additional_tags[ocp3_version] | combine(deployment_specific_tags[oa_deployment_type]) }}"
 common_check_excluder: 'memory_availability,disk_availability,docker_storage,docker_storage_driver,docker_image_availability,openshift_release,package_version,package_availability,package_update'
 docker_versions:
   'v3.11': '1.13.1'
   'v3.10': '1.13.1'
   'v3.9': '1.13.1'
   'v3.7': '1.12.6'
-deployment_type: 'openshift-enterprise' # origin vs openshift-enterprise
+oa_deployment_type: 'openshift-enterprise' # origin vs openshift-enterprise
 ssh_private_key: "/var/tmp/key.pem"
 network_plugin: 'redhat/openshift-ovs-multitenant'

@@ -2,7 +2,7 @@
   git:
     dest: "{{ mig_controller_location }}"
     repo: https://github.com/fusor/mig-controller.git
-    force: yes
+    force: true
     depth: 1
 
 - name: Deploy velero

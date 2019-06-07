@@ -18,7 +18,7 @@
       - rhel-7-server-rpms
       - rhel-7-server-extras-rpms
       - "rhel-7-server-ose-{{ ocp3_version[1:] }}-rpms"
-      - rhel-7-server-ansible-{{ ansible_rpm }}-rpms
+      - "rhel-7-server-ansible-{{ ansible_rpm }}-rpms"
     state: enabled
 
 - name: "Enable {{ ocp3_version }} specific repos"
@@ -69,26 +69,11 @@
     daemon_reload: true
     name: docker
 
-- set_fact:
-    node_noproxies: []
-    node_ips: "{{ groups['aws'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | list }}"
-
-- set_fact:
-    node_noproxies: "{{ node_noproxies + [item, 'apps.' + item + '.xip.io', item + '.xip.io'] }}"
-  with_items:
-    - "{{ node_ips }}"
-    - "{{ groups['aws'] }}"
-
-- name: Set noproxy for known hosts
-  lineinfile:
-    path: /etc/environment
-    create: true
-    line: "noproxy=127.0.0.1,172.30.0.0/16,localhost,.cluster.local,.internal.example.com,.svc,{{ node_noproxies | join(',') }}"
-
 - name: Clone the mig-ci repo
   git:
     dest: "/var/tmp/mig-ci"
-    repo: https://github.com/fusor/mig-ci.git
+    repo: https://github.com/Danil-Grigorev/mig-ci.git # TODO change to upstream
+    version: oa-to-pipelines
     force: true
 
 - name: Clone the openshift-ansible repo
@@ -96,4 +81,4 @@
     repo: 'https://github.com/openshift/openshift-ansible'
     dest: "/var/tmp/openshift-ansible"
     version: "release-{{ ocp3_version[1:] }}"
-    force: yes
+    force: true

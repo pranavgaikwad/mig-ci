@@ -25,6 +25,6 @@
       module: ec2
       instance_ids: "{{ instances }}"
       state: absent
-      wait: yes
+      wait: true
   ignore_errors: true
 

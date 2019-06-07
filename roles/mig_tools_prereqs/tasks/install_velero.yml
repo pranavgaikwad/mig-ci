@@ -7,7 +7,7 @@
   unarchive:
     src: "{{ velero_release_url }}"
     dest: "{{ playbook_dir }}/velero"
-    remote_src: yes
+    remote_src: true
 
 - name: Update image
   replace:

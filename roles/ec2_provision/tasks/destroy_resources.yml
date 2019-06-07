@@ -70,7 +70,7 @@
       state: absent
       cidr: "{{ subnet_cidr }}"
       vpc_id: "{{ vpc.vpcs[0].id }}"
-      wait: yes
+      wait: true
       wait_timeout: 300
     register: res
     until: res is success

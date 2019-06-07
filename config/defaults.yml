@@ -2,6 +2,7 @@
 
 # Jenkins WORKSPACE or assume parent dir
 workspace: "{{ lookup('env', 'WORKSPACE') or '../'}}"
+ec2_region: "{{ lookup('env', 'AWS_REGION') or lookup('env', 'EC2_REGION') }}"
 
 # AWS / EC2 related
 aws_access_key_id: "{{ lookup('env','AWS_ACCESS_KEY_ID') }}"

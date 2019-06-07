@@ -20,9 +20,9 @@
      # Current context always returns only one entry 
 
     - name: Extract cluster URL from current context
-      shell: "{{ oc_binary }} project | sed 's/.*\\(https:\\)/\\1/' | cut -d \\\" -f1"
+      shell: "{{ oc_binary }} status | head -1 | sed -E 's/^.* (https:.*)/\\1/'"
       register: oc_config_output
-     
+
     - set_fact:
        dest_cluster_url: "{{ oc_config_output.stdout }}"
 

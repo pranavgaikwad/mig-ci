@@ -1,13 +1,40 @@
 - debug:
     msg: "Starting OA {{ ocp3_version }} deployment. The logs wiil be located in {{ workspace }}/.install.log directory upon completion."
 
-- name: "Deploy OA {{ ocp3_version }}"
-  shell: ansible-playbook /var/tmp/mig-ci/aws_playbooks/deploy_aws_39+.yml | tee /var/tmp/.install.log
+- block:
+  - name: "Start OA {{ ocp3_version }} deployment"
+    shell: ansible-playbook /var/tmp/mig-ci/aws_playbooks/deploy_aws_39+.yml | tee /var/tmp/.install.log
+    async: "{{ 2*60*60 }}"
+    poll: 0
+    register: task
+
+  - name: Check OA {{ ocp3_version }} deployment status
+    async_status:
+      jid: "{{ task.ansible_job_id }}"
+    register: deploy
+    until: deploy.finished
+    retries: 30
+    delay: 300
+
   when: ocp3_version != "v3.7"
 
-- name: "Deploy OA {{ ocp3_version }}"
-  shell: ansible-playbook /var/tmp/mig-ci/aws_playbooks/deploy_aws_37.yml | tee /var/tmp/.install.log
+- block:
+  - name: "Start OA {{ ocp3_version }} deployment"
+    shell: ansible-playbook /var/tmp/mig-ci/aws_playbooks/deploy_aws_37.yml | tee /var/tmp/.install.log
+    async: 7200
+    poll: 0
+    register: task
+
+  - name: Check OA {{ ocp3_version }} deployment status
+    async_status:
+      jid: "{{ task.ansible_job_id }}"
+    register: deploy
+    until: deploy.finished
+    retries: 30
+    delay: 300
+
   when: ocp3_version == "v3.7"
+
 
 - fetch:
     src: /var/tmp/.install.log

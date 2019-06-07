@@ -3,4 +3,3 @@
     tasks_from: destroy_instance
   vars:
     instance_name: "{{ aws_name_suffix }}"
-  ignore_errors: true

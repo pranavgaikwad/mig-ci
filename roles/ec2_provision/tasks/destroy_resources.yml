@@ -3,57 +3,57 @@
     module: aws_caller_facts
   register: caller_facts
 
-- set_fact:
-    aws_resource_tag: "{{
-      prefix + instance_name + caller_facts.arn | hash('md5') }}"
-
-- ec2_vpc_net_facts:
-    filters:
-      "tag:creator": "{{ aws_resource_tag }}"
-  register: vpc
-
-- ec2_group_facts:
-    filters:
-      "tag:creator": "{{ aws_resource_tag }}"
-  register: sec_group
-
-- ec2_group_facts:
-    filters:
-      "vpc-id": "{{ vpc.vpcs[0].id }}"
-  register: other_groups
-
-- set_fact:
-    group_list: "{{
-      other_groups.security_groups |
-      selectattr('group_name', 'match', '^(?!default).*$') |
-      map(attribute='group_id') | list }}"
-    sec_group: "{{
-      sec_group.security_groups |
-      map(attribute='group_id') | list }}"
-
-- ec2_vpc_route_table_facts:
-    filters:
-      "vpc-id": "{{ vpc.vpcs[0].id }}"
-      "tag:creator": "{{ aws_resource_tag }}"
-  register: route
-
-- ec2_vpc_subnet_facts:
-    filters:
-      "tag:creator": "{{ aws_resource_tag }}"
-  register: subn
-
-- ec2_elb_facts:
-  register: elbs
-
-- set_fact:
-    sub_id: "{{ subn.subnets[0].id }}"
-    names: "{{ elbs.elbs | map(attribute='name') | list }}"
-    subnets: "{{ elbs.elbs | map(attribute='subnets') | list }}"
-
-- set_fact:
-    elbs: "{{ dict(names | zip(subnets)) }}"
-
 - block:
+  - set_fact:
+      aws_resource_tag: "{{
+        prefix + instance_name + caller_facts.arn | hash('md5') }}"
+
+  - ec2_vpc_net_facts:
+      filters:
+        "tag:creator": "{{ aws_resource_tag }}"
+    register: vpc
+
+  - ec2_group_facts:
+      filters:
+        "tag:creator": "{{ aws_resource_tag }}"
+    register: sec_group
+
+  - ec2_group_facts:
+      filters:
+        "vpc-id": "{{ vpc.vpcs[0].id }}"
+    register: other_groups
+
+  - set_fact:
+      group_list: "{{
+        other_groups.security_groups |
+        selectattr('group_name', 'match', '^(?!default).*$') |
+        map(attribute='group_id') | list }}"
+      sec_group: "{{
+        sec_group.security_groups |
+        map(attribute='group_id') | list }}"
+
+  - ec2_vpc_route_table_facts:
+      filters:
+        "vpc-id": "{{ vpc.vpcs[0].id }}"
+        "tag:creator": "{{ aws_resource_tag }}"
+    register: route
+
+  - ec2_vpc_subnet_facts:
+      filters:
+        "tag:creator": "{{ aws_resource_tag }}"
+    register: subn
+
+  - ec2_elb_facts:
+    register: elbs
+
+  - set_fact:
+      sub_id: "{{ subn.subnets[0].id }}"
+      names: "{{ elbs.elbs | map(attribute='name') | list }}"
+      subnets: "{{ elbs.elbs | map(attribute='subnets') | list }}"
+
+  - set_fact:
+      elbs: "{{ dict(names | zip(subnets)) }}"
+
   - ec2_elb_lb:
       name: "{{ item.key }}"
       state: absent
@@ -61,6 +61,10 @@
       wait_timeout: 600
     when: "{{ item.value | select('search', sub_id) | list != []}}"
     with_dict: "{{ elbs }}"
+    register: res
+    until: res is success
+    retries: 5
+    delay: 60
 
   - ec2_vpc_subnet:
       state: absent
@@ -68,15 +72,27 @@
       vpc_id: "{{ vpc.vpcs[0].id }}"
       wait: yes
       wait_timeout: 300
+    register: res
+    until: res is success
+    retries: 5
+    delay: 60
 
   - ec2_vpc_route_table:
       state: absent
       route_table_id: "{{ route.route_tables[0].id }}"
       lookup: id
+    register: res
+    until: res is success
+    retries: 20
+    delay: 15
 
   - ec2_vpc_igw:
       state: absent
       vpc_id: "{{ vpc.vpcs[0].id }}"
+    register: res
+    until: res is success
+    retries: 20
+    delay: 15
 
   - ec2_group:
       group_id: "{{ item}}"
@@ -84,10 +100,19 @@
     with_items:
       - "{{ group_list }}"
       - "{{ sec_group }}"
+    register: res
+    until: res is success
+    retries: 20
+    delay: 15
 
   - ec2_vpc_net:
       name: "{{ prefix }}-{{ instance_name }}"
       cidr_block: "{{ cidr }}"
       purge_cidrs: true
       state: absent
+    register: res
+    until: res is success
+    retries: 5
+    delay: 30
   delegate_to: localhost
+  ignore_errors: true

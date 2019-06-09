@@ -1,4 +1,4 @@
-#!groovy
+// mig-e2e.groovy
 
 // Set Job properties and triggers
 properties([

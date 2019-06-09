@@ -1,4 +1,4 @@
-#!groovy
+// parallel-base.groovy
 
 // Set Job properties and triggers
 properties([
@@ -27,6 +27,8 @@ def EC2_TERMINATE_INSTANCES = params.EC2_TERMINATE_INSTANCES
 // true/false build parameter that defines if we cleanup workspace once build is done
 def CLEAN_WORKSPACE = params.CLEAN_WORKSPACE
 
+def common_stages
+
 steps_finished = []
 
 echo "Running job ${env.JOB_NAME}, build ${env.BUILD_ID} on ${env.JENKINS_URL}"
@@ -35,7 +37,11 @@ echo "Job URL ${env.JOB_URL}"
 
 node {
     try {
-        notifyBuild('STARTED')   
+        checkout scm
+
+        common_stages = load "${env.WORKSPACE}/pipeline/common_stages.groovy"
+
+        common_stages.notifyBuild('STARTED')
         stage('Prepare Build Environment') {
             steps_finished << 'Prepare Build Environment'
             sh 'printenv'
@@ -85,62 +91,24 @@ node {
         stage('Deploy clusters') {
             steps_finished << 'Deploy clusters'
             parallel deploy_OCP3: {
-                withCredentials([
-                        string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-                        string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY'),
-                        string(credentialsId: "$EC2_SUB_USER", variable: 'SUB_USER'),
-                        string(credentialsId: "$EC2_SUB_PASS", variable: 'SUB_PASS')
-                        ]) 
-                    {
-                        dir('mig-ci') {
-                            withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${KUBECONFIG_TMP}", "AWS_REGION=${env.EC2_REGION}"]) {
-                                ansiColor('xterm') {
-                                    ansiblePlaybook(
-                                        playbook: 'deploy_ocp3_cluster.yml',
-                                        extras: "-e prefix=${env.CLUSTER_NAME}",
-                                        hostKeyChecking: false,
-                                        unbuffered: true,
-                                        colorized: true)
-                                }
-                            }
-                        }
-                    }
+                common_stages.deployOCP3_OA().call()
             }, deploy_OCP4: {
-                withCredentials([
-                    string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-                    string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
-                    ]) 
-                {
-
-                    dir('mig-ci') {
-                        withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${KUBECONFIG_TMP}", "AWS_REGION=${env.EC2_REGION}"]) {
-                            ansiColor('xterm') {
-                                ansiblePlaybook(
-                                    playbook: 'deploy_ocp4_cluster.yml',
-                                    hostKeyChecking: false,
-                                    unbuffered: true,
-                                    colorized: true)
-                                }
-                            }
-                        }
+                common_stages.deployOCP4().call()
+            }, deploy_NFS: {
+                stage('Configure NFS storage on OCP3') {
+                    steps_finished << 'Configure NFS storage on OCP3'
+                    ansiColor('xterm') {
+                        ansiblePlaybook(
+                            playbook: 'nfs_server_deploy.yml',
+                            hostKeyChecking: false,
+                            unbuffered: true,
+                            colorized: true)
                     }
-            },
+                }
+            }
             failFast: true
         }
 
-        stage('Configure NFS storage on OCP3') {
-            steps_finished << 'Configure NFS storage on OCP3'
-            dir('mig-ci') {
-                ansiColor('xterm') {
-                    ansiblePlaybook(
-                        playbook: 'nfs_server_deploy.yml',
-                        hostKeyChecking: false,
-                        unbuffered: true,
-                        colorized: true)
-                }
-            }
-        }
-              
         stage('Deploy Velero and configure S3 storage on OCP3') {
             steps_finished << 'Deploy Velero and configure S3 storage on OCP3'
             withCredentials([
@@ -241,7 +209,7 @@ node {
         throw e
     } finally {
         // Success or failure, always send notifications
-        notifyBuild(currentBuild.result)
+        common_stages.notifyBuild(currentBuild.result)
         stage('Clean Up Environment') {
             // Always attempt to terminate instances if EC2_TERMINATE_INSTANCES is true
             if (EC2_TERMINATE_INSTANCES) {
@@ -262,13 +230,7 @@ node {
                                                     colorized: true)
                                         }
                                     }, destroy_OCP4: {
-                                        ansiColor('xterm') {
-                                                ansiblePlaybook(
-                                                    playbook: 'destroy_ocp4_cluster.yml',
-                                                    hostKeyChecking: false,
-                                                    unbuffered: true,
-                                                    colorized: true)
-                                        }
+                                        common_stages.teardown_OCP4()
                                     }, destroy_NFS: {
                                         ansiColor('xterm') {
                                                 ansiblePlaybook(
@@ -287,31 +249,4 @@ node {
             }
         }
     }
-}
-
-def notifyBuild(String buildStatus = 'STARTED') {
-  // build status of null means successful
-  buildStatus =  buildStatus ?: 'SUCCESSFUL'
- 
-  // Default values
-  def colorName = 'RED'
-  def colorCode = '#FF0000'
-  def subject = "${buildStatus}: Job '${env.JOB_NAME}, build [${env.BUILD_NUMBER}]'"
-  def summary = "${subject}\nLink: (${env.BUILD_URL})\n"
-
-  // Override default values based on build status
-  if (buildStatus == 'STARTED') {
-    colorCode = '#FFFF00'
-  } else if (buildStatus == 'SUCCESSFUL') {
-    colorCode = '#00FF00'
-    summary = summary + steps_finished.join(' - SUCCESS\n')
-    summary = summary + ' - SUCCESS\n'
-  } else {
-    colorCode = '#FF0000'
-    summary = summary + steps_finished.join(' - SUCCESS\n')
-    summary = summary + ' - FAILED\n'
-  }
- 
-  // Send notifications
-  slackSend (color: colorCode, message: summary)
 }

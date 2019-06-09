@@ -1,19 +1,20 @@
-#!groovy
+// ocp4-base.groovy
 
 // Set Job properties and triggers
-properties([disableConcurrentBuilds(), 
-parameters([string(defaultValue: 'jenkins-ci', description: 'OCP4 cluster name to deploy', name: 'OCP4_CLUSTER_NAME', trim: false), 
+properties([
+parameters([
+string(defaultValue: 'v4.1', description: 'OCP4 version to deploy', name: 'OCP4_VERSION', trim: false),
+string(defaultValue: 'jenkins-ci', description: 'OCP4 cluster name to deploy', name: 'OCP4_CLUSTER_NAME', trim: false), 
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_aws_access_key_id', description: 'EC2 access key ID for auth purposes', name: 'EC2_ACCESS_KEY_ID', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_aws_secret_access_key', description: 'EC2 private key needed to access instances, from Jenkins credentials store', name: 'EC2_SECRET_ACCESS_KEY', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl', defaultValue: 'ci_pull_secret', description: 'Pull secret needed for OCP4 deployments', name: 'OCP4_PULL_SECRET', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl', defaultValue: 'ci_pub_key', description: 'EC2 public key needed for OCP4 instances', name: 'EC2_PUB_KEY', required: true),
 string(defaultValue: 'ci', description: 'EC2 SSH key name to deploy on instances for remote access ', name: 'EC2_KEY', trim: false),
-string(defaultValue: 'us-east-2', description: 'EC2 region to deploy instances', name: 'EC2_REGION', trim: false),
-string(defaultValue: 'https://github.com/fusor/mig-ci.git', description: 'MIG CI repo URL to checkout', name: 'MIG_CI_REPO', trim: false),
-string(defaultValue: 'master', description: 'MIG CI repo branch to checkout', name: 'MIG_CI_BRANCH', trim: false),
+string(defaultValue: 'eu-west-1', description: 'EC2 region to deploy instances', name: 'EC2_REGION', trim: false),
+string(defaultValue: 'https://github.com/Danil-Grigorev/mig-ci.git', description: 'MIG CI repo URL to checkout', name: 'MIG_CI_REPO', trim: false), // TODO: change to upstream
+string(defaultValue: 'oa-to-pipelines', description: 'MIG CI repo branch to checkout', name: 'MIG_CI_BRANCH', trim: false),
 booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE'),
 booleanParam(defaultValue: true, description: 'EC2 terminate instances after build', name: 'EC2_TERMINATE_INSTANCES')]),
-[$class: 'ThrottleJobProperty', categories: ['OCP'], limitOneJobWithMatchingParams: true, maxConcurrentPerNode: 0, maxConcurrentTotal: 0, paramsToUseForLimit: '', throttleEnabled: true, throttleOption: 'category'],
 pipelineTriggers([cron('@midnight')])])
 
 // true/false build parameter that defines if we terminate instances once build is done
@@ -21,20 +22,31 @@ def EC2_TERMINATE_INSTANCES = params.EC2_TERMINATE_INSTANCES
 // true/false build parameter that defines if we cleanup workspace once build is done
 def CLEAN_WORKSPACE = params.CLEAN_WORKSPACE
 
+def common_stages
+
+steps_finished = []
+
 echo "Running job ${env.JOB_NAME}, build ${env.BUILD_ID} on ${env.JENKINS_URL}"
 echo "Build URL ${env.BUILD_URL}"
 echo "Job URL ${env.JOB_URL}"
 
 node {
     try {
-        notifyBuild('STARTED')   
         stage('Prepare Build Environment') {
+            checkout scm
+            common_stages = load "${env.WORKSPACE}/pipeline/common_stages.groovy"
+
+            echo "$common_stages"
+            common_stages.notifyBuild('STARTED')   
+            steps_finished << 'Prepare Build Environment'
             echo 'Cloning mig-ci repo'
             checkout([$class: 'GitSCM', branches: [[name: "*/$MIG_CI_BRANCH"]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'mig-ci']], submoduleCfg: [], userRemoteConfigs: [[url: "$MIG_CI_REPO"]]])
             
             // Create default keys dir
             KEYS_DIR = "${env.WORKSPACE}" + '/keys'
             sh "mkdir -p ${KEYS_DIR}"
+            sh "mkdir -p ${env.WORKSPACE}/kubeconfigs"
+
 
             // Prepare pull secret
             withCredentials([file(credentialsId: "$OCP4_PULL_SECRET", variable: "PULL_SECRET")]) {
@@ -47,34 +59,15 @@ node {
             }
         }
         
-        stage('Deploy OCP4') {
-            withCredentials([
-                string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-                string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
-                ]) 
-            {
-
-                dir('mig-ci') {
-                    withEnv(['PATH+EXTRA=~/bin']) {
-                        ansiColor('xterm') {
-                            ansiblePlaybook(
-                                playbook: 'deploy_ocp4_cluster.yml',
-                                hostKeyChecking: false,
-                                unbuffered: true,
-                                colorized: true)
-                        }
-                    }
-                }
-            }
-        }
+        common_stages.deployOCP4().call()
 
         stage('Deploy Velero and configure S3 storage') {
+            steps_finished << 'Deploy Velero and configure S3 storage'
             withCredentials([
                 string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
                 string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
                 ]) 
             {
-                
                 withEnv(['PATH+EXTRA=~/bin']) {
                     dir('mig-ci') {
                         ansiColor('xterm') {
@@ -94,55 +87,13 @@ node {
         throw e
     } finally {
         // Success or failure, always send notifications
-        notifyBuild(currentBuild.result)
-
-	stage('Clean Up Environment') {
-	// Success or failure, always terminate instances if requested
-            	if (EC2_TERMINATE_INSTANCES) {
-                	withCredentials([
-                        string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-                        string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
-                    	]) 
-                    {
-                        withEnv(['PATH+EXTRA=~/bin']) {
-                            dir('mig-ci') {
-                                ansiColor('xterm') {
-                                    ansiblePlaybook(
-                                        playbook: 'destroy_ocp4_cluster.yml',
-                                        hostKeyChecking: false,
-                                        unbuffered: true,
-                                        colorized: true)
-                                }
-                            }
-                        }
-                    }
-                }
-		if (CLEAN_WORKSPACE) {  
-		cleanWs cleanWhenFailure: false, notFailBuild: true
-		}
-	    }
+        common_stages.notifyBuild(currentBuild.result)
+        stage('Clean Up Environment') {
+        // Success or failure, always terminate instances if requested
+            common_stages.teardown_OCP4()
+            if (CLEAN_WORKSPACE) {
+                cleanWs cleanWhenFailure: false, notFailBuild: true
+            }
+        }
 	}
-}
-
-def notifyBuild(String buildStatus = 'STARTED') {
-  // build status of null means successful
-  buildStatus =  buildStatus ?: 'SUCCESSFUL'
- 
-  // Default values
-  def colorName = 'RED'
-  def colorCode = '#FF0000'
-  def subject = "${buildStatus}: Job '${env.JOB_NAME}, build [${env.BUILD_NUMBER}]'"
-  def summary = "${subject} (${env.BUILD_URL})"
- 
-  // Override default values based on build status
-  if (buildStatus == 'STARTED') {
-    colorCode = '#FFFF00'
-  } else if (buildStatus == 'SUCCESSFUL') {
-    colorCode = '#00FF00'
-  } else {
-    colorCode = '#FF0000'
-  }
- 
-  // Send notifications
-  slackSend (color: colorCode, message: summary)
 }

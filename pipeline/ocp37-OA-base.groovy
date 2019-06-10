@@ -1,6 +1,6 @@
 // ocp37-OA-base.groovy
 // Set Job properties and triggers
-properties([
+properties([disableConcurrentBuilds(),
 parameters([string(defaultValue: 'v3.7', description: 'OpenShift version to deploy', name: 'OCP3_VERSION', trim: false), 
 // TODO: reset to ci values
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'dgrigore_aws_access_key_id', description: 'EC2 access key ID for auth purposes', name: 'EC2_ACCESS_KEY_ID', required: true),
@@ -10,8 +10,6 @@ credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringC
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_rhel_sub_pass', description: 'RHEL Openshift subscription account password', name: 'EC2_SUB_PASS', required: true),
 string(defaultValue: 'libra', description: 'EC2 SSH key name to deploy on instances for remote access ', name: 'EC2_KEY', trim: false),
 string(defaultValue: 'eu-west-1', description: 'EC2 region to deploy instances', name: 'EC2_REGION', trim: false),
-string(defaultValue: 'https://github.com/Danil-Grigorev/mig-ci.git', description: 'MIG CI repo URL to checkout', name: 'MIG_CI_REPO', trim: false), // TODO: change to upstream
-string(defaultValue: 'oa-to-pipelines', description: 'MIG CI repo branch to checkout', name: 'MIG_CI_BRANCH', trim: false),
 booleanParam(defaultValue: true, description: 'EC2 terminate instances after build', name: 'EC2_TERMINATE_INSTANCES')]),
 pipelineTriggers([cron('@midnight')])])
 
@@ -19,6 +17,7 @@ pipelineTriggers([cron('@midnight')])])
 def EC2_TERMINATE_INSTANCES = params.EC2_TERMINATE_INSTANCES
 
 def common_stages
+def utils
 
 steps_finished = []
 
@@ -27,12 +26,23 @@ echo "Build URL ${env.BUILD_URL}"
 echo "Job URL ${env.JOB_URL}"
 
 node {
-    checkout scm
-    common_stages = load "${env.WORKSPACE}/pipeline/common_stages.groovy"
-    try {
-        common_stages.notifyBuild('STARTED')
 
-        common_stages.setup_OCP3_OA().call()
+    try {
+        checkout scm
+        utils = load "${env.WORKSPACE}/pipeline/utils.groovy"
+        common_stages = load "${env.WORKSPACE}/pipeline/common_stages.groovy"
+
+        utils.notifyBuild('STARTED')
+
+        stage('Setup Build Environment OCP3') {
+            steps_finished << 'Setup Build Environment OCP3'
+
+            utils.prepare_workspace("${env.OCP3_VERSION}", '')
+
+            utils.copy_private_keys()
+
+            utils.clone_related_repos()
+        }
 
         common_stages.deployOCP3_OA().call()
 
@@ -45,7 +55,7 @@ node {
         throw e
     } finally {
         // Success or failure, always send notifications
-        common_stages.notifyBuild(currentBuild.result)
+        utils.notifyBuild(currentBuild.result)
         stage('Clean Up Environment') {
             common_stages.teardown_OCP3_OA()
             cleanWs cleanWhenFailure: false, notFailBuild: true

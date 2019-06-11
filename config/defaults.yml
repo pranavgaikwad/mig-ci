@@ -1,7 +1,7 @@
 # default common variables for mig-ci roles/plays
 
 # Jenkins WORKSPACE or assume parent dir
-workspace: "{{ lookup('env', 'WORKSPACE') or '../'}}"
+workspace: "{{ lookup('env', 'WORKSPACE') or './'}}"
 ec2_region: "{{ lookup('env', 'AWS_REGION') or lookup('env', 'EC2_REGION') }}"
 
 # AWS / EC2 related

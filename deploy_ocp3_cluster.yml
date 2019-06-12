@@ -1,11 +1,11 @@
 - hosts: localhost
   roles:
-    - ocp3_aws_deploy
+    - ocp3_aws_provision
 
 # AWS group is created in previous role
 - hosts: aws
   roles:
-    - ocp3_aws_provision
+    - ocp3_aws_deploy
 
 - hosts: localhost
   tasks:

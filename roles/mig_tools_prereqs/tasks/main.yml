@@ -1,8 +1,0 @@
-- import_tasks: create_aws_backup_storage.yml
-  tags: create_aws_backup_storage
-
-- import_tasks: install_velero.yml
-  tags: install_velero
-
-- import_tasks: apply_fixes.yml
-  tags: apply_fixes

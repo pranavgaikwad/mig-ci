@@ -2,6 +2,7 @@
 
 # Jenkins WORKSPACE or assume parent dir
 workspace: "{{ lookup('env', 'WORKSPACE') or './'}}"
+# This var is only applicable to mig-controller roles at the moment
 ec2_region: "{{ lookup('env', 'AWS_REGION') or lookup('env', 'EC2_REGION') }}"
 
 # AWS / EC2 related

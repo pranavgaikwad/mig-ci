@@ -4,6 +4,6 @@
 - name: Login info
   debug:
     msg:
-    - "Console address https://{{ inventory_hostname }}.xip.io:8443/console"
-    - 'User: admin, Password: admin'
-    - "You can login with 'oc login -u admin -p admin https://{{ inventory_hostname }}.xip.io:8443 --insecure-skip-tls-verify=true'"
+    - "Console address https://{{ inventory_hostname }}:8443/console"
+    - "User: admin, Password: admin"
+    - "You can login with 'oc login -u admin -p admin https://{{ inventory_hostname }}:8443 --insecure-skip-tls-verify=true'"

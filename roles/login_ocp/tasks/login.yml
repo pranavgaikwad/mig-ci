@@ -15,7 +15,7 @@
   - name: Login to cluster
     shell: "{{ oc_binary }} login -u {{ user }} -p {{ passwd }} {{ console_addr }} --insecure-skip-tls-verify=true"
     register: login
-    retries: 10
+    retries: 20
     delay: 6
     until: login.rc == 0
     environment:

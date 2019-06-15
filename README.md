@@ -60,6 +60,17 @@ If you want to select the downstream version of openshift, you can add `-e deplo
 
 Deployment usually takes around 40-80 minutes to complete. Logs are written in `$WORKSPACE/.install.log` file upon completion.
 
+## Deploying cluster outside of CI
+
+In case that you don't want to specify environment variables, every `deploy*` and `destroy*` playbook could be run with config file located in `/config/adhoc_vars.yml`.
+
+Example:
+
+- `ansible-playbook deploy_ocp3_cluster.yml -e @config/adhoc_vars.yml`
+- `ansible-playbook deploy_ocp4_cluster.yml -e @config/adhoc_vars.yml`
+- `ansible-playbook destroy_ocp3_cluster.yml -e @config/adhoc_vars.yml`
+- `ansible-playbook destroy_ocp4_cluster.yml -e @config/adhoc_vars.yml`
+
 ## List of other environment variables:
 
 - `AWS_ACCESS_KEY_ID` - AWS access key id, which is used to access your AWS environment.

@@ -17,4 +17,4 @@
   vars:
     force_login: true
     target_kubeconfig: "{{ ocp3_kubeconfig }}"
-    console_addr: "https://{{ ec2_instance_ip }}.xip.io:8443"
+    console_addr: "https://{{ ec2_instance_ip }}.nip.io:8443"

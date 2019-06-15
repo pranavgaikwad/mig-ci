@@ -4,7 +4,7 @@
 - block:
   - name: "Start OA {{ ocp3_version }} deployment"
     shell: ansible-playbook /var/tmp/mig-ci/aws_playbooks/deploy_aws_39+.yml | tee /var/tmp/.install.log
-    async: "{{ 2*60*60 }}"
+    async: 7200
     poll: 0
     register: task
 
@@ -13,8 +13,8 @@
       jid: "{{ task.ansible_job_id }}"
     register: deploy
     until: deploy.finished
-    retries: 30
-    delay: 300
+    retries: 150
+    delay: 60
 
   when: ocp3_version != "v3.7"
 
@@ -30,11 +30,10 @@
       jid: "{{ task.ansible_job_id }}"
     register: deploy
     until: deploy.finished
-    retries: 30
-    delay: 300
+    retries: 150
+    delay: 60
 
   when: ocp3_version == "v3.7"
-
 
 - fetch:
     src: /var/tmp/.install.log

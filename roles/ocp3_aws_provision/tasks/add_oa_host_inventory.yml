@@ -43,10 +43,10 @@
         ansible_service_broker_install: false
         openshift_deployment_type: "{{ oa_deployment_type }}"
         openshift_disable_check: "{{ common_check_excluder }}"
-        openshift_public_hostname: "{{ ec2_instance_ip }}.xip.io"
+        openshift_public_hostname: "{{ ec2_instance_ip }}.nip.io"
         openshift_public_ip: "{{ ec2_instance_ip }}"
-        openshift_master_cluster_public_hostname: "{{ ec2_instance_ip }}.xip.io"
-        openshift_master_default_subdomain: "apps.{{ ec2_instance_ip }}.xip.io"
+        openshift_master_cluster_public_hostname: "{{ ec2_instance_ip }}.nip.io"
+        openshift_master_default_subdomain: "apps.{{ ec2_instance_ip }}.nip.io"
         openshift_master_identity_providers:
           - name: allow_all
             login: true

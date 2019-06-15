@@ -45,8 +45,9 @@ deployment_specific_tags:
   'openshift-enterprise':
     oreg_auth_user: "{{ sub_user }}"
     oreg_auth_password: "{{ sub_pass }}"
+    oreg_test_login: false # Oreg_url issue fix: https://access.redhat.com/solutions/3682911
 ocp_additional_tags: "{{ cluster_additional_tags[ocp3_version] | combine(deployment_specific_tags[oa_deployment_type]) }}"
-common_check_excluder: 'memory_availability,disk_availability,docker_storage,docker_storage_driver,docker_image_availability,openshift_release,package_version,package_availability,package_update'
+common_check_excluder: 'memory_availability,disk_availability,docker_storage,docker_storage_driver'
 docker_versions:
   'v3.11': '1.13.1'
   'v3.10': '1.13.1'
@@ -54,4 +55,4 @@ docker_versions:
   'v3.7': '1.12.6'
 oa_deployment_type: 'openshift-enterprise' # origin vs openshift-enterprise
 ssh_private_key: "/var/tmp/key.pem"
-network_plugin: 'redhat/openshift-ovs-multitenant'
+network_plugin: 'redhat/openshift-ovs-subnet'

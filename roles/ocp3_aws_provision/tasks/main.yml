@@ -1,8 +1,9 @@
 - include_vars:
+    file: "{{ playbook_dir }}/config/defaults.yml"
+
+- include_vars:
     file: "{{ playbook_dir }}/roles/ocp3_aws_deploy/defaults/main.yml"
 
-- include: pre_deploy.yml
+- include_tasks: aws_instance_provision.yml
 
-- include: deploy.yml
-
-- include: post_deploy.yml
+- include_tasks: add_oa_host_inventory.yml

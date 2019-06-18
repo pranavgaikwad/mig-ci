@@ -14,5 +14,5 @@
     - debug:
         var: inv
 
-- name: Run the openshift-ansible deployment
-  import_playbook: "/var/tmp/openshift-ansible/playbooks/byo/config.yml"
+- name: Run the openshift-ansible uninstall playbook
+  import_playbook: "/var/tmp/openshift-ansible/playbooks/adhoc/uninstall.yml"

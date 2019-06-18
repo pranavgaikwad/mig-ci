@@ -1,8 +1,8 @@
 - include_vars:
-    file: "{{ playbook_dir }}/roles/ocp3_aws_deploy/defaults/main.yml"
+    file: "{{ playbook_dir }}/config/defaults.yml"
 
 - include_vars:
-    file: "{{ playbook_dir }}/config/defaults.yml"
+    file: "{{ playbook_dir }}/roles/ocp3_aws_deploy/defaults/main.yml"
 
 - include_tasks: pre_destroy.yml
 

@@ -112,9 +112,9 @@
         image: "{{ suggested_ami }}"
         count: 1
         vpc_subnet_id: "{{ ec2_subnet.subnet.id }}"
-        assign_public_ip: yes
+        assign_public_ip: true
         instance_tags: "{{ inst_tags }}"
-        wait: yes
+        wait: true
       args: "{{ instance_args }}"
       register: ec2_inst
 

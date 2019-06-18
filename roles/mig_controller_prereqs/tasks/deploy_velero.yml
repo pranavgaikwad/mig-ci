@@ -1,3 +1,10 @@
+- name: Clone the mig controller repo
+  git:
+    dest: "{{ mig_controller_location }}"
+    repo: https://github.com/fusor/mig-controller.git
+    force: true
+    depth: 1
+
 - name: Deploy velero
   command: "{{ mig_controller_location }}/hack/deploy/deploy_velero.sh"
   register: deploy

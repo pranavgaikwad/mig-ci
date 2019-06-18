@@ -43,7 +43,7 @@ Task specific:
 
 - `SUB_PASS` - password for the redhat subscriprion account.
 
-- `OPENSHIFT_VERSION` - verison of cluster to be provisioned. Should be specified as 'v3\.[0-9]+'. If not set, will be used 'v3.11'.
+- `OCP3_VERSION` - verison of cluster to be provisioned. Should be specified as 'v3\.[0-9]+'. If not set, will be used 'v3.11'.
 
 - `WORKSPACE` - from [other variables](https://github.com/fusor/mig-ci#list-of-other-environment-variables). You should create a directory `$WORKSPACE/keys` and place there your AWS ssh private key, which will be supplied to the newly created instance. The name of the key is captured from `$EC2_KEY`.
   - The result ssh private key file will should be discoverable in `${WORKSPACE}/keys/${EC2_KEY}.pem`. You can use it after that, to access the instance via ssh.
@@ -60,6 +60,17 @@ If you want to select the downstream version of openshift, you can add `-e deplo
 
 Deployment usually takes around 40-80 minutes to complete. Logs are written in `$WORKSPACE/.install.log` file upon completion.
 
+## Deploying cluster outside of CI
+
+In case that you don't want to specify environment variables, every `deploy*` and `destroy*` playbook could be run with config file located in `/config/adhoc_vars.yml`.
+
+Example:
+
+- `ansible-playbook deploy_ocp3_cluster.yml -e @config/adhoc_vars.yml`
+- `ansible-playbook deploy_ocp4_cluster.yml -e @config/adhoc_vars.yml`
+- `ansible-playbook destroy_ocp3_cluster.yml -e @config/adhoc_vars.yml`
+- `ansible-playbook destroy_ocp4_cluster.yml -e @config/adhoc_vars.yml`
+
 ## List of other environment variables:
 
 - `AWS_ACCESS_KEY_ID` - AWS access key id, which is used to access your AWS environment.
@@ -70,7 +81,7 @@ Deployment usually takes around 40-80 minutes to complete. Logs are written in `
 
 - `EC2_KEY` - name of the ssh private key, which will be passed to the instance, and allow you to access the instance via ssh in future. Set to `ci` by default. The key should be discoverable with `${WORKSPACE}/keys/${EC2_KEY}.pem`.
 
-- `EC2_REGION` - region, where all resources will be created. By default is set to `us-east-1`.
+- `EC2_REGION` - region, where all resources will be created.
 
 - `CLUSTER_VERSION` - CI is deciding, which cluster to provision, based on this variable. Default value is 4, or could be set to 3.
 

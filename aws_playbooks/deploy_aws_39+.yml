@@ -1,4 +1,6 @@
 - hosts: localhost
+  gather_facts: false
+  become: true
   tasks:
     - set_fact:
         inventory: "{{ lookup('file', '/var/tmp/master-hosts') | from_yaml }}"

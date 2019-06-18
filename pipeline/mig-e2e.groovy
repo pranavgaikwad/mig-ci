@@ -1,13 +1,13 @@
-#!groovy
+// mig-e2e.groovy
 
 // Set Job properties and triggers
-properties([disableConcurrentBuilds(), 
-parameters([string(defaultValue: 'v3.11', description: 'OCP3 version to deploy', name: 'OPENSHIFT_VERSION', trim: false), 
+properties([disableConcurrentBuilds(),
+parameters([string(defaultValue: 'v3.11', description: 'OCP3 version to deploy', name: 'OCP3_VERSION', trim: false), 
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_aws_access_key_id', description: 'EC2 access key ID for auth purposes', name: 'EC2_ACCESS_KEY_ID', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_aws_secret_access_key', description: 'EC2 private key needed to access instances, from Jenkins credentials store', name: 'EC2_SECRET_ACCESS_KEY', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl', defaultValue: 'ci_ec2_key', description: 'EC2 private key needed to access instances, from Jenkins credentials store', name: 'EC2_PRIV_KEY', required: true),
 string(defaultValue: 'ci', description: 'EC2 SSH key name to deploy on instances for remote access ', name: 'EC2_KEY', trim: false),
-string(defaultValue: 'us-east-1', description: 'EC2 region to deploy instances', name: 'EC2_REGION', trim: false),
+string(defaultValue: 'us-east-2', description: 'EC2 region to deploy instances', name: 'EC2_REGION', trim: false),
 string(defaultValue: 'm4.large', description: 'EC2 instance type to deploy', name: 'EC2_INSTANCE_TYPE', trim: false),
 string(defaultValue: 'jenkins-ci', description: 'OCP4 cluster name to deploy', name: 'OCP4_CLUSTER_NAME', trim: false),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl', defaultValue: 'ci_pull_secret', description: 'Pull secret needed for OCP4 deployments', name: 'OCP4_PULL_SECRET', required: true),
@@ -19,7 +19,6 @@ string(defaultValue: 'https://github.com/fusor/mig-e2e.git', description: 'MIG E
 string(defaultValue: 'master', description: 'MIG E2E repo branch to checkout', name: 'MIG_E2E_BRANCH', trim: false),
 booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE'),
 booleanParam(defaultValue: true, description: 'EC2 terminate instances after build', name: 'EC2_TERMINATE_INSTANCES')]),
-[$class: 'ThrottleJobProperty', categories: ['OCP'], limitOneJobWithMatchingParams: true, maxConcurrentPerNode: 0, maxConcurrentTotal: 0, paramsToUseForLimit: '', throttleEnabled: true, throttleOption: 'category']])
 
 // true/false build parameter that defines if we terminate instances once build is done
 def EC2_TERMINATE_INSTANCES = params.EC2_TERMINATE_INSTANCES
@@ -67,7 +66,7 @@ node {
                     'ec2_private_key_file': "$KEYS_DIR/${EC2_KEY}.pem",
                     'ec2_instance_type': "$EC2_INSTANCE_TYPE",
                     'ec2_repo_create': false,
-                    'openshift_setup_client_version': "$OPENSHIFT_VERSION",
+                    'openshift_setup_client_version': "$OCP3_VERSION",
                     'openshift_setup_remote_auto_login': true,
                     'openshift_setup_cluster_retries': 5]
                 writeYaml file: 'overrides.yml', data: overrides
@@ -309,7 +308,7 @@ def notifyBuild(String buildStatus = 'STARTED') {
   def colorName = 'RED'
   def colorCode = '#FF0000'
   def subject = "${buildStatus}: Job '${env.JOB_NAME}, build [${env.BUILD_NUMBER}]'"
-  def summary = "${subject} (${env.BUILD_URL})"
+  def summary = "${subject}\nLink: (${env.BUILD_URL})\n"
  
   // Override default values based on build status
   if (buildStatus == 'STARTED') {

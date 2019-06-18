@@ -27,6 +27,6 @@
     - name: Set origin pod dir selinux context to match prod installs (restic fix)
       shell: "chcon -R -t container_file_t /tmp/openshift.local.clusterup/openshift.local.volumes/pods/"
       become: true
-      ignore_errors: yes
+      ignore_errors: true
       delegate_to: "{{ instance_ip }}"
   when: deployment_type == 'cluster_up'

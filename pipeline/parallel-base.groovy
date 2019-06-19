@@ -81,12 +81,13 @@ node {
             }
         }
 
-        stage('Deploy mig-controller and mig-ui on source cluster') {
-            steps_finished << 'Deploy mig-controller and mig-ui on source cluster'
-            withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${KUBECONFIG_OCP3}"]) {
+        stage('Deploy mig-controller on source cluster') {
+            steps_finished << 'Deploy mig-controller on source cluster'
+            withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${KUBECONFIG_OCP3}", "CLUSTER_VERSION=3"]) {
                 ansiColor('xterm') {
                     ansiblePlaybook(
                         playbook: 'mig_controller_deploy.yml',
+                        extras: "-e mig_controller_host_cluster=false",
                         hostKeyChecking: false,
                         unbuffered: true,
                         colorized: true)
@@ -106,7 +107,6 @@ node {
                     ansiColor('xterm') {
                         ansiblePlaybook(
                             playbook: 'mig_controller_deploy.yml',
-                            extras: "-e with_controller=false",
                             hostKeyChecking: false,
                             unbuffered: true,
                             colorized: true)

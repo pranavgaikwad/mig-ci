@@ -11,3 +11,4 @@
 
 - name: Prepare remote cluster
   import_tasks: prepare_remote_cluster.yml
+  when: mig_controller_host_cluster|bool and mig_controller_remote_cluster_online|bool

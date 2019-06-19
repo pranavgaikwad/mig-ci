@@ -46,12 +46,13 @@ node {
 
         common_stages.deployOCP4().call()
 
-        stage('Deploy mig-controller and mig-ui on target cluster') {
-            steps_finished << 'Deploy mig-controller and mig-ui on target cluster'
+        stage('Deploy mig-controller on target cluster') {
+            steps_finished << 'Deploy mig-controller on target cluster'
             withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${KUBECONFIG_OCP4}"]) {
                 ansiColor('xterm') {
                     ansiblePlaybook(
                         playbook: 'mig_controller_deploy.yml',
+                        extras: "-e mig_controller_remote_cluster_online=false",
                         hostKeyChecking: false,
                         unbuffered: true,
                         colorized: true)

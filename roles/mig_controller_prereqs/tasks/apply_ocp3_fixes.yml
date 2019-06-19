@@ -1,4 +1,4 @@
-# Apply misc cluster fixes for velero/restic integration
+# Apply misc cluster fixes for velero/restic integration on cluster_up deployments
 
 - name: Apply OCP3 fixes
   block:
@@ -12,6 +12,7 @@
         module: ec2_instance_facts
         filters:
           "tag:Name": "{{ ansible_user }}-origin3-dev"
+          "tag:creator_arn": "{{ caller_facts.arn }}"
       register: ec2_instance
 
     - name: Extract public ip

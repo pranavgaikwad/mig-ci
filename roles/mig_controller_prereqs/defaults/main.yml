@@ -2,3 +2,5 @@
 mig_controller_location: "{{ workspace }}/mig-controller"
 mig_controller_namespace: "mig"
 mig_controller_sa_name: "mig"
+mig_controller_host_cluster: true
+mig_controller_remote_cluster_online: true

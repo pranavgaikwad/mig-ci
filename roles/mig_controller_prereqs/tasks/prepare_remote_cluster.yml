@@ -1,10 +1,29 @@
 ---
+# OCP3 host clusters login to OCP4 for remote cluster tasks, the opposite for OCP4 host clusters.
+
 - name: Logging to OCP4 and saving credentials
   include_role:
     name: login_ocp
   vars:
     source_kubeconfig: "{{ playbook_dir }}/auth/kubeconfig"
     target_kubeconfig: "{{ ocp4_kubeconfig }}"
+  when: cluster_version == '3'
+
+- name: Logging to OCP3 and saving credentials
+  include_role:
+    name: login_ocp
+  vars:
+    source_kubeconfig: "{{ playbook_dir }}/kubeconfigs/kubeconfig"
+    target_kubeconfig: "{{ ocp3_kubeconfig }}"
+  when: cluster_version == '4'
+
+- set_fact:
+    remote_cluster_kubeconfig: "{{ ocp4_kubeconfig }}"
+  when: cluster_version == '3'
+
+- set_fact:
+    remote_cluster_kubeconfig: "{{ ocp3_kubeconfig }}"
+  when: cluster_version == '4'
 
 - name: Start remote cluster tasks
   block:
@@ -30,4 +49,4 @@
         msg: "Destination cluster URL set to: {{ dest_cluster_url }}"
 
   environment:
-    KUBECONFIG: "{{ ocp4_kubeconfig }}"
+    KUBECONFIG: "{{ remote_cluster_kubeconfig }}"

@@ -1,8 +1,8 @@
 // common_stages.groovy
 
-def deployOCP3_OA(extras = '') {
-  if ("${extras}" != '') {
-    extras = "-e ${extras}"
+def deployOCP3_OA(prefix = '') {
+  if (prefix != '') {
+    prefix = "-e prefix=${prefix}"
   }
 
   return {
@@ -15,12 +15,14 @@ def deployOCP3_OA(extras = '') {
           string(credentialsId: "$EC2_SUB_PASS", variable: 'SUB_PASS')
           ])
       {
-        withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${KUBECONFIG_TMP}", "AWS_REGION=${env.EC2_REGION}"]) {
-          echo "$AWS_REGION"
+        withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${KUBECONFIG_TMP}"]) {
+          echo "Region: ${env.AWS_REGION}"
+          echo "Name: ${env.CLUSTER_NAME}"
+          echo "Version: ${env.OCP3_VERSION}"
           ansiColor('xterm') {
             ansiblePlaybook(
               playbook: 'deploy_ocp3_cluster.yml',
-              extras: "${extras}",
+              extras: "${prefix}",
               hostKeyChecking: false,
               unbuffered: true,
               colorized: true)
@@ -30,7 +32,6 @@ def deployOCP3_OA(extras = '') {
     }
   }
 }
-
 
 def deployOCP4() {
   return {
@@ -43,9 +44,7 @@ def deployOCP4() {
       {
         withEnv([
             'PATH+EXTRA=~/bin',
-            "KUBECONFIG=${KUBECONFIG_TMP}",
-            "EC2_REGION=${env.EC2_REGION}",
-            "AWS_REGION=${env.EC2_REGION}"])
+            "KUBECONFIG=${KUBECONFIG_TMP}"])
           {
           ansiColor('xterm') {
             ansiblePlaybook(
@@ -82,8 +81,10 @@ def load_sample_data() {
     stage('Load Sample Data/Apps on OCP3') {
       steps_finished << 'Load Sample Data/Apps on OCP3'
       dir('ocp-mig-test-data') {
-        withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${KUBECONFIG_TMP}", "AWS_REGION=${env.EC2_REGION}"]) {
-          echo "$AWS_REGION"
+        withEnv([
+            'PATH+EXTRA=~/bin',
+            "KUBECONFIG=${KUBECONFIG_TMP}"])
+          {
           ansiColor('xterm') {
             ansiblePlaybook(
               playbook: 'nginx.yml',
@@ -103,8 +104,9 @@ def sanity_checks() {
   return {
     stage('Run OCP3 Sanity Checks') {
       steps_finished << 'Run OCP3 Sanity Checks'
-      withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${KUBECONFIG_TMP}", "AWS_REGION=${env.EC2_REGION}"]) {
-        echo "$AWS_REGION"
+      withEnv([
+          'PATH+EXTRA=~/bin',
+          "KUBECONFIG=${KUBECONFIG_TMP}"]) {
         ansiColor('xterm') {
           ansiblePlaybook(
             playbook: 'ocp_sanity_check.yml',
@@ -118,9 +120,9 @@ def sanity_checks() {
 }
 
 
-def teardown_OCP3_OA(extras = '') {
-  if ("${extras}" != '') {
-    extras = "-e ${extras}"
+def teardown_OCP3_OA(prefix = '') {
+  if (prefix != '') {
+    prefix = "-e prefix=${prefix}"
   }
   if (EC2_TERMINATE_INSTANCES) {
     withCredentials([
@@ -128,12 +130,12 @@ def teardown_OCP3_OA(extras = '') {
         string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY'),
         ]) 
     {
-      withEnv(['PATH+EXTRA=~/bin', "AWS_REGION=${env.EC2_REGION}"]) {
-        echo "$AWS_REGION"
+      withEnv(['PATH+EXTRA=~/bin']) {
+        echo "Region: ${env.AWS_REGION}"
         ansiColor('xterm') {
           ansiblePlaybook(
             playbook: 'destroy_ocp3_cluster.yml',
-            extras: "${extras}",
+            extras: "${prefix}",
             hostKeyChecking: false,
             unbuffered: true,
             colorized: true)

@@ -13,6 +13,10 @@
     ansible_become: true
 
 - block:
+  - name: Unregister instance
+    redhat_subscription:
+      state: absent
+
   - name: "Destroy OA {{ ocp3_version }} cluster"
     shell: ansible-playbook /var/tmp/mig-ci/aws_playbooks/destroy_aws.yml > /var/tmp/.uninstall.log
     async: 1200

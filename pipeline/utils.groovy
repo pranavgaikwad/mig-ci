@@ -48,7 +48,6 @@ def clone_related_repos() {
 
 def prepare_workspace(ocp3_version = '', ocp4_version = '') {
   // Prepare EC2 key for ansible consumption
-  echo 'TEST'
   KEYS_DIR = "${env.WORKSPACE}" + '/keys'
   sh "mkdir -p ${KEYS_DIR}"
   sh "mkdir -p ${env.WORKSPACE}/kubeconfigs"

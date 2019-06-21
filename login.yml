@@ -1,0 +1,16 @@
+- hosts: localhost
+  vars:
+    user: admin
+    passwd: admin
+    console_addr: ''
+  tasks:
+    - name: Check that console address was specified
+      assert:
+        that: console_addr != ''
+        fail_msg: 'No console address specified'
+        success_msg: "Login to the cluster at '{{ console_addr }}' with username: {{ user }}, password: {{ passwd }}"
+
+    - name: "Login to the cluster at '{{ console_addr }}' with username: {{ user }}, password: {{ passwd }}"
+      include_role:
+        name: login_ocp
+        tasks_from: main

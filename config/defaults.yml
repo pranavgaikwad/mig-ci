@@ -13,7 +13,7 @@ ec2_private_key_file: "{{ workspace }}/keys/{{ ec2_key }}.pem"
 ec2_ssh_user: "ec2-user"
 
 cluster_version: "{{ lookup('env', 'CLUSTER_VERSION') or '4' }}"
-deployment_type: "{{ lookup('env', 'DEPLOYMENT_TYPE') or 'OA' }}" # Could be set to 'OA' or 'cluster_up'
+deployment_type: "{{ lookup('env', 'DEPLOYMENT_TYPE') or 'agnosticd' }}" # Could be set to 'agnosticd', 'OA' or 'cluster_up'
 oc_binary: "{{ workspace }}/bin/oc"
 ocp3_version: "{{ lookup('env', 'OCP3_VERSION') or 'v3.11' }}"
 ocp4_version: "{{ lookup('env', 'OCP4_VERSION') or 'v4.1' }}"

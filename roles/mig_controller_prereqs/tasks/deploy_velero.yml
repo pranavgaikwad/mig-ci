@@ -33,7 +33,7 @@
 
 - name: Fix restic pod dir mount for OA install
   shell: "{{ oc_binary }} set volume -n velero ds/restic --add --name=host-pods --path /var/lib/origin/openshift.local.volumes/pods --overwrite"
-  when: deployment_type == 'OA' and cluster_version != '4'
+  when: deployment_type != 'cluster_up' and cluster_version != '4'
 
 - name: Check status of restic deployment
   k8s_facts:

@@ -1,5 +1,34 @@
 // common_stages.groovy
 
+
+def deploy_origin3_dev(kubeconfig) {
+  return {
+    stage('Deploy OCP3 origin3-dev cluster') {
+      steps_finished << 'Deploy OCP3 origin3-dev cluster ' + OCP3_VERSION
+      withCredentials([
+        string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
+        string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
+        ])
+      {
+        dir('origin3-dev') {
+          withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${kubeconfig}"]) {
+            ansiColor('xterm') {
+              ansiblePlaybook(
+                playbook: 'deploy.yml',
+                extras: "-e @overrides.yml",
+                hostKeyChecking: false,
+                unbuffered: true,
+                colorized: true)
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+
+
 def deployOCP3_OA(prefix = '') {
   if (prefix != '') {
     prefix = "-e prefix=${prefix}"
@@ -7,7 +36,7 @@ def deployOCP3_OA(prefix = '') {
 
   return {
     stage('Deploy OCP3 OA cluster') {
-      steps_finished << 'Deploy OCP3 OA cluster'
+      steps_finished << 'Deploy OCP3 OA cluster ' + OCP3_VERSION
       withCredentials([
           string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
           string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY'),
@@ -16,9 +45,6 @@ def deployOCP3_OA(prefix = '') {
           ])
       {
         withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${KUBECONFIG_TMP}"]) {
-          echo "Region: ${env.AWS_REGION}"
-          echo "Name: ${env.CLUSTER_NAME}"
-          echo "Version: ${env.OCP3_VERSION}"
           ansiColor('xterm') {
             ansiblePlaybook(
               playbook: 'deploy_ocp3_cluster.yml',
@@ -43,50 +69,55 @@ def deploy_ocp3_agnosticd() {
   ]
   def osrelease = releases["${repo_version}"]
   def envtype = "ocp-workshop"
+  def cluster_adm_user = 'admin'
+  def console_addr = "https://master.${CLUSTER_NAME}-${BUILD_NUMBER}${BASESUFFIX}:443"
   return {
     stage('Deploy OCP3 cluster with agnosticd') {
-      steps_finished << 'Deploy agnosticd OCP3 workload ' + OCP3_VERSION
-      dir('agnosticd') {
-        withCredentials([
-            string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-            string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY'),
-            string(credentialsId: "$EC2_SUB_USER", variable: 'SUB_USER'),
-            string(credentialsId: "$EC2_SUB_PASS", variable: 'SUB_PASS'),
-            string(credentialsId: "$AGND_REPO", variable: 'OWN_REPO')
-            ])
-        {
+      steps_finished << 'Deploy agnosticd OCP3 workshop ' + OCP3_VERSION
+      withCredentials([
+          string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
+          string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY'),
+          string(credentialsId: "$EC2_SUB_USER", variable: 'SUB_USER'),
+          string(credentialsId: "$EC2_SUB_PASS", variable: 'SUB_PASS'),
+          string(credentialsId: "$AGND_REPO", variable: 'OWN_REPO')
+          ])
+      {
+        dir('agnosticd') {
           def vars = [
-            "-e 'guid=${GUID}'",
-            "-e 'env_type=${envtype}'",
-            "-e 'own_repo_path=${OWN_REPO}/${osrelease}'",
-            "-e 'osrelease=${osrelease}'",
-            "-e 'repo_version=${repo_version}'",
-            "-e 'cloud_provider=ec2'",
-            "-e 'aws_region=${AWS_REGION}'",
-            "-e 'HostedZoneId=${HOSTZONEID}'",
-            "-e 'key_name=${EC2_KEY}'",
-            "-e 'ansible_ssh_private_key_file=${PRIVATE_KEY}'",
-            "-e 'subdomain_base_suffix=${BASESUFFIX}'",
-            "-e 'node_instance_count=${NODE_COUNT}'",
-            "-e 'software_to_deploy=openshift'",
-            "-e 'redhat_registry_user=${SUB_USER}'",
-            "-e 'redhat_registry_password=${SUB_PASS}'",
-            "-e 'aws_access_key_id=${AWS_ACCESS_KEY_ID}'",
-            "-e 'aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}'",
-            "-e 'email=${EMAIL}' -e'output_dir=${WORKSPACE}'",
-            // User admin with admin password to preserve consistency between different deployment types
-            "-e 'admin_user=admin",
-            "-e 'admin_user_password=admin",
+            'guid': "${CLUSTER_NAME}-${BUILD_NUMBER}",
+            'env_type': "${envtype}",
+            'own_repo_path': "${OWN_REPO}/${osrelease}",
+            'osrelease': "${osrelease}",
+            'repo_version': "${repo_version}",
+            'cloud_provider': 'ec2',
+            'aws_region': "${AWS_REGION}",
+            'HostedZoneId': "${HOSTZONEID}",
+            'key_name': "${EC2_KEY}",
+            'ansible_ssh_private_key_file': "${PRIVATE_KEY}",
+            'subdomain_base_suffix': "${BASESUFFIX}",
+            'node_instance_count': "${NODE_COUNT}",
+            'master_instance_count': "${MASTER_COUNT}",
+            'software_to_deploy': 'openshift',
+            'redhat_registry_user': "${SUB_USER}",
+            'redhat_registry_password': "${SUB_PASS}",
+            'aws_access_key_id': "${AWS_ACCESS_KEY_ID}",
+            'aws_secret_access_key': "${AWS_SECRET_ACCESS_KEY}",
+            'email': "${EMAIL}",
+            'output_dir': "${WORKSPACE}",
+            "update_packages": "false",
+            // User admin to preserve consistency between different deployment types
+            'admin_user': "${cluster_adm_user}",
             // Fix for commit # 8780932 to work
-            "-e 'course_name=ocp-workshop' -e 'platform=aws'",
-            // Workaround for hitting AWS limit of c4.xlarge instances
-            "-e 'bastion_instance_type=t2.large' -e 'master_instance_type=c4.xlarge'",
-            "-e 'infranode_instance_type=c4.4xlarge' -e 'node_instance_type=c4.4xlarge'"
+            'course_name': 'ocp-workshop',
+            'platform': 'aws'
           ]
+          sh 'rm -f vars.yml'
+          writeYaml file: 'vars.yml', data: vars
+          vars = vars.collect { e -> '-e ' + e.key + '=' + e.value }
+
           withEnv(['PATH+EXTRA=~/.local/bin']) {
-            sh "which aws"
             echo "Region: ${AWS_REGION}"
-            echo "Name: ${GUID}"
+            echo "Name: ${CLUSTER_NAME}"
             echo "Version: ${OCP3_VERSION}"
             ansiColor('xterm') {
               ansiblePlaybook(
@@ -98,6 +129,25 @@ def deploy_ocp3_agnosticd() {
                 colorized: true)
             }
           }
+        }
+        def login_vars = [
+          "console_addr": "${console_addr}",
+          "user": "${cluster_adm_user}",
+          "passwd": "r3dh4t1!",
+          "source_kubecnfig": "${KUBECONFIG_TMP}",
+          "target_kubeconfig": "${KUBECONFIG_OCP3}"
+        ]
+        sh 'rm -f login_vars.yml'
+        writeYaml file: 'login_vars.yml', data: login_vars
+
+        login_vars = login_vars.collect { e -> '-e ' + e.key + '=' + e.value }
+        ansiColor('xterm') {
+          ansiblePlaybook(
+            playbook: 'login.yml',
+            extras: "${login_vars.join(' ')}",
+            hostKeyChecking: false,
+            unbuffered: true,
+            colorized: true)
         }
       }
     }
@@ -113,10 +163,7 @@ def deployOCP4() {
           string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
           ])
       {
-        withEnv([
-            'PATH+EXTRA=~/bin',
-            "KUBECONFIG=${KUBECONFIG_TMP}"])
-          {
+        withEnv(["KUBECONFIG=${KUBECONFIG_TMP}"]){
           ansiColor('xterm') {
             ansiblePlaybook(
               playbook: 'deploy_ocp4_cluster.yml',
@@ -147,26 +194,23 @@ def deploy_NFS() {
 }
 
 
-def login_agnosticd() {
-  def credentials = [
-    "console_addr=https://master.${GUID}${BASESUFFIX}:443",
-    "user=admin",
-    "passwd=admin"
-  ]
+def provision_pvs() {
   return {
-    stage('Login into cluster') {
-      steps_finished << 'Login into cluster ' + OCP3_VERSION
-      withEnv([
-          'PATH+EXTRA=~/bin',
-          "KUBECONFIG=${KUBECONFIG_TMP}"])
-        {
-        ansiColor('xterm') {
-          ansiblePlaybook(
-            playbook: 'login.yml',
-            extras: "${credentials.join(' ')}",
-            hostKeyChecking: false,
-            unbuffered: true,
-            colorized: true)
+    stage('Provison PVs on source cluster') {
+      steps_finished << 'Provison PVs on source cluster'
+      withCredentials([
+        string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
+        string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
+        ])
+      {
+        withEnv(["KUBECONFIG=${KUBECONFIG_OCP3}"]) {
+          ansiColor('xterm') {
+            ansiblePlaybook(
+              playbook: 'nfs_provision_pvs.yml',
+              hostKeyChecking: false,
+              unbuffered: true,
+              colorized: true)
+          }
         }
       }
     }
@@ -174,14 +218,35 @@ def login_agnosticd() {
 }
 
 
-def load_sample_data() {
+def prepare_test_data(kubeconfig) {
+  return {
+    stage('Prepare test data on source cluster') {
+      steps_finished << 'Prepare test data on source cluster'
+      withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${kubeconfig}"]) {
+        dir('ocp-mig-test-data') {
+          ansiColor('xterm') {
+            ansiblePlaybook(
+              playbook: 'mysql-pvc.yml',
+              extras: "-e with_backup=false -e with_restore=false",
+              hostKeyChecking: false,
+              unbuffered: true,
+              colorized: true)
+          }
+        }
+      }
+    }
+  }
+}
+
+
+def load_sample_data(kubeconfig) {
   return {
     stage('Load Sample Data/Apps on OCP3') {
       steps_finished << 'Load Sample Data/Apps on OCP3'
       dir('ocp-mig-test-data') {
         withEnv([
             'PATH+EXTRA=~/bin',
-            "KUBECONFIG=${KUBECONFIG_TMP}"])
+            "KUBECONFIG=${kubeconfig}"])
           {
           ansiColor('xterm') {
             ansiblePlaybook(
@@ -198,13 +263,13 @@ def load_sample_data() {
 }
 
 
-def sanity_checks() {
+def sanity_checks(kubeconfig) {
   return {
     stage('Run OCP3 Sanity Checks') {
       steps_finished << 'Run OCP3 Sanity Checks'
       withEnv([
           'PATH+EXTRA=~/bin',
-          "KUBECONFIG=${KUBECONFIG_TMP}"]) {
+          "KUBECONFIG=${kubeconfig}"]) {
         ansiColor('xterm') {
           ansiblePlaybook(
             playbook: 'ocp_sanity_check.yml',
@@ -217,81 +282,5 @@ def sanity_checks() {
   }
 }
 
-
-def teardown_OCP3_OA(prefix = '') {
-  if (prefix != '') {
-    prefix = "-e prefix=${prefix}"
-  }
-  if (EC2_TERMINATE_INSTANCES) {
-    withCredentials([
-        string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-        string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY'),
-        ]) 
-    {
-      withEnv(['PATH+EXTRA=~/bin']) {
-        echo "Region: ${env.AWS_REGION}"
-        ansiColor('xterm') {
-          ansiblePlaybook(
-            playbook: 'destroy_ocp3_cluster.yml',
-            extras: "${prefix}",
-            hostKeyChecking: false,
-            unbuffered: true,
-            colorized: true)
-        }
-      }
-    }
-  }
-}
-
-def teardown_ocp3_agnosticd() {
-  if (EC2_TERMINATE_INSTANCES) {
-    dir("agnosticd") {
-      withCredentials([
-          string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-          string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY'),
-          ])
-      {
-        def teardown_vars = [
-          "-e 'aws_region=${AWS_REGION}'",
-          "-e 'guid=${GUID}'",
-          "-e 'env_type=ocp-workshop'",
-          "-e 'cloud_provider=ec2'",
-          "-e 'aws_access_key_id=${AWS_ACCESS_KEY_ID}'",
-          "-e 'aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}'"
-        ]
-        withEnv(['PATH+EXTRA=~/.local/bin']) {
-          echo "Teardown_vars: ${teardown_vars.join(' ')}"
-          ansiblePlaybook(
-            playbook: "ansible/configs/${ENVTYPE}/destroy_env.yml",
-            extras: "${teardown_vars.join(' ')}",
-            hostKeyChecking: false,
-            unbuffered: true,
-            colorized: true)
-        }
-      }
-    }
-  }
-}
-
-
-def teardown_OCP4() {
-  if (EC2_TERMINATE_INSTANCES) {
-    withCredentials([
-      string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-      string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
-      ]) 
-    {
-      withEnv(['PATH+EXTRA=~/bin']) {
-        ansiColor('xterm') {
-          ansiblePlaybook(
-            playbook: 'destroy_ocp4_cluster.yml',
-            hostKeyChecking: false,
-            unbuffered: true,
-            colorized: true)
-        }
-      }
-    }
-  }
-}
 
 return this

@@ -1,20 +1,27 @@
 // parallel-base.groovy
 
 // Set Job properties and triggers
-properties([disableConcurrentBuilds(),
+properties([
 parameters([string(defaultValue: 'v3.11', description: 'OCP3 version to deploy', name: 'OCP3_VERSION', trim: false),
 string(defaultValue: 'v4.1', description: 'OCP4 version to deploy', name: 'OCP4_VERSION', trim: false),
+string(description: 'Cluster name to deploy', name: 'CLUSTER_NAME', trim: false),
+string(defaultValue: 'jmatthew@redhat.com', description: 'Email to register the deploymnet', name: 'EMAIL', trim: false),
+string(defaultValue: '1', description: 'Master count for cluster deployment', name: 'NODE_COUNT', trim: false),
+string(defaultValue: '1', description: 'Node count for cluster deployment', name: 'MASTER_COUNT', trim: false),
+string(defaultValue: '.mg.dog8code.com', description: 'Zone suffix for instance hostname address', name: 'BASESUFFIX', trim: false),
+string(defaultValue: 'Z2GE8CSGW2ZA8W', description: 'Zone id', name: 'HOSTZONEID', trim: false),
+string(defaultValue: 'ocp-workshop', description: 'AgnosticD environment type to deploy', name: 'ENVTYPE', trim: false),
+string(defaultValue: 'ci', description: 'EC2 SSH key name to deploy on instances for remote access ', name: 'EC2_KEY', trim: false),
+string(defaultValue: 'eu-west-1', description: 'AWS region to deploy instances', name: 'AWS_REGION', trim: false),
+string(defaultValue: 'agnosticd', description: 'Deployment type to choose', name: 'DEPLOYMENT_TYPE', trim: false),
+credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'agnosticd_own_repo', description: 'Private repo address for openshift-ansible packages', name: 'AGND_REPO', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_aws_access_key_id', description: 'EC2 access key ID for auth purposes', name: 'EC2_ACCESS_KEY_ID', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_aws_secret_access_key', description: 'EC2 private key needed to access instances, from Jenkins credentials store', name: 'EC2_SECRET_ACCESS_KEY', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl', defaultValue: 'ci_ec2_key', description: 'EC2 private key needed to access instances, from Jenkins credentials store', name: 'EC2_PRIV_KEY', required: true),
+credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl', defaultValue: 'ci_pub_key', description: 'EC2 public key needed for agnosticd instances', name: 'EC2_PUB_KEY', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_rhel_sub_user', description: 'RHEL Openshift subscription account username', name: 'EC2_SUB_USER', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_rhel_sub_pass', description: 'RHEL Openshift subscription account password', name: 'EC2_SUB_PASS', required: true),
-string(defaultValue: 'ci', description: 'EC2 SSH key name to deploy on instances for remote access ', name: 'EC2_KEY', trim: false),
-string(defaultValue: 'eu-west-1', description: 'AWS region to deploy instances', name: 'AWS_REGION', trim: false),
-string(defaultValue: 'm4.large', description: 'EC2 instance type to deploy', name: 'EC2_INSTANCE_TYPE', trim: false),
-string(defaultValue: 'jenkins-parallel-ci', description: 'Cluster names to deploy', name: 'CLUSTER_NAME', trim: false),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl', defaultValue: 'ci_pull_secret', description: 'Pull secret needed for OCP4 deployments', name: 'OCP4_PULL_SECRET', required: true),
-credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl', defaultValue: 'ci_pub_key', description: 'EC2 public key needed for OCP4 instances', name: 'EC2_PUB_KEY', required: true),
 booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE'),
 booleanParam(defaultValue: true, description: 'EC2 terminate instances after build', name: 'EC2_TERMINATE_INSTANCES')])])
 
@@ -47,12 +54,23 @@ node {
             utils.copy_private_keys()
             utils.copy_public_keys()
             utils.clone_related_repos()
+            if (env.DEPLOYMENT_TYPE == 'agnosticd') {
+                utils.prepare_agnosticd()
+            } else if (env.DEPLOYMENT_TYPE != 'OA') {
+                utils.prepare_origin3_dev()
+            }
         }
 
         stage('Deploy clusters') {
             steps_finished << 'Deploy clusters'
             parallel deploy_OCP3: {
-                common_stages.deployOCP3_OA(CLUSTER_NAME).call()
+                if (env.DEPLOYMENT_TYPE == 'agnosticd') {
+                    common_stages.deploy_ocp3_agnosticd().call()
+                } else if (env.DEPLOYMENT_TYPE == 'OA') {
+                    common_stages.deployOCP3_OA(CLUSTER_NAME).call()
+                } else {
+                    common_stages.deploy_origin3_dev(KUBECONFIG_OCP3).call()
+                }
             }, deploy_OCP4: {
                 common_stages.deployOCP4().call()
             }, deploy_NFS: {
@@ -61,25 +79,7 @@ node {
             failFast: true
         }
 
-        stage('Provison PVs on source cluster') {
-            steps_finished << 'Provison PVs on source cluster'
-            withCredentials([
-                string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-                string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
-                ]) 
-            {
-                
-                withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${KUBECONFIG_OCP3}"]) {
-                    ansiColor('xterm') {
-                        ansiblePlaybook(
-                            playbook: 'nfs_provision_pvs.yml',
-                            hostKeyChecking: false,
-                            unbuffered: true,
-                            colorized: true)
-                    }
-                }
-            }
-        }
+        common_stages.provision_pvs().call()
 
         stage('Deploy mig-controller on source cluster') {
             steps_finished << 'Deploy mig-controller on source cluster'
@@ -101,7 +101,7 @@ node {
             withCredentials([
                 string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
                 string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
-                ]) 
+                ])
             {
                 withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${KUBECONFIG_OCP4}"]) {
                     ansiColor('xterm') {
@@ -115,21 +115,7 @@ node {
             }
         }
 
-        stage('Prepare test data on source cluster') {
-        steps_finished << 'Prepare test data on source cluster'
-            withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${KUBECONFIG_OCP3}"]) {
-                dir('ocp-mig-test-data') {
-                    ansiColor('xterm') {
-                        ansiblePlaybook(
-                            playbook: 'mysql-pvc.yml',
-                            extras: "-e with_backup=false -e with_restore=false",
-                            hostKeyChecking: false,
-                            unbuffered: true,
-                            colorized: true)
-                    }
-                }
-            }
-        }
+        common_stages.prepare_test_data(KUBECONFIG_OCP3).call()
 
         stage('Execute migration') {
             steps_finished << 'Execute migration'
@@ -141,9 +127,10 @@ node {
             // TODO
         }
 
-    } catch (e) {
+    } catch (Exception ex) {
         currentBuild.result = "FAILED"
-        throw e
+        println(ex.toString())
+        throw ex
     } finally {
         // Success or failure, always send notifications
         utils.notifyBuild(currentBuild.result)
@@ -157,17 +144,17 @@ node {
                         {
                             withEnv(['PATH+EXTRA=~/bin']) {
                                 parallel destroy_OCP3: {
-                                    common_stages.teardown_OCP3_OA(CLUSTER_NAME)
-                                }, destroy_OCP4: {
-                                    common_stages.teardown_OCP4()
-                                }, destroy_NFS: {
-                                    ansiColor('xterm') {
-                                            ansiblePlaybook(
-                                                playbook: 'nfs_server_destroy.yml',
-                                                hostKeyChecking: false,
-                                                unbuffered: true,
-                                                colorized: true)
+                                    if (env.DEPLOYMENT_TYPE == 'agnosticd') {
+                                        utils.teardown_ocp3_agnosticd()
+                                    } else if (env.DEPLOYMENT_TYPE == 'OA') {
+                                        utils.teardown_OCP3_OA(CLUSTER_NAME)
+                                    } else {
+                                        utils.teardown_origin3_dev()
                                     }
+                                }, destroy_OCP4: {
+                                    utils.teardown_OCP4()
+                                }, destroy_NFS: {
+                                    utils.teardown_nfc()
                                 }, failFast: false
                             }
                         }

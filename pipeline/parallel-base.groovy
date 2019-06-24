@@ -10,7 +10,7 @@ credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCre
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_rhel_sub_user', description: 'RHEL Openshift subscription account username', name: 'EC2_SUB_USER', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_rhel_sub_pass', description: 'RHEL Openshift subscription account password', name: 'EC2_SUB_PASS', required: true),
 string(defaultValue: 'ci', description: 'EC2 SSH key name to deploy on instances for remote access ', name: 'EC2_KEY', trim: false),
-string(defaultValue: 'eu-west-1', description: 'EC2 region to deploy instances', name: 'EC2_REGION', trim: false),
+string(defaultValue: 'eu-west-1', description: 'AWS region to deploy instances', name: 'AWS_REGION', trim: false),
 string(defaultValue: 'm4.large', description: 'EC2 instance type to deploy', name: 'EC2_INSTANCE_TYPE', trim: false),
 string(defaultValue: 'jenkins-parallel-ci', description: 'Cluster names to deploy', name: 'CLUSTER_NAME', trim: false),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl', defaultValue: 'ci_pull_secret', description: 'Pull secret needed for OCP4 deployments', name: 'OCP4_PULL_SECRET', required: true),
@@ -52,7 +52,7 @@ node {
         stage('Deploy clusters') {
             steps_finished << 'Deploy clusters'
             parallel deploy_OCP3: {
-                common_stages.deployOCP3_OA("prefix=${env.CLUSTER_NAME}").call()
+                common_stages.deployOCP3_OA(CLUSTER_NAME).call()
             }, deploy_OCP4: {
                 common_stages.deployOCP4().call()
             }, deploy_NFS: {
@@ -155,9 +155,9 @@ node {
                             string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
                             ]) 
                         {
-                            withEnv(['PATH+EXTRA=~/bin', "AWS_REGION=${EC2_REGION}"]) {
+                            withEnv(['PATH+EXTRA=~/bin']) {
                                 parallel destroy_OCP3: {
-                                    common_stages.teardown_OCP3_OA("prefix=${env.CLUSTER_NAME}")
+                                    common_stages.teardown_OCP3_OA(CLUSTER_NAME)
                                 }, destroy_OCP4: {
                                     common_stages.teardown_OCP4()
                                 }, destroy_NFS: {

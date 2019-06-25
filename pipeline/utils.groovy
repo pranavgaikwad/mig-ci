@@ -75,11 +75,11 @@ def prepare_agnosticd() {
 
   // Fixes
   withCredentials([file(credentialsId: "${env.EC2_PUB_KEY}", variable: "SSH_PUB_KEY")]) {
-    sh "test -e ${CLUSTER_NAME}-${BUILD_NUMBER}key.pub || cat ${SSH_PUB_KEY} > ${CLUSTER_NAME}-${BUILD_NUMBER}key.pub"
+    sh "cat ${SSH_PUB_KEY} > ${CLUSTER_NAME}-${BUILD_NUMBER}key.pub"
   }
 
   withCredentials([file(credentialsId: "${env.EC2_PRIV_KEY}", variable: "SSH_PRIV_KEY")]) {
-    sh "test -e ${CLUSTER_NAME}-${BUILD_NUMBER}key || cat ${SSH_PRIV_KEY} > ${CLUSTER_NAME}-${BUILD_NUMBER}key"
+    sh "cat ${SSH_PRIV_KEY} > ${CLUSTER_NAME}-${BUILD_NUMBER}key"
     sh "chmod 600 ${CLUSTER_NAME}key"
   }
 
@@ -227,13 +227,15 @@ def teardown_OCP4() {
   }
 }
 
-def teardown_nfc() {
-  ansiColor('xterm') {
-    ansiblePlaybook(
-      playbook: 'nfs_server_destroy.yml',
-      hostKeyChecking: false,
-      unbuffered: true,
-      colorized: true)
+def teardown_nfs() {
+  if (EC2_TERMINATE_INSTANCES) {
+    ansiColor('xterm') {
+      ansiblePlaybook(
+        playbook: 'nfs_server_destroy.yml',
+        hostKeyChecking: false,
+        unbuffered: true,
+        colorized: true)
+    }
   }
 }
 

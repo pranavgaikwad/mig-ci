@@ -3,8 +3,8 @@
 // Set Job properties and triggers
 properties([
 parameters([
-string(description: 'OpenShift version to deploy', name: 'OCP3_VERSION', trim: false),
-string(description: 'Cluster name to deploy', name: 'CLUSTER_NAME', trim: false),
+string(defaultValue: 'v3.11', description: 'OpenShift version to deploy', name: 'OCP3_VERSION', trim: false),
+string(defaultValue: 'jenkins-ci-agnosticd-base', description: 'Cluster name to deploy', name: 'CLUSTER_NAME', trim: false),
 string(defaultValue: 'jmatthew@redhat.com', description: 'Email to register the deploymnet', name: 'EMAIL', trim: false),
 string(defaultValue: '1', description: 'Node count for cluster deployment', name: 'NODE_COUNT', trim: false),
 string(defaultValue: '1', description: 'Node count for cluster deployment', name: 'MASTER_COUNT', trim: false),

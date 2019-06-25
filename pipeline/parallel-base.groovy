@@ -4,7 +4,7 @@
 properties([
 parameters([string(defaultValue: 'v3.11', description: 'OCP3 version to deploy', name: 'OCP3_VERSION', trim: false),
 string(defaultValue: 'v4.1', description: 'OCP4 version to deploy', name: 'OCP4_VERSION', trim: false),
-string(description: 'Cluster name to deploy', name: 'CLUSTER_NAME', trim: false),
+string(defaultValue: 'jenkins-ci-parallel-base', description: 'Cluster name to deploy', name: 'CLUSTER_NAME', trim: false),
 string(defaultValue: 'jmatthew@redhat.com', description: 'Email to register the deploymnet', name: 'EMAIL', trim: false),
 string(defaultValue: '1', description: 'Master count for cluster deployment', name: 'NODE_COUNT', trim: false),
 string(defaultValue: '1', description: 'Node count for cluster deployment', name: 'MASTER_COUNT', trim: false),
@@ -40,6 +40,8 @@ echo "Build URL ${env.BUILD_URL}"
 echo "Job URL ${env.JOB_URL}"
 
 node {
+    sh "mkdir ${WORKSPACE}-${BUILD_NUMBER}"
+    ws("${WORKSPACE}-${BUILD_NUMBER}") {
     try {
         checkout scm
         common_stages = load "${env.WORKSPACE}/pipeline/common_stages.groovy"
@@ -67,7 +69,7 @@ node {
                 if (env.DEPLOYMENT_TYPE == 'agnosticd') {
                     common_stages.deploy_ocp3_agnosticd().call()
                 } else if (env.DEPLOYMENT_TYPE == 'OA') {
-                    common_stages.deployOCP3_OA(CLUSTER_NAME).call()
+                    common_stages.deployOCP3_OA(CLUSTER_NAME + '-' + BUILD_NUMBER).call()
                 } else {
                     common_stages.deploy_origin3_dev(KUBECONFIG_OCP3).call()
                 }
@@ -81,51 +83,9 @@ node {
 
         common_stages.provision_pvs().call()
 
-        stage('Deploy mig-controller on source cluster') {
-            steps_finished << 'Deploy mig-controller on source cluster'
-            withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${KUBECONFIG_OCP3}", "CLUSTER_VERSION=3"]) {
-                ansiColor('xterm') {
-                    ansiblePlaybook(
-                        playbook: 'mig_controller_deploy.yml',
-                        extras: "-e mig_controller_host_cluster=false",
-                        hostKeyChecking: false,
-                        unbuffered: true,
-                        colorized: true)
-                }
-            }
-        }
+        common_stages.deploy_mig_controller_on_both(KUBECONFIG_OCP3, KUBECONFIG_OCP4, false, true).call()
 
-
-        stage('Deploy mig-controller on target cluster') {
-            steps_finished << 'Deploy mig-controller on target cluster'
-            withCredentials([
-                string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-                string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
-                ])
-            {
-                withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${KUBECONFIG_OCP4}"]) {
-                    ansiColor('xterm') {
-                        ansiblePlaybook(
-                            playbook: 'mig_controller_deploy.yml',
-                            hostKeyChecking: false,
-                            unbuffered: true,
-                            colorized: true)
-                    }
-                }
-            }
-        }
-
-        common_stages.prepare_test_data(KUBECONFIG_OCP3).call()
-
-        stage('Execute migration') {
-            steps_finished << 'Execute migration'
-            // TODO
-        }
-
-        stage('Verify migration sanity') {
-            steps_finished << 'Verify migration sanity'
-            // TODO
-        }
+        common_stages.execute_migration(KUBECONFIG_OCP4).call()
 
     } catch (Exception ex) {
         currentBuild.result = "FAILED"
@@ -154,14 +114,16 @@ node {
                                 }, destroy_OCP4: {
                                     utils.teardown_OCP4()
                                 }, destroy_NFS: {
-                                    utils.teardown_nfc()
+                                    utils.teardown_nfs()
                                 }, failFast: false
                             }
                         }
                 }
             if (CLEAN_WORKSPACE) {
                 cleanWs cleanWhenFailure: false, notFailBuild: true
+                sh "rm -rf ${WORKSPACE}-${BUILD_NUMBER}"
             }
         }
+    }
     }
 }

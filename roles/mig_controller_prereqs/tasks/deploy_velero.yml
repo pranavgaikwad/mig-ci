@@ -1,7 +1,8 @@
 - name: Clone the mig controller repo
   git:
     dest: "{{ mig_controller_location }}"
-    repo: https://github.com/fusor/mig-controller.git
+    repo: "https://github.com/{{ mig_controller_owner_repo }}/mig-controller.git"
+    version: "{{ mig_controller_owner_branch }}"
     force: true
     depth: 1
 
@@ -11,6 +12,9 @@
 
 - debug:
     var: deploy.stdout_lines
+
+- debug:
+    var: deploy.stderr_lines
 
 - name: Check status of velero deployment
   k8s_facts:
@@ -34,6 +38,25 @@
 - name: Fix restic pod dir mount for OA install
   shell: "{{ oc_binary }} set volume -n velero ds/restic --add --name=host-pods --path /var/lib/origin/openshift.local.volumes/pods --overwrite"
   when: deployment_type != 'cluster_up' and cluster_version != '4'
+
+- name: Patch node-selector for restic DS
+  shell: "{{ oc_binary }} patch namespace velero -p '{\"metadata\": {\"annotations\": {\"openshift.io/node-selector\": \"\"}}}'"
+
+- name: Find restic pods
+  k8s_facts:
+    api_version: v1
+    kind: Pod
+    namespace: velero
+    label_selectors: "name=restic"
+  register: restic
+
+- name: Delete restic pod to restart DS
+  k8s:
+    state: absent
+    api_version: v1
+    kind: Pod
+    namespace: velero
+    name: "{{ restic.resources[0].metadata.name }}"
 
 - name: Check status of restic deployment
   k8s_facts:

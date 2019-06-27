@@ -44,25 +44,11 @@ node {
             utils.clone_related_repos()
         }
 
-        common_stages.deployOCP4().call()
+        common_stages.deployOCP4(TARGET_KUBECONFIG).call()
 
-        stage('Deploy mig-controller on target cluster') {
-            steps_finished << 'Deploy mig-controller on target cluster'
-            withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${KUBECONFIG_OCP4}"]) {
-                ansiColor('xterm') {
-                    ansiblePlaybook(
-                        playbook: 'mig_controller_deploy.yml',
-                        extras: "-e mig_controller_remote_cluster_online=false",
-                        hostKeyChecking: false,
-                        unbuffered: true,
-                        colorized: true)
-                }
-            }
-        }
     } catch (Exception ex) {
         currentBuild.result = "FAILED"
         println(ex.toString())
-        throw ex
     } finally {
         // Success or failure, always send notifications
         utils.notifyBuild(currentBuild.result)

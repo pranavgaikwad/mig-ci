@@ -11,7 +11,9 @@ def deploy_origin3_dev(kubeconfig) {
         ])
       {
         dir('origin3-dev') {
-          withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${kubeconfig}"]) {
+          withEnv([
+            "PATH+EXTRA=~/bin",
+            "KUBECONFIG=${kubeconfig}"]) {
             ansiColor('xterm') {
               ansiblePlaybook(
                 playbook: 'deploy.yml',
@@ -29,7 +31,7 @@ def deploy_origin3_dev(kubeconfig) {
 
 
 
-def deployOCP3_OA(prefix = '') {
+def deployOCP3_OA(kubeconfig, prefix = '') {
   if (prefix != '') {
     prefix = "-e prefix=${prefix}"
   }
@@ -44,7 +46,7 @@ def deployOCP3_OA(prefix = '') {
           string(credentialsId: "$EC2_SUB_PASS", variable: 'SUB_PASS')
           ])
       {
-        withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${KUBECONFIG_TMP}"]) {
+        withEnv(["KUBECONFIG=${kubeconfig}"]) {
           ansiColor('xterm') {
             ansiblePlaybook(
               playbook: 'deploy_ocp3_cluster.yml',
@@ -59,7 +61,7 @@ def deployOCP3_OA(prefix = '') {
   }
 }
 
-def deploy_ocp3_agnosticd() {
+def deploy_ocp3_agnosticd(kubeconfig) {
   def repo_version = "${OCP3_VERSION.substring(1)}"
   def releases = [
     '3.7': "3.7.23",
@@ -70,7 +72,7 @@ def deploy_ocp3_agnosticd() {
   def osrelease = releases["${repo_version}"]
   def envtype = "ocp-workshop"
   def cluster_adm_user = 'admin'
-  def console_addr = "https://master.${CLUSTER_NAME}-${BUILD_NUMBER}${BASESUFFIX}:443"
+  def console_addr = "https://master.${CLUSTER_NAME}-v3-${BUILD_NUMBER}${BASESUFFIX}:443"
   return {
     stage('Deploy OCP3 cluster with agnosticd') {
       steps_finished << 'Deploy agnosticd OCP3 workshop ' + OCP3_VERSION
@@ -84,7 +86,7 @@ def deploy_ocp3_agnosticd() {
       {
         dir('agnosticd') {
           def vars = [
-            'guid': "${CLUSTER_NAME}-${BUILD_NUMBER}",
+            'guid': "${CLUSTER_NAME}-v3-${BUILD_NUMBER}",
             'env_type': "${envtype}",
             'own_repo_path': "${OWN_REPO}/${osrelease}",
             'osrelease': "${osrelease}",
@@ -118,7 +120,7 @@ def deploy_ocp3_agnosticd() {
           // Dump teardown wars on host
           def teardown_vars = [
             'aws_region': "${AWS_REGION}",
-            'guid': "${CLUSTER_NAME}-${BUILD_NUMBER}",
+            'guid': "${CLUSTER_NAME}-v3-${BUILD_NUMBER}",
             'env_type': "ocp-workshop",
             'cloud_provider': "ec2",
             'aws_access_key_id': "${AWS_ACCESS_KEY_ID}",
@@ -148,8 +150,7 @@ def deploy_ocp3_agnosticd() {
           "console_addr": "${console_addr}",
           "user": "${cluster_adm_user}",
           "passwd": "r3dh4t1!", // This value is not configurable
-          "source_kubecnfig": "${KUBECONFIG_TMP}",
-          "target_kubeconfig": "${KUBECONFIG_OCP3}"
+          "kubeconfig": "${kubeconfig}"
         ]
         sh 'rm -f login_vars.yml'
         writeYaml file: 'login_vars.yml', data: login_vars
@@ -168,7 +169,7 @@ def deploy_ocp3_agnosticd() {
   }
 }
 
-def deployOCP4() {
+def deployOCP4(kubeconfig) {
   return {
     stage('Deploy OCP4 cluster') {
       steps_finished << 'Deploy OCP4'
@@ -177,7 +178,7 @@ def deployOCP4() {
           string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
           ])
       {
-        withEnv(["KUBECONFIG=${KUBECONFIG_TMP}"]){
+        withEnv(["KUBECONFIG=${kubeconfig}", "CLUSTER_NAME=${CLUSTER_NAME}-v4-${BUILD_NUMBER}"]){
           ansiColor('xterm') {
             ansiblePlaybook(
               playbook: 'deploy_ocp4_cluster.yml',
@@ -192,7 +193,10 @@ def deployOCP4() {
 }
 
 
-def deploy_NFS() {
+def deploy_NFS(prefix = '') {
+  if (prefix != '') {
+    prefix = "-e prefix=${prefix}"
+  }
   return {
     stage('Configure NFS storage') {
       steps_finished << 'Configure NFS storage'
@@ -200,6 +204,7 @@ def deploy_NFS() {
         ansiblePlaybook(
           playbook: 'nfs_server_deploy.yml',
           hostKeyChecking: false,
+          extras: "${prefix}",
           unbuffered: true,
           colorized: true)
       }
@@ -208,7 +213,10 @@ def deploy_NFS() {
 }
 
 
-def provision_pvs() {
+def provision_pvs(kubeconfig, prefix = '') {
+  if (prefix != '') {
+    prefix = "-e prefix=${prefix}"
+  }
   return {
     stage('Provison PVs on source cluster') {
       steps_finished << 'Provison PVs on source cluster'
@@ -221,12 +229,13 @@ def provision_pvs() {
         string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
         ])
       {
-        withEnv(["KUBECONFIG=${KUBECONFIG_OCP3}"]) {
+        withEnv(["KUBECONFIG=${kubeconfig}"]) {
           ansiColor('xterm') {
             ansiblePlaybook(
               playbook: 'nfs_provision_pvs.yml',
               hostKeyChecking: false,
               skippedTags: "${skip_tags}",
+              extras: "${prefix}",
               unbuffered: true,
               colorized: true)
           }
@@ -293,11 +302,14 @@ def deploy_mig_controller_on_both(
   } else {
     cluster_version = 4
   }
+
   return {
     stage('Deploy mig-controller on both clusters') {
       steps_finished << 'Deploy mig-controller on both clusters'
       // Source
-      withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${source_kubeconfig}", "CLUSTER_VERSION=${cluster_version}"]) {
+      withEnv([
+          "KUBECONFIG=${source_kubeconfig}",
+          "PATH+EXTRA=~/bin"]) {
         ansiColor('xterm') {
           ansiblePlaybook(
             playbook: 'mig_controller_deploy.yml',
@@ -308,7 +320,9 @@ def deploy_mig_controller_on_both(
         }
       }
       // Target
-      withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${target_kubeconfig}"]) {
+      withEnv([
+          "KUBECONFIG=${target_kubeconfig}",
+          "PATH+EXTRA=~/bin"]) {
         ansiColor('xterm') {
           ansiblePlaybook(
             playbook: 'mig_controller_deploy.yml',
@@ -323,17 +337,32 @@ def deploy_mig_controller_on_both(
 }
 
 
-def execute_migration(kubeconfig) {
+def execute_migration(source_kubeconfig, target_kubeconfig) {
   return {
     stage('Execute migration') {
+      steps_finished << 'Execute migration'
       sh "cp -r config/mig_controller.yml mig-e2e/config"
       dir('mig-e2e') {
-        withEnv(["KUBECONFIG=${kubeconfig}"]) {
+        withEnv([
+          "KUBECONFIG=${source_kubeconfig}",
+          "PATH+EXTRA=~/bin"]) {
           ansiColor('xterm') {
-            steps_finished << 'Execute nginx migration'
             ansiblePlaybook(
-              playbook: 'nginx.yml',
+              playbook: 'mig_controller_samples.yml',
               hostKeyChecking: false,
+              extras: "-e 'with_migrate=false'",
+              unbuffered: true,
+              colorized: true)
+          }
+        }
+        withEnv([
+          "KUBECONFIG=${target_kubeconfig}",
+          "PATH+EXTRA=~/bin"]) {
+          ansiColor('xterm') {
+            ansiblePlaybook(
+              playbook: 'mig_controller_samples.yml',
+              hostKeyChecking: false,
+              extras: "-e 'with_deploy=false' -e 'mig_velero_timeout=300'",
               unbuffered: true,
               colorized: true)
           }

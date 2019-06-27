@@ -45,16 +45,15 @@ node {
             utils.prepare_origin3_dev()
         }
 
-        common_stages.deploy_origin3_dev(KUBECONFIG_OCP3).call()
+        common_stages.deploy_origin3_dev(SOURCE_KUBECONFIG).call()
 
-        common_stages.load_sample_data(KUBECONFIG_OCP3).call()
+        common_stages.load_sample_data(SOURCE_KUBECONFIG).call()
 
-        common_stages.sanity_checks(KUBECONFIG_OCP3).call()
+        common_stages.sanity_checks(SOURCE_KUBECONFIG).call()
 
     } catch (Exception ex) {
         currentBuild.result = "FAILED"
         println(ex.toString())
-        throw ex
     } finally {
     	stage('Clean Up Environment') {
             utils.teardown_origin3_dev()

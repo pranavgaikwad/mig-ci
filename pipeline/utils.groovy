@@ -75,12 +75,12 @@ def prepare_agnosticd() {
 
   // Fixes
   withCredentials([file(credentialsId: "${env.EC2_PUB_KEY}", variable: "SSH_PUB_KEY")]) {
-    sh "cat ${SSH_PUB_KEY} > ${CLUSTER_NAME}-${BUILD_NUMBER}key.pub"
+    sh "cat ${SSH_PUB_KEY} > ${CLUSTER_NAME}-v3-${BUILD_NUMBER}key.pub"
   }
 
   withCredentials([file(credentialsId: "${env.EC2_PRIV_KEY}", variable: "SSH_PRIV_KEY")]) {
-    sh "cat ${SSH_PRIV_KEY} > ${CLUSTER_NAME}-${BUILD_NUMBER}key"
-    sh "chmod 600 ${CLUSTER_NAME}key"
+    sh "cat ${SSH_PRIV_KEY} > ${CLUSTER_NAME}-v3-${BUILD_NUMBER}key"
+    sh "chmod 600 ${CLUSTER_NAME}-v3-${BUILD_NUMBER}key"
   }
 
   def readContent = readFile 'agnosticd/ansible.cfg'
@@ -93,19 +93,15 @@ def prepare_workspace(ocp3_version = '', ocp4_version = '') {
   sh "mkdir -p ${KEYS_DIR}"
   sh "mkdir -p ${env.WORKSPACE}/kubeconfigs"
 
-  // Set enviroment variables
-  KUBECONFIG_TMP = "${env.WORKSPACE}/kubeconfigs/kubeconfig"
-
   // Target kubeconfig locations
   if ("${ocp3_version}" != '') {
-    KUBECONFIG_OCP3 = "${env.WORKSPACE}/kubeconfigs/ocp-${ocp3_version}-kubeconfig"
+    SOURCE_KUBECONFIG = "${env.WORKSPACE}/kubeconfigs/ocp-${ocp3_version}-kubeconfig"
   }
   if ("${ocp4_version}" != '') {
-    KUBECONFIG_OCP4 = "${env.WORKSPACE}/kubeconfigs/ocp-${ocp4_version}-kubeconfig"
+    TARGET_KUBECONFIG = "${env.WORKSPACE}/kubeconfigs/ocp-${ocp4_version}-kubeconfig"
   }
 
-  sh "rm -f ${KUBECONFIG_TMP}"
-
+  OC_BINARY = "${env.WORKSPACE}/bin/oc"
 }
 
 
@@ -186,7 +182,7 @@ def teardown_ocp3_agnosticd() {
       {
         def teardown_vars = [
           'aws_region': "${AWS_REGION}",
-          'guid': "${CLUSTER_NAME}-${BUILD_NUMBER}",
+          'guid': "${CLUSTER_NAME}-v3-${BUILD_NUMBER}",
           'env_type': "ocp-workshop",
           'cloud_provider': "ec2",
           'aws_access_key_id': "${AWS_ACCESS_KEY_ID}",
@@ -227,12 +223,16 @@ def teardown_OCP4() {
   }
 }
 
-def teardown_nfs() {
+def teardown_nfs(prefix = '') {
+  if (prefix != '') {
+    prefix = "-e prefix=${prefix}"
+  }
   if (EC2_TERMINATE_INSTANCES) {
     ansiColor('xterm') {
       ansiblePlaybook(
         playbook: 'nfs_server_destroy.yml',
         hostKeyChecking: false,
+        extras: "${prefix}",
         unbuffered: true,
         colorized: true)
     }

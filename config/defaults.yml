@@ -19,6 +19,5 @@ ocp3_version: "{{ lookup('env', 'OCP3_VERSION') or 'v3.11' }}"
 ocp4_version: "{{ lookup('env', 'OCP4_VERSION') or 'v4.1' }}"
 
 default_kube_location: "{{ workspace }}/kubeconfigs"
-default_kubeconfig: "{{ lookup('env', 'KUBECONFIG') or default_kube_location + '/kubeconfig' }}"
-ocp3_kubeconfig: "{{ default_kube_location }}/ocp-{{ ocp3_version }}-kubeconfig"
-ocp4_kubeconfig: "{{ default_kube_location }}/ocp-{{ ocp4_version }}-kubeconfig"
+source_kubeconfig: "{{ default_kube_location }}/ocp-{{ ocp3_version }}-kubeconfig"
+target_kubeconfig: "{{ default_kube_location }}/ocp-{{ ocp4_version }}-kubeconfig"

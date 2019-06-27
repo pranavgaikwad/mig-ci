@@ -55,16 +55,15 @@ node {
             utils.prepare_agnosticd()
         }
 
-        common_stages.deploy_ocp3_agnosticd().call()
+        common_stages.deploy_ocp3_agnosticd(SOURCE_KUBECONFIG).call()
 
-        common_stages.load_sample_data(KUBECONFIG_OCP3).call()
+        common_stages.load_sample_data(SOURCE_KUBECONFIG).call()
 
-        common_stages.sanity_checks(KUBECONFIG_OCP3).call()
+        common_stages.sanity_checks(SOURCE_KUBECONFIG).call()
 
     } catch (Exception ex) {
         currentBuild.result = "FAILED"
         println(ex.toString())
-        throw ex
     } finally {
         // Success or failure, always send notifications
         utils.notifyBuild(currentBuild.result)

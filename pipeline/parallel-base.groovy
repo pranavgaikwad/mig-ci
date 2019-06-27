@@ -14,6 +14,8 @@ string(defaultValue: 'ocp-workshop', description: 'AgnosticD environment type to
 string(defaultValue: 'ci', description: 'EC2 SSH key name to deploy on instances for remote access ', name: 'EC2_KEY', trim: false),
 string(defaultValue: 'eu-west-1', description: 'AWS region to deploy instances', name: 'AWS_REGION', trim: false),
 string(defaultValue: 'agnosticd', description: 'Deployment type to choose', name: 'DEPLOYMENT_TYPE', trim: false),
+string(defaultValue: 'fusor', description: 'Mig controller repo to test', name: 'MIG_CONTROLLER_REPO', trim: false),
+string(defaultValue: 'HEAD', description: 'Mig controller repo branch to test', name: 'MIG_CONTROLLER_BRANCH', trim: false),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'agnosticd_own_repo', description: 'Private repo address for openshift-ansible packages', name: 'AGND_REPO', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_aws_access_key_id', description: 'EC2 access key ID for auth purposes', name: 'EC2_ACCESS_KEY_ID', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_aws_secret_access_key', description: 'EC2 private key needed to access instances, from Jenkins credentials store', name: 'EC2_SECRET_ACCESS_KEY', required: true),
@@ -67,30 +69,29 @@ node {
             steps_finished << 'Deploy clusters'
             parallel deploy_OCP3: {
                 if (env.DEPLOYMENT_TYPE == 'agnosticd') {
-                    common_stages.deploy_ocp3_agnosticd().call()
+                    common_stages.deploy_ocp3_agnosticd(SOURCE_KUBECONFIG).call()
                 } else if (env.DEPLOYMENT_TYPE == 'OA') {
-                    common_stages.deployOCP3_OA(CLUSTER_NAME + '-' + BUILD_NUMBER).call()
+                    common_stages.deployOCP3_OA(SOURCE_KUBECONFIG, CLUSTER_NAME + '-v3-' + BUILD_NUMBER).call()
                 } else {
-                    common_stages.deploy_origin3_dev(KUBECONFIG_OCP3).call()
+                    common_stages.deploy_origin3_dev(SOURCE_KUBECONFIG).call()
                 }
-            }, deploy_OCP4: {
-                common_stages.deployOCP4().call()
             }, deploy_NFS: {
-                common_stages.deploy_NFS().call()
-            }
+                common_stages.deploy_NFS(CLUSTER_NAME + '-' + BUILD_NUMBER).call()
+            }, deploy_OCP4: {
+                common_stages.deployOCP4(TARGET_KUBECONFIG).call()
+            },
             failFast: true
         }
 
-        common_stages.provision_pvs().call()
+        common_stages.provision_pvs(SOURCE_KUBECONFIG, CLUSTER_NAME + '-' + BUILD_NUMBER).call()
 
-        common_stages.deploy_mig_controller_on_both(KUBECONFIG_OCP3, KUBECONFIG_OCP4, false, true).call()
+        common_stages.deploy_mig_controller_on_both(SOURCE_KUBECONFIG, TARGET_KUBECONFIG, false, true).call()
 
-        common_stages.execute_migration(KUBECONFIG_OCP4).call()
+        common_stages.execute_migration(SOURCE_KUBECONFIG, TARGET_KUBECONFIG).call()
 
     } catch (Exception ex) {
         currentBuild.result = "FAILED"
         println(ex.toString())
-        throw ex
     } finally {
         // Success or failure, always send notifications
         utils.notifyBuild(currentBuild.result)
@@ -107,21 +108,20 @@ node {
                                     if (env.DEPLOYMENT_TYPE == 'agnosticd') {
                                         utils.teardown_ocp3_agnosticd()
                                     } else if (env.DEPLOYMENT_TYPE == 'OA') {
-                                        utils.teardown_OCP3_OA(CLUSTER_NAME)
+                                        utils.teardown_OCP3_OA(CLUSTER_NAME + '-' + BUILD_NUMBER)
                                     } else {
                                         utils.teardown_origin3_dev()
                                     }
                                 }, destroy_OCP4: {
                                     utils.teardown_OCP4()
                                 }, destroy_NFS: {
-                                    utils.teardown_nfs()
+                                    utils.teardown_nfs(CLUSTER_NAME + '-' + BUILD_NUMBER)
                                 }, failFast: false
                             }
                         }
                 }
             if (CLEAN_WORKSPACE) {
                 cleanWs cleanWhenFailure: false, notFailBuild: true
-                sh "rm -rf ${WORKSPACE}-${BUILD_NUMBER}"
             }
         }
     }

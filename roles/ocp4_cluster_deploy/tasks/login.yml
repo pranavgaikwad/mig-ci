@@ -2,5 +2,5 @@
   include_role:
     name: login_ocp
   vars:
-    source_kubeconfig: "{{ playbook_dir }}/auth/kubeconfig"
-    target_kubeconfig: "{{ ocp4_kubeconfig }}"
+    kubeconfig: "{{ playbook_dir }}/auth/kubeconfig"
+    copy_location: "{{ target_kubeconfig }}"

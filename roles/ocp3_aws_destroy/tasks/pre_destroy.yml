@@ -31,3 +31,4 @@
     retries: 60
     delay: 20
   delegate_to: "{{ ec2_instance_ip }}"
+  ignore_errors: true

@@ -44,16 +44,15 @@ node {
             utils.clone_related_repos()
         }
 
-        common_stages.deployOCP3_OA(CLUSTER_NAME).call()
+        common_stages.deployOCP3_OA(SOURCE_KUBECONFIG, CLUSTER_NAME).call()
 
-        common_stages.load_sample_data(KUBECONFIG_OCP3).call()
+        common_stages.load_sample_data(SOURCE_KUBECONFIG).call()
 
-        common_stages.sanity_checks(KUBECONFIG_OCP3).call()
+        common_stages.sanity_checks(SOURCE_KUBECONFIG).call()
 
     } catch (Exception ex) {
         currentBuild.result = "FAILED"
         println(ex.toString())
-        throw ex
     } finally {
         // Success or failure, always send notifications
         utils.notifyBuild(currentBuild.result)

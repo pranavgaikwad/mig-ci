@@ -35,7 +35,14 @@ def deployOCP3_OA(kubeconfig, prefix = '') {
   if (prefix != '') {
     prefix = "-e prefix=${prefix}"
   }
-
+  withCredentials([
+      string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
+      string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
+      ])
+  {
+    sh "echo 'export AWS_REGION=${AWS_REGION} AWS_ACCESS_KEY=${AWS_ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}' >> destroy_env.sh"
+    sh "echo 'ansible-playbook destroy_ocp3_cluster.yml ${prefix} &' >> destroy_env.sh"
+  }
   return {
     stage('Deploy OCP3 OA cluster') {
       steps_finished << 'Deploy OCP3 OA cluster ' + OCP3_VERSION
@@ -73,6 +80,7 @@ def deploy_ocp3_agnosticd(kubeconfig) {
   def envtype = "ocp-workshop"
   def cluster_adm_user = 'admin'
   def console_addr = "https://master.${CLUSTER_NAME}-v3-${BUILD_NUMBER}${BASESUFFIX}:443"
+  sh "echo 'cd agnosticd && ansible-playbook ansible/configs/ocp-workshop/destroy_env.yml -e @teardown_vars.yml &' >> destroy_env.sh && echo 'cd -' >> destroy_env.sh"
   return {
     stage('Deploy OCP3 cluster with agnosticd') {
       steps_finished << 'Deploy agnosticd OCP3 workshop ' + OCP3_VERSION
@@ -170,6 +178,7 @@ def deploy_ocp3_agnosticd(kubeconfig) {
 }
 
 def deployOCP4(kubeconfig) {
+  sh "echo './openshift-install destroy cluster &' >> destroy_env.sh"
   return {
     stage('Deploy OCP4 cluster') {
       steps_finished << 'Deploy OCP4'
@@ -196,6 +205,14 @@ def deployOCP4(kubeconfig) {
 def deploy_NFS(prefix = '') {
   if (prefix != '') {
     prefix = "-e prefix=${prefix}"
+  }
+  withCredentials([
+      string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
+      string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
+      ])
+  {
+    sh "echo 'export AWS_REGION=${AWS_REGION} AWS_ACCESS_KEY=${AWS_ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}' >> destroy_env.sh"
+    sh "echo 'ansible-playbook nfs_server_destroy.yml ${prefix} &' >> destroy_env.sh"
   }
   return {
     stage('Configure NFS storage') {
@@ -362,7 +379,7 @@ def execute_migration(source_kubeconfig, target_kubeconfig) {
             ansiblePlaybook(
               playbook: 'mig_controller_samples.yml',
               hostKeyChecking: false,
-              extras: "-e 'with_deploy=false' -e 'mig_velero_timeout=300'",
+              extras: "-e 'with_deploy=false' -e 'mig_velero_timeout=120'",
               unbuffered: true,
               colorized: true)
           }

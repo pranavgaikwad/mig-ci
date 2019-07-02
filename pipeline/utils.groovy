@@ -102,6 +102,7 @@ def prepare_workspace(ocp3_version = '', ocp4_version = '') {
   }
 
   OC_BINARY = "${env.WORKSPACE}/bin/oc"
+  sh 'touch destroy_env.sh && chmod +x destroy_env.sh'
 }
 
 

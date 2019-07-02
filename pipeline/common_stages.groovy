@@ -291,9 +291,7 @@ def sanity_checks(kubeconfig) {
   return {
     stage('Run OCP3 Sanity Checks') {
       steps_finished << 'Run OCP3 Sanity Checks'
-      withEnv([
-          'PATH+EXTRA=~/bin',
-          "KUBECONFIG=${kubeconfig}"]) {
+      withEnv(["KUBECONFIG=${kubeconfig}"]) {
         ansiColor('xterm') {
           ansiblePlaybook(
             playbook: 'ocp_sanity_check.yml',
@@ -379,7 +377,7 @@ def execute_migration(source_kubeconfig, target_kubeconfig) {
             ansiblePlaybook(
               playbook: 'mig_controller_samples.yml',
               hostKeyChecking: false,
-              extras: "-e 'with_deploy=false' -e 'mig_velero_timeout=120'",
+              extras: "-e 'with_deploy=false'",
               unbuffered: true,
               colorized: true)
           }

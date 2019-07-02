@@ -108,7 +108,7 @@ node {
                                     if (env.DEPLOYMENT_TYPE == 'agnosticd') {
                                         utils.teardown_ocp3_agnosticd()
                                     } else if (env.DEPLOYMENT_TYPE == 'OA') {
-                                        utils.teardown_OCP3_OA(CLUSTER_NAME + '-' + BUILD_NUMBER)
+                                        utils.teardown_OCP3_OA(CLUSTER_NAME + '-v3-' + BUILD_NUMBER)
                                     } else {
                                         utils.teardown_origin3_dev()
                                     }

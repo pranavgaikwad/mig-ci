@@ -1,5 +1,8 @@
 ---
+cluster_version: "{{ lookup('env', 'CLUSTER_VERSION') or '4' }}"
 mig_controller_location: "{{ workspace }}/mig-controller"
+mig_controller_owner_repo: "{{ lookup('env', 'MIG_CONTROLLER_REPO') or 'fusor' }}"
+mig_controller_owner_branch: "{{ lookup('env', 'MIG_CONTROLLER_BRANCH') or 'HEAD' }}"
 mig_controller_namespace: "mig"
 mig_controller_sa_name: "mig"
 mig_controller_host_cluster: true

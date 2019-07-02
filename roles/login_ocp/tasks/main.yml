@@ -6,3 +6,4 @@
 - import_tasks: login.yml
 
 - import_tasks: copy_kubeconfig.yml
+  when: copy_location != ""

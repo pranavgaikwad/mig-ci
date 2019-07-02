@@ -4,7 +4,7 @@
 properties([disableConcurrentBuilds(),
 parameters([
 string(defaultValue: 'v4.1', description: 'OCP4 version to deploy', name: 'OCP4_VERSION', trim: false),
-string(defaultValue: 'jenkins-ci', description: 'OCP4 cluster name to deploy', name: 'OCP4_CLUSTER_NAME', trim: false), 
+string(defaultValue: 'jenkins-ci-ocp4-base', description: 'OCP4 cluster name to deploy', name: 'CLUSTER_NAME', trim: false),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_aws_access_key_id', description: 'EC2 access key ID for auth purposes', name: 'EC2_ACCESS_KEY_ID', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_aws_secret_access_key', description: 'EC2 private key needed to access instances, from Jenkins credentials store', name: 'EC2_SECRET_ACCESS_KEY', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl', defaultValue: 'ci_pull_secret', description: 'Pull secret needed for OCP4 deployments', name: 'OCP4_PULL_SECRET', required: true),
@@ -34,7 +34,7 @@ node {
         checkout scm
         common_stages = load "${env.WORKSPACE}/pipeline/common_stages.groovy"
         utils = load "${env.WORKSPACE}/pipeline/utils.groovy"
-        utils.notifyBuild('STARTED')   
+        utils.notifyBuild('STARTED')
 
         stage('Setup for target cluster') {
             steps_finished << 'Setup for target cluster'
@@ -44,31 +44,17 @@ node {
             utils.clone_related_repos()
         }
 
-        common_stages.deployOCP4().call()
+        common_stages.deployOCP4(TARGET_KUBECONFIG).call()
 
-        stage('Deploy mig-controller on target cluster') {
-            steps_finished << 'Deploy mig-controller on target cluster'
-            withEnv(['PATH+EXTRA=~/bin', "KUBECONFIG=${KUBECONFIG_OCP4}"]) {
-                ansiColor('xterm') {
-                    ansiblePlaybook(
-                        playbook: 'mig_controller_deploy.yml',
-                        extras: "-e mig_controller_remote_cluster_online=false",
-                        hostKeyChecking: false,
-                        unbuffered: true,
-                        colorized: true)
-                }
-            }
-        }
-
-    } catch (e) {
+    } catch (Exception ex) {
         currentBuild.result = "FAILED"
-        throw e
+        println(ex.toString())
     } finally {
         // Success or failure, always send notifications
         utils.notifyBuild(currentBuild.result)
         stage('Clean Up Environment') {
         // Success or failure, always terminate instances if requested
-            common_stages.teardown_OCP4()
+            utils.teardown_OCP4()
             if (CLEAN_WORKSPACE) {
                 cleanWs cleanWhenFailure: false, notFailBuild: true
             }

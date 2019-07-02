@@ -33,7 +33,4 @@
   file:
     state: directory
     recurse: true
-    path: "{{ item | dirname }}"
-  with_items:
-    - "{{ source_kubeconfig }}"
-    - "{{ target_kubeconfig }}"
+    path: "{{ kubeconfig | dirname }}"

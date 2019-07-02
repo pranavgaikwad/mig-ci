@@ -5,6 +5,40 @@
 
 This repo contains ansible and CI related assets used for the OCP 3 to 4 migration project, the primary use case for these tools is to integrate with Jenkins and allow the creation of all necessary CI workflows. It will consist of several ansible playbooks, which will prepare a environment for migration purposes. This involves provisioning customer-like cluster deployments with [OA installer](https://github.com/openshift/openshift-ansible), and setup of the migration tools from [mig-controller](https://github.com/fusor/mig-controller).
 
+## Migration controller e2e tests
+
+The execution is triggered by update in mig-controller repo by parametrized job. Parallel base consists of several parameters to choose the type of the deployment (Agnosticd, OA, or origin3-dev), ([parallel-base](https://github.com/fusor/mig-ci/blob/master/pipeline/parallel-base.groovy) in CI pipeline)
+
+Other parameters you could specify:
+
+- `AWS_REGION` - region for clusters to deploy.
+
+- `NODE_COUNT` - number of compute nodes to create. Will be the same for source and target cluster.
+
+- `MASTER_COUNT` - number of master nodes to create. Will be the same for source and target cluster.
+
+- `CLUSTER_NAME` - name of the cluster to deploy. The real deployment name will be created by following convention: `${CLUSTER_NAME}-v3-${BUILD_NUMBER}-${OCP3_VERSION}`. In AWS you can find this value in instance tags under `GUID` label.
+
+- `EC2_KEY` - name of ssh public and private key, which will be imported in OCP3 cluster and allow ssh access. By default is `ci`, but for manual run is recomended `libra`.
+
+- `DEPLOYMENT_TYPE` - type of the ocp3 deployment. Could be `agnosticd`, `OA` or `cluster_up`.
+
+- `MIG_CONTROLLER_REPO` - source repository for mig-controller to test.
+
+- `MIG_CONTROLLER_BRANCH` - source branch for mig-controller to test.
+
+- `SUB_USER` - redhat subscription username for account, which have access to the openshift bits. Allows to setup an `enterprise` and `origin` OA deployment.
+
+- `SUB_PASS` - password for the redhat subscriprion account.
+
+### Cleanup
+
+There is an additional boolean parametr, which will disable workspace cleanup after run - `EC2_TERMINATE_INSTANCES`. In case you want to debug the migration after the run:
+
+1) Ssh to jenkins host.
+2) Go to `/var/lib/jenkins/workspace`, and enter the `parallel-mig-ci-${BUILD_NUMBER}` dir. The `kubeconfigs` directory will contain `KUBECONFIG` files with opened sessions for both source and target cluster. You can utilize them with `export KUBECONFIG=$(pwd)/kubeconfigs/ocp-v3.11-kubeconfig`.
+3) After finishing those steps you can remove deployments manually by executing `./destroy_env.sh`.
+
 ## External NFS server setup on AWS
 
 In order to demonstrate the `swing` migration of the PV resources, wich will be based on NFS, you can deploy an external NFS server on AWS. The server will have a public IP, and could be pointed from both locations - source OCP3 and target OCP4 based clusters.
@@ -21,11 +55,9 @@ When you are finished, just run the playbook to destroy NFS AWS instance:
 
 Functionality of this tool is tested with both [all-in-one](https://github.com/fusor/mig-ci#ocp3-all-in-one-deployment-on-aws) AWS deployment, and [origin3-dev](https://github.com/fusor/origin3-dev/).
 
-## Migration controller CI deployment
+## OCP3 agnosticd multinode in AWS
 
-Source: https://github.com/fusor/mig-controller
-
-(TODO)
+This type of deployment is used in [parallel-base](https://github.com/fusor/mig-ci/blob/master/pipeline/parallel-base.groovy) pipeline, and is used for creation of multinode cluster. To setup a similar environment outside of CI, please refer to the [official](https://github.com/redhat-cop/agnosticd) doc.
 
 ## OCP3 all-in-one deployment on AWS
 
@@ -34,14 +66,6 @@ In order to execute an all-in-one deployment, firstly you should specify several
 Customer environment is expected to be based on RHEL distributions. By default the RHEL 7 does not have an access to the [official OpenShift bits](https://docs.openshift.com/enterprise/3.0/install_config/install/prerequisites.html#software-prerequisites) for the OA deployment, so you need to setup a valid account with those subscriptions by following variables:
 
 Task specific:
-
-- `AWS_ACCESS_KEY_ID` - AWS access key id for AWS deployment.
-
-- `AWS_SECRET_ACCESS_KEY` - secret, used for AWS deployment.
-
-- `SUB_USER` - redhat subscription username for account, which have access to the openshift bits. Allows to setup an `enterprise` and `origin` OA deployment.
-
-- `SUB_PASS` - password for the redhat subscriprion account.
 
 - `OCP3_VERSION` - verison of cluster to be provisioned. Should be specified as 'v3\.[0-9]+'. If not set, will be used 'v3.11'.
 
@@ -73,6 +97,12 @@ Example:
 
 ## List of other environment variables:
 
+- `SUB_USER` - redhat subscription username for account, which have access to the openshift bits. Allows to setup an `enterprise` and `origin` OA deployment.
+
+- `SUB_PASS` - password for the redhat subscriprion account.
+
+- `AWS_REGION` - region, in which all resources will be created.
+
 - `AWS_ACCESS_KEY_ID` - AWS access key id, which is used to access your AWS environment.
 
 - `AWS_SECRET_ACCESS_KEY` - secret, used for authentication.
@@ -82,8 +112,6 @@ Example:
 - `EC2_KEY` - name of the ssh private key, which will be passed to the instance, and allow you to access the instance via ssh in future. Set to `ci` by default. The key should be discoverable with `${WORKSPACE}/keys/${EC2_KEY}.pem`.
 
 - `EC2_REGION` - region, where all resources will be created.
-
-- `CLUSTER_VERSION` - CI is deciding, which cluster to provision, based on this variable. Default value is 4, or could be set to 3.
 
 - `CLUSTER_NAME` - this variable is used in multiple location. In this scenario it's perpouse, is to specify prefix for a newly created AWS EC2 instance. When it is not specified, your ansible username will be used. All EC2 instances are named by the following convention: `$CLUSTER_NAME-<instance role>-3.(7-11)`.
 

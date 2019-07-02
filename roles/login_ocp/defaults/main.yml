@@ -6,8 +6,8 @@ console_addr: '' # User specified cluster address
 force_login: False # Login into cluster anyway with provided credentials
 
 # Kubeconfig processing
-source_kubeconfig: "{{ default_kubeconfig }}"
-target_kubeconfig: "{{ default_kubeconfig }}"
+kubeconfig: "{{ lookup('env', 'KUBECONFIG') or '~/.kube/config' }}"
+copy_location: ""
 
 # Download section
 system_types:

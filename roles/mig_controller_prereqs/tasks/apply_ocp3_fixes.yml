@@ -6,7 +6,7 @@
       local_action:
         module: aws_caller_facts
       register: caller_facts
-  
+
     - name: Get instance info
       local_action:
         module: ec2_instance_facts

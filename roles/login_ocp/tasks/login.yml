@@ -2,7 +2,7 @@
   shell: "{{ oc_binary }} whoami"
   register: oc_status
   environment:
-    KUBECONFIG: "{{ source_kubeconfig }}"
+    KUBECONFIG: "{{ kubeconfig }}"
   ignore_errors: true
 
 - block:
@@ -19,5 +19,5 @@
     delay: 6
     until: login.rc == 0
     environment:
-      KUBECONFIG: "{{ source_kubeconfig }}"
+      KUBECONFIG: "{{ kubeconfig }}"
   when: oc_status is failed or oc_status.rc != 0 or force_login == True

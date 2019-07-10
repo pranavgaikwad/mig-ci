@@ -5,7 +5,7 @@ string(defaultValue: 'ci', description: 'EC2 SSH key name for remote access', na
 string(defaultValue: 'HEAD', description: 'CPMA branch to checkout', name: 'CPMA_BRANCH', trim: false),
 string(defaultValue: 'https://github.com/fusor/cpma.git', description: 'CPMA repo to clone', name: 'CPMA_REPO', trim: false),
 string(description: 'Cluster hostname for ssh access', name: 'CPMA_HOSTNAME', trim: false),
-string(description: 'Cluster currnet-context master name to generate report from', name: 'CPMA_CLUSTERNAME', trim: false),
+string(description: 'Cluster current-context master name to generate report from', name: 'CPMA_CLUSTERNAME', trim: false),
 string(description: 'Login for the cluster', name: 'CPMA_LOGIN', trim: false),
 string(description: 'Password for the cluster', name: 'CPMA_PASSWD', trim: false),
 string(defaultValue: 'root', description: 'SSH login', name: 'CPMA_SSHLOGIN', trim: false),

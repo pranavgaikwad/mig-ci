@@ -46,6 +46,17 @@ def clone_related_repos() {
 }
 
 
+def prepare_cpma(repo = '', branch = '') {
+  if (repo == '') {
+    repo = "https://github.com/fusor/cpma.git"
+  }
+  if (branch == '') {
+    branch = "master"
+  }
+  checkout([$class: 'GitSCM', branches: [[name: branch]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'cpma']], submoduleCfg: [], userRemoteConfigs: [[url: repo]]])
+}
+
+
 def prepare_origin3_dev() {
   echo 'Cloning origin3-dev repo'
   checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'origin3-dev']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/fusor/origin3-dev.git']]])
@@ -76,7 +87,6 @@ def prepare_agnosticd() {
 
   sh 'rm -f agnosticd/ansible.cfg'
 
-  echo 'Cloning ocp-mig-test-data repo'
   checkout([$class: 'GitSCM', branches: [[name: '8780932ab2917e000b7b05297a7a63d0b7397a28']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'agnosticd']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/redhat-cop/agnosticd.git']]])
 
   // Fixes

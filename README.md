@@ -16,6 +16,8 @@ Jenkins _pipelines_ are used to provide the logic necessary to orchestrate the b
 | `ocp3-origin3-dev-base` | Deploys OCP3 using [origin3-dev](https://github.com/fusor/origin3-dev.git), all-in-one cluster |
 | `ocp4-base` | Deploys OCP4 and performs cluster sanity checks |
 | `parallel-base` | Deploys OCP3, OCP4, NFS server in parallel, installs cluster application migration tools and executes e2e migration tests|
+| `cpma-e2e-base` | Works similar to `parallel-base`, deploys OCP3, OCP4, builds CPMA. After that extracts manifests from source cluster (OCP3) and applies them to the target cluster (OCP4). Arguments used in this pipeline are documented in https://github.com/fusor/cpma#e2e-tests |
+| `cpma-base` | Same as above, but expects only preprovisioned stable cluster to compare generated reports. Does not check the manifests extraction. Documented in https://github.com/fusor/cpma#e2e-tests |
 
 ### CI job logic
 
@@ -41,6 +43,22 @@ Below are some of the parameters allowing the customization of mig CI jobs :
 | `SUB_PASS` | RH subscription password | Only used in OA deployments to access OCP bits |
 | `CLEAN_WORKSPACE` | Clean Jenkins workspace after build | Default is true |
 | `EC2_TERMINATE_INSTANCES` | Terminate all instances on EC2 after build | Default is true |
+
+
+#### CPMA CI job parameters
+
+| Parameter | Purpose | Notes |
+| --- | --- | --- |
+| `EC2_PRIV_KEY`  | Private key for accessing instances, from Jenkins credentials store | Should be one of credentials in Jenkins |
+| `EC2_KEY` | EC2 SSH key name for remote access | `ci` by default |
+| `CPMA_BRANCH` | CPMA branch to checkout | `HEAD` by default |
+| `CPMA_REPO` | CPMA repo to clone | `https://github.com/fusor/cpma.git` points to upstream by default |
+| `CPMA_HOSTNAME` | Hostname of the stable cluster for ssh access | Required to be specified |
+| `CPMA_CLUSTERNAME`  | Cluster master name to generate report from. | Should be equal to `current-context`  |
+| `CPMA_LOGIN`  | Login for the cluster | required |
+| `CPMA_PASSWD` | Password for the cluster | required |
+| `CPMA_SSHLOGIN` | SSH login for master node | `root` |
+| `CPMA_SSHPORT`  | SSH port for master node | `22` |
 
 _**Note:**_ **For a full list of all possible parameters please inspect each pipeline script**
 

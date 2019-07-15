@@ -1,7 +1,7 @@
 - name: Clone the mig controller repo
   git:
     dest: "{{ mig_controller_location }}"
-    repo: "https://github.com/{{ mig_controller_owner_repo }}/mig-controller.git"
+    repo: "{{ mig_controller_owner_repo }}"
     version: "{{ mig_controller_owner_branch }}"
     force: true
     depth: 1

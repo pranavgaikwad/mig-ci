@@ -65,6 +65,12 @@ def prepare_origin3_dev() {
 }
 
 
+def clone_mig_controller() {
+  echo 'Cloning mig-controller repo'
+  checkout([$class: 'GitSCM', branches: [[name: "${MIG_CONTROLLER_BRANCH}"]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'mig-controller']], submoduleCfg: [], userRemoteConfigs: [[url: "${MIG_CONTROLLER_REPO}"]]])
+}
+
+
 def prepare_agnosticd() {
   sh 'test -e ~/.local/bin/aws || pip install awscli --upgrade --user'
 
@@ -237,6 +243,13 @@ def teardown_nfs(prefix = '') {
         unbuffered: true,
         colorized: true)
     }
+  }
+}
+
+def teardown_mig_controller() {
+  // Check if is not upstream
+  if (env.QUAYIO_CI_REPO && "${MIG_CONTROLLER_REPO}" != "https://github.com/fusor/mig-controller.git") {
+    sh "docker rmi ${QUAYIO_CI_REPO}:${MIG_CONTROLLER_BRANCH}"
   }
 }
 

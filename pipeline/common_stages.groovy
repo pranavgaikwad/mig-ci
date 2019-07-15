@@ -319,8 +319,23 @@ def deploy_mig_controller_on_both(
   }
 
   return {
-    stage('Deploy mig-controller on both clusters') {
-      steps_finished << 'Deploy mig-controller on both clusters'
+    stage('Build mig-controller image and deploy on both clusters') {
+      steps_finished << 'Build mig-controller image and deploy on both clusters'
+      // Create mig-controller docker image
+      if (env.QUAYIO_CI_REPO && "${MIG_CONTROLLER_REPO}" != "https://github.com/fusor/mig-controller.git") {
+        withEnv(["IMG=${QUAYIO_CI_REPO}:${MIG_CONTROLLER_BRANCH}"]) {
+          dir('mig-controller') {
+            sh 'make docker-build'
+          }
+        }
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "${QUAYIO_CREDENTIALS}", usernameVariable: 'QUAY_USERNAME', passwordVariable: 'QUAY_PASSWORD']]) {
+          sh 'docker login quay.io -u $QUAY_USERNAME -p $QUAY_PASSWORD'
+        }
+        withEnv(["IMG=${QUAYIO_CI_REPO}:${MIG_CONTROLLER_BRANCH}"]) {
+          sh 'docker push $IMG'
+        }
+      }
+
       // Source
       withEnv([
           "KUBECONFIG=${source_kubeconfig}",

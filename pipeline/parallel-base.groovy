@@ -16,6 +16,7 @@ string(defaultValue: 'eu-west-1', description: 'AWS region to deploy instances',
 string(defaultValue: 'agnosticd', description: 'Deployment type to choose', name: 'DEPLOYMENT_TYPE', trim: false),
 string(defaultValue: 'https://github.com/fusor/mig-controller.git', description: 'Mig controller repo to test', name: 'MIG_CONTROLLER_REPO', trim: false),
 string(defaultValue: 'HEAD', description: 'Mig controller repo branch to test', name: 'MIG_CONTROLLER_BRANCH', trim: false),
+string(defaultValue: 'all', description: 'e2e test tags to run, see https://github.com/fusor/mig-e2e for details, space delimited', name: 'E2E_TESTS', trim: false),7
 string(defaultValue: 'quay.io/fbladilo/mig-controller', description: 'Repo for quay io mig-controller images', name: 'QUAYIO_CI_REPO', trim: false),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_quay_credentials', description: 'Credentials for quay.io container storage, used by mig-controller to push and pull images', name: 'QUAYIO_CREDENTIALS', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'agnosticd_own_repo', description: 'Private repo address for openshift-ansible packages', name: 'AGND_REPO', required: true),
@@ -33,6 +34,8 @@ booleanParam(defaultValue: true, description: 'EC2 terminate instances after bui
 def EC2_TERMINATE_INSTANCES = params.EC2_TERMINATE_INSTANCES
 // true/false build parameter that defines if we cleanup workspace once build is done
 def CLEAN_WORKSPACE = params.CLEAN_WORKSPACE
+// Split e2e tests from string param
+def E2E_TESTS = params.E2E_TESTS.split(' ')
 
 def common_stages
 def utils
@@ -90,7 +93,7 @@ node {
 
         common_stages.deploy_mig_controller_on_both(SOURCE_KUBECONFIG, TARGET_KUBECONFIG, false, true).call()
 
-        common_stages.execute_migration(SOURCE_KUBECONFIG, TARGET_KUBECONFIG).call()
+        common_stages.execute_migration(E2E_TESTS, SOURCE_KUBECONFIG, TARGET_KUBECONFIG).call()
 
     } catch (Exception ex) {
         currentBuild.result = "FAILED"

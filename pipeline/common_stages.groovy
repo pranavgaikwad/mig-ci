@@ -181,7 +181,7 @@ def deployOCP4(kubeconfig) {
   sh "echo './openshift-install destroy cluster &' >> destroy_env.sh"
   return {
     stage('Deploy OCP4 cluster') {
-      steps_finished << 'Deploy OCP4'
+      steps_finished << 'Deploy OCP4 ' + OCP4_VERSION
       withCredentials([
           string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
           string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
@@ -367,34 +367,40 @@ def deploy_mig_controller_on_both(
 }
 
 
-def execute_migration(source_kubeconfig, target_kubeconfig) {
+def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig) {
   return {
     stage('Execute migration') {
       steps_finished << 'Execute migration'
       sh "cp -r config/mig_controller.yml mig-e2e/config"
-      dir('mig-e2e') {
-        withEnv([
-          "KUBECONFIG=${source_kubeconfig}",
-          "PATH+EXTRA=~/bin"]) {
-          ansiColor('xterm') {
-            ansiblePlaybook(
-              playbook: 'mig_controller_samples.yml',
-              hostKeyChecking: false,
-              extras: "-e 'with_migrate=false'",
-              unbuffered: true,
-              colorized: true)
+
+      for (int i = 0; i < e2e_tests.size(); i++) {
+        steps_finished << 'Execute test ' + e2e_tests[i]
+        dir('mig-e2e') {
+          withEnv([
+            "KUBECONFIG=${source_kubeconfig}",
+            "PATH+EXTRA=~/bin"]) {
+            ansiColor('xterm') {
+              ansiblePlaybook(
+                playbook: 'mig_controller_samples.yml',
+                hostKeyChecking: false,
+                extras: "-e 'with_migrate=false'",
+                tags: "${e2e_tests[i]}",
+                unbuffered: true,
+                colorized: true)
+            }
           }
-        }
-        withEnv([
-          "KUBECONFIG=${target_kubeconfig}",
-          "PATH+EXTRA=~/bin"]) {
-          ansiColor('xterm') {
-            ansiblePlaybook(
-              playbook: 'mig_controller_samples.yml',
-              hostKeyChecking: false,
-              extras: "-e 'with_deploy=false'",
-              unbuffered: true,
-              colorized: true)
+          withEnv([
+            "KUBECONFIG=${target_kubeconfig}",
+            "PATH+EXTRA=~/bin"]) {
+            ansiColor('xterm') {
+              ansiblePlaybook(
+                playbook: 'mig_controller_samples.yml',
+                hostKeyChecking: false,
+                extras: "-e 'with_deploy=false'",
+                tags: "${e2e_tests[i]}",
+                unbuffered: true,
+                colorized: true)
+            }
           }
         }
       }

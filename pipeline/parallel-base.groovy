@@ -14,8 +14,10 @@ string(defaultValue: 'ocp-workshop', description: 'AgnosticD environment type to
 string(defaultValue: 'ci', description: 'EC2 SSH key name to deploy on instances for remote access ', name: 'EC2_KEY', trim: false),
 string(defaultValue: 'eu-west-1', description: 'AWS region to deploy instances', name: 'AWS_REGION', trim: false),
 string(defaultValue: 'agnosticd', description: 'Deployment type to choose', name: 'DEPLOYMENT_TYPE', trim: false),
-string(defaultValue: 'fusor', description: 'Mig controller repo to test', name: 'MIG_CONTROLLER_REPO', trim: false),
+string(defaultValue: 'https://github.com/fusor/mig-controller.git', description: 'Mig controller repo to test', name: 'MIG_CONTROLLER_REPO', trim: false),
 string(defaultValue: 'HEAD', description: 'Mig controller repo branch to test', name: 'MIG_CONTROLLER_BRANCH', trim: false),
+string(defaultValue: 'quay.io/fbladilo/mig-controller', description: 'Repo for quay io mig-controller images', name: 'QUAYIO_CI_REPO', trim: false),
+credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_quay_credentials', description: 'Credentials for quay.io container storage, used by mig-controller to push and pull images', name: 'QUAYIO_CREDENTIALS', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'agnosticd_own_repo', description: 'Private repo address for openshift-ansible packages', name: 'AGND_REPO', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_aws_access_key_id', description: 'EC2 access key ID for auth purposes', name: 'EC2_ACCESS_KEY_ID', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_aws_secret_access_key', description: 'EC2 private key needed to access instances, from Jenkins credentials store', name: 'EC2_SECRET_ACCESS_KEY', required: true),
@@ -58,6 +60,7 @@ node {
             utils.copy_private_keys()
             utils.copy_public_keys()
             utils.clone_related_repos()
+            utils.clone_mig_controller()
             if (env.DEPLOYMENT_TYPE == 'agnosticd') {
                 utils.prepare_agnosticd()
             } else if (env.DEPLOYMENT_TYPE != 'OA') {
@@ -121,6 +124,7 @@ node {
                         }
                 }
             if (CLEAN_WORKSPACE) {
+                utils.teardown_mig_controller()
                 cleanWs cleanWhenFailure: false, notFailBuild: true
             }
         }

@@ -3,8 +3,7 @@
     dest: "{{ mig_controller_location }}"
     repo: "{{ mig_controller_owner_repo }}"
     version: "{{ mig_controller_owner_branch }}"
-    force: true
-    depth: 1
+  ignore_errors: true
 
 - name: Deploy velero
   command: "{{ mig_controller_location }}/hack/deploy/deploy_velero.sh"

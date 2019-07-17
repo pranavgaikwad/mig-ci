@@ -1,0 +1,11 @@
+- hosts: localhost
+  tasks:
+    - name: "Remove container image {{quayio_ci_repo}}:{{quayio_ci_tag}}"
+      docker_image:
+        state: absent
+        name: "{{  quayio_ci_repo }}"
+        tag: "{{ quayio_ci_tag }}"
+        force_absent: yes
+  vars:
+    quayio_ci_repo: "{{ lookup('env', 'QUAYIO_CI_REPO') }}"
+    quayio_ci_tag: "{{ lookup('env', 'MIG_CONTROLLER_BRANCH') }}"

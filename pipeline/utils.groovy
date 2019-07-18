@@ -259,7 +259,14 @@ def teardown_nfs(prefix = '') {
 def teardown_mig_controller() {
   // Check if is not upstream
   if (env.QUAYIO_CI_REPO && "${MIG_CONTROLLER_REPO}" != "https://github.com/fusor/mig-controller.git") {
-    sh "docker rmi ${QUAYIO_CI_REPO}:${MIG_CONTROLLER_BRANCH}"
+    ansiColor('xterm') {
+      ansiblePlaybook(
+        playbook: 'container_image_destroy.yml',
+        hostKeyChecking: false,
+        extras: "-e quayio_ci_repo=${QUAYIO_CI_REPO} -e quayio_ci_tag=${MIG_CONTROLLER_BRANCH}",
+        unbuffered: true,
+        colorized: true)
+    }
   }
 }
 

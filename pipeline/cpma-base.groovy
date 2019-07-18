@@ -2,7 +2,7 @@ properties([
 parameters([
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl', defaultValue: 'ci_ec2_key', description: 'EC2 private key needed to access instances, from Jenkins credentials store', name: 'EC2_PRIV_KEY', required: true),
 string(defaultValue: 'ci', description: 'EC2 SSH key name for remote access', name: 'EC2_KEY', trim: false),
-string(defaultValue: 'HEAD', description: 'CPMA branch to checkout', name: 'CPMA_BRANCH', trim: false),
+string(defaultValue: 'master', description: 'CPMA branch to checkout', name: 'CPMA_BRANCH', trim: false),
 string(defaultValue: 'https://github.com/fusor/cpma.git', description: 'CPMA repo to clone', name: 'CPMA_REPO', trim: false),
 string(description: 'Cluster hostname for ssh access', name: 'CPMA_HOSTNAME', trim: false),
 string(description: 'Cluster current-context master name to generate report from', name: 'CPMA_CLUSTERNAME', trim: false),

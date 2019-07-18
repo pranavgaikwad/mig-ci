@@ -38,7 +38,7 @@ Below are some of the parameters allowing the customization of mig CI jobs :
 | `EC2_KEY` | Name of SSH public and private key | Default is `ci`, outside CI `libra` is recommended. Will be used to allow SSH access to instances |
 | `DEPLOYMENT_TYPE` | OCP3 deployment type | Could be `agnosticd`, `OA` or `cluster_up`|
 | `MIG_CONTROLLER_REPO` | source repository for mig-controller to test | Default is fusor |
-| `MIG_CONTROLLER_BRANCH` | source branch for mig-controller to test | Default is HEAD |
+| `MIG_CONTROLLER_BRANCH` | source branch for mig-controller to test | Default is master |
 | `SUB_USER` | RH subscription username | Only used in OA deployments to access OCP bits |
 | `SUB_PASS` | RH subscription password | Only used in OA deployments to access OCP bits |
 | `CLEAN_WORKSPACE` | Clean Jenkins workspace after build | Default is true |
@@ -51,7 +51,7 @@ Below are some of the parameters allowing the customization of mig CI jobs :
 | --- | --- | --- |
 | `EC2_PRIV_KEY`  | Private key for accessing instances, from Jenkins credentials store | Should be one of credentials in Jenkins |
 | `EC2_KEY` | EC2 SSH key name for remote access | `ci` by default |
-| `CPMA_BRANCH` | CPMA branch to checkout | `HEAD` by default |
+| `CPMA_BRANCH` | CPMA branch to checkout | `master` by default |
 | `CPMA_REPO` | CPMA repo to clone | `https://github.com/fusor/cpma.git` points to upstream by default |
 | `CPMA_HOSTNAME` | Hostname of the stable cluster for ssh access | Required to be specified |
 | `CPMA_CLUSTERNAME`  | Cluster master name to generate report from. | Should be equal to `current-context`  |

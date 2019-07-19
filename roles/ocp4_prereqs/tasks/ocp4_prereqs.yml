@@ -32,8 +32,10 @@
   shell: "{{ playbook_dir }}/openshift-install destroy cluster"
   when: install.stat.exists == true and terraform.stat.exists == true
 
-- name: Delete terraform.tfstate from unsuccessful deployment
-  shell: "rm -f {{ playbook_dir }}/terraform.tfstate"
+- name: delete terraform.tfstate from unsuccessful deployment
+  file:
+    path: "{{ playbook_dir }}/terraform.tfstate"
+    state: absent
 
 - name: template install file
   template:

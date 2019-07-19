@@ -4,7 +4,7 @@
     tasks_from: get_ip
 
 - name: Remove existing PVs
-  shell: "for i in $({{ oc_binary }} get pv --no-headers | awk '{ print $1 }'); do {{ oc_binary }} delete pv $i; done"
+  shell: "for i in $({{ oc_binary }} get pv --no-headers | grep -i Available | awk '{ print $1 }'); do {{ oc_binary }} delete pv $i; done"
   ignore_errors: true
 
 - name: Template the PV resources

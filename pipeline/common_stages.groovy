@@ -238,10 +238,6 @@ def provision_pvs(kubeconfig, prefix = '') {
   return {
     stage('Provision PVs on source cluster') {
       steps_finished << 'Provision PVs on source cluster'
-      def skip_tags = ""
-      if (env.DEPLOYMENT_TYPE == 'agnosticd') {
-        skip_tags = "remove_existing_pvs"
-      }
       withCredentials([
         string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
         string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
@@ -252,7 +248,6 @@ def provision_pvs(kubeconfig, prefix = '') {
             ansiblePlaybook(
               playbook: 'nfs_provision_pvs.yml',
               hostKeyChecking: false,
-              skippedTags: "${skip_tags}",
               extras: "${prefix}",
               unbuffered: true,
               colorized: true)

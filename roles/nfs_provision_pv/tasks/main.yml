@@ -5,8 +5,7 @@
 
 - name: Remove existing PVs
   shell: "for i in $({{ oc_binary }} get pv --no-headers | awk '{ print $1 }'); do {{ oc_binary }} delete pv $i; done"
-  tags:
-    - remove_existing_pvs
+  ignore_errors: true
 
 - name: Template the PV resources
   template:

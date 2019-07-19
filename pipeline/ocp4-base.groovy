@@ -51,14 +51,22 @@ node {
         currentBuild.result = "FAILED"
         println(ex.toString())
     } finally {
-        // Success or failure, always send notifications
         utils.notifyBuild(currentBuild.result)
         stage('Clean Up Environment') {
-        // Success or failure, always terminate instances if requested
-            utils.teardown_OCP4()
-            if (CLEAN_WORKSPACE) {
-                cleanWs cleanWhenFailure: false, notFailBuild: true
+        // Always attempt to terminate instances if EC2_TERMINATE_INSTANCES is true
+          if (EC2_TERMINATE_INSTANCES) {
+            withCredentials([
+              string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
+              string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
+              ])
+            {
+              utils.teardown_OCP4()
             }
+          }
+
+          if (CLEAN_WORKSPACE) {
+            cleanWs cleanWhenFailure: false, notFailBuild: true
+          }
         }
-	}
+      }
 }

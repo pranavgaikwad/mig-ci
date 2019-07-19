@@ -19,6 +19,8 @@
   shell: "{{ oc_binary }} login -u {{ ocp4_admin_user }} -p {{ ocp4_admin_password }} --insecure-skip-tls-verify=true"
   retries: 6
   delay: 10
+  register: result
+  until: result is succeeded
 
 - name: Remove temporary httpasswd file
   file:

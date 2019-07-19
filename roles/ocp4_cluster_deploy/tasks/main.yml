@@ -1,7 +1,7 @@
 - import_tasks: get_ocp4_installer.yml
-  tags: get_ocp4_installer
 
 - import_tasks: launch_ocp4_installer.yml
-  tags: launch_ocp4_installer
 
 - import_tasks: login.yml
+
+- import_tasks: idp.yml

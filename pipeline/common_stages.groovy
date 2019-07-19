@@ -236,8 +236,8 @@ def provision_pvs(kubeconfig, prefix = '') {
     prefix = "-e prefix=${prefix}"
   }
   return {
-    stage('Provison PVs on source cluster') {
-      steps_finished << 'Provison PVs on source cluster'
+    stage('Provision PVs on source cluster') {
+      steps_finished << 'Provision PVs on source cluster'
       def skip_tags = ""
       if (env.DEPLOYMENT_TYPE == 'agnosticd') {
         skip_tags = "remove_existing_pvs"

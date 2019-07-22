@@ -184,7 +184,8 @@ def deployOCP4(kubeconfig) {
       steps_finished << 'Deploy OCP4 ' + OCP4_VERSION
       withCredentials([
           string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-          string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
+          string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY'),
+          [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP4_CREDENTIALS}", usernameVariable: 'OCP4_ADMIN_USER', passwordVariable: 'OCP4_ADMIN_PASSWD']
           ])
       {
         withEnv(["KUBECONFIG=${kubeconfig}", "CLUSTER_NAME=${CLUSTER_NAME}-v4-${BUILD_NUMBER}"]){
@@ -235,8 +236,8 @@ def provision_pvs(kubeconfig, prefix = '') {
     prefix = "-e prefix=${prefix}"
   }
   return {
-    stage('Provison PVs on source cluster') {
-      steps_finished << 'Provison PVs on source cluster'
+    stage('Provision PVs on source cluster') {
+      steps_finished << 'Provision PVs on source cluster'
       def skip_tags = ""
       if (env.DEPLOYMENT_TYPE == 'agnosticd') {
         skip_tags = "remove_existing_pvs"

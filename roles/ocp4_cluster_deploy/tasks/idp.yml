@@ -1,0 +1,29 @@
+- name: Create temporary htpasswd file
+  htpasswd:
+    path: "{{ ocp4_htpasswd_file }}"
+    name: "{{ ocp4_admin_user }}"
+    password: "{{ ocp4_admin_password }}"
+
+- name: Create htpasswd secret
+  shell: "{{ oc_binary }} create secret generic htpass-secret --from-file=htpasswd={{ ocp4_htpasswd_file }} -n openshift-config"
+    
+- name: Create htpasswd IDP
+  k8s:
+    state: present
+    definition: "{{ lookup('file', 'htpasswd_idp.yml')}}"
+    wait: yes
+
+- name: Add cluster-admin role to {{ ocp4_admin_user }}
+  shell: "{{ oc_binary }} adm policy add-cluster-role-to-user cluster-admin {{ ocp4_admin_user }}"
+
+- name: Login as {{ ocp4_admin_user }}
+  shell: "{{ oc_binary }} login -u {{ ocp4_admin_user }} -p {{ ocp4_admin_password }} --insecure-skip-tls-verify=true"
+  retries: 12
+  delay: 10
+  register: result
+  until: result is succeeded
+
+- name: Remove temporary httpasswd file
+  file:
+    path: "{{ ocp4_htpasswd_file }}"
+    state: absent

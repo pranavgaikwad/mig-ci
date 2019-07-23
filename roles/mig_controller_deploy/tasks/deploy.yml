@@ -5,4 +5,7 @@
 - debug:
     var: deploy.stdout_lines
 
+- debug:
+    var: deploy.stderr_lines
+
 - include: check.yml

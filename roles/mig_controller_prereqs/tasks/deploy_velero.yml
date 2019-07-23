@@ -5,6 +5,14 @@
     version: "{{ mig_controller_owner_branch }}"
   ignore_errors: true
 
+- name: Ensure mig namespace is present before continuing
+  k8s:
+    state: present
+    api_version: v1
+    kind: Namespace
+    name: mig
+    wait: yes
+
 - name: Deploy velero
   command: "{{ mig_controller_location }}/hack/deploy/deploy_velero.sh"
   register: deploy
@@ -19,7 +27,7 @@
   k8s_facts:
     kind: Deployment
     api_version: extensions/v1beta1
-    namespace: velero
+    namespace: mig
     name: velero
     label_selectors: "component=velero"
   register: deploy
@@ -31,21 +39,21 @@
 # Adjust host pod dir based on OCP3 deployment type
 
 - name: Fix restic pod dir mount for oc cluster up install
-  shell: "{{ oc_binary }} set volume -n velero ds/restic --add --name=host-pods --path /tmp/openshift.local.clusterup/openshift.local.volumes/pods --overwrite"
+  shell: "{{ oc_binary }} set volume -n mig ds/restic --add --name=host-pods --path /tmp/openshift.local.clusterup/openshift.local.volumes/pods --overwrite"
   when: deployment_type == 'cluster_up' and cluster_version != '4'
 
 - name: Fix restic pod dir mount for OA install
-  shell: "{{ oc_binary }} set volume -n velero ds/restic --add --name=host-pods --path /var/lib/origin/openshift.local.volumes/pods --overwrite"
+  shell: "{{ oc_binary }} set volume -n mig ds/restic --add --name=host-pods --path /var/lib/origin/openshift.local.volumes/pods --overwrite"
   when: deployment_type != 'cluster_up' and cluster_version != '4'
 
 - name: Patch node-selector for restic DS
-  shell: "{{ oc_binary }} patch namespace velero -p '{\"metadata\": {\"annotations\": {\"openshift.io/node-selector\": \"\"}}}'"
+  shell: "{{ oc_binary }} patch namespace mig -p '{\"metadata\": {\"annotations\": {\"openshift.io/node-selector\": \"\"}}}'"
 
 - name: Find restic pods
   k8s_facts:
     api_version: v1
     kind: Pod
-    namespace: velero
+    namespace: mig
     label_selectors: "name=restic"
   register: restic
 
@@ -54,14 +62,14 @@
     state: absent
     api_version: v1
     kind: Pod
-    namespace: velero
+    namespace: mig
     name: "{{ restic.resources[0].metadata.name }}"
 
 - name: Check status of restic deployment
   k8s_facts:
     kind: DaemonSet
     api_version: extensions/v1beta1
-    namespace: velero
+    namespace: mig
     name: restic
     label_selectors: "name=restic"
   register: dset

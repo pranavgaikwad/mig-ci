@@ -9,7 +9,7 @@
 
 - name: Deploy mig controller
   import_tasks: deploy.yml
-  when: mig_controller_host_cluster
+  when: mig_controller_host_cluster|bool
 
 - name: Process mig controller deployment summary
   import_tasks: summary.yml

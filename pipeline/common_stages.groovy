@@ -320,7 +320,8 @@ def login_cluster(
       "console_addr": "${cluster_url}",
       "user": "${cluster_user}",
       "passwd": "${cluster_password}",
-      "kubeconfig": "${kubeconfig}"
+      "kubeconfig": "${kubeconfig}",
+      "force_login": "true"
       ]
      sh 'rm -f ocp_login_vars.yml'
      writeYaml file: 'ocp_login_vars.yml', data: ocp_login_vars

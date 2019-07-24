@@ -4,6 +4,7 @@
   environment:
     KUBECONFIG: "{{ kubeconfig }}"
   ignore_errors: true
+  when: not force_login|bool
 
 - block:
   - assert:
@@ -20,4 +21,4 @@
     until: login.rc == 0
     environment:
       KUBECONFIG: "{{ kubeconfig }}"
-  when: oc_status is failed or oc_status.rc != 0 or force_login == True
+    when: (oc_status is defined and oc_status is failed) or force_login|bool

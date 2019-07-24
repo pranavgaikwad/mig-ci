@@ -3,7 +3,7 @@
 user: admin # Username for cluster login
 passwd: admin # Password for cluster login
 console_addr: '' # User specified cluster address
-force_login: False # Login into cluster anyway with provided credentials
+force_login: false # Login into cluster anyway with provided credentials
 
 # Kubeconfig processing
 kubeconfig: "{{ lookup('env', 'KUBECONFIG') or '~/.kube/config' }}"

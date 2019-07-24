@@ -306,6 +306,37 @@ def sanity_checks(kubeconfig) {
   }
 }
 
+def login_cluster(
+  cluster_url,
+  cluster_user,
+  cluster_password,
+  cluster_version,
+  kubeconfig) {
+
+  return {
+    stage("Login to OCP ${cluster_version}") {
+      steps_finished << 'Login to OCP ' + cluster_version
+      def ocp_login_vars = [
+      "console_addr": "${cluster_url}",
+      "user": "${cluster_user}",
+      "passwd": "${cluster_password}",
+      "kubeconfig": "${kubeconfig}",
+      "force_login": "true"
+      ]
+     sh 'rm -f ocp_login_vars.yml'
+     writeYaml file: 'ocp_login_vars.yml', data: ocp_login_vars
+     ocp_login_vars = ocp_login_vars.collect { e -> '-e ' + e.key + '=' + e.value }
+     ansiColor('xterm') {
+       ansiblePlaybook(
+         playbook: 'login.yml',
+         extras: "${ocp_login_vars.join(' ')}",
+         hostKeyChecking: false,
+         unbuffered: true,
+         colorized: true)
+        }
+    }
+  }
+}
 
 def deploy_mig_controller_on_both(
   source_kubeconfig,

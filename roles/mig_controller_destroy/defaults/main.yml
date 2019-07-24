@@ -1,0 +1,14 @@
+---
+velero_crds:
+  - backups.velero.io
+  - backupstoragelocations.velero.io
+  - deletebackuprequests.velero.io
+  - downloadrequests.velero.io
+  - migrationcontrollers.migration.openshift.io
+  - podvolumebackups.velero.io
+  - podvolumerestores.velero.io
+  - resticrepositories.velero.io
+  - restores.velero.io
+  - schedules.velero.io
+  - serverstatusrequests.velero.io
+  - volumesnapshotlocations.velero.io

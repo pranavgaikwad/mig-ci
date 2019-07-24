@@ -128,7 +128,7 @@ node {
                         }
                 }
             if (CLEAN_WORKSPACE) {
-                utils.teardown_mig_controller()
+                utils.teardown_container_image()
                 cleanWs cleanWhenFailure: false, notFailBuild: true
             }
         }

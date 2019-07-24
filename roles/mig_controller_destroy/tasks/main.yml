@@ -1,0 +1,17 @@
+---
+- name: Destroy mig namespace
+  k8s:
+    state: absent
+    api_version: v1
+    kind: Namespace
+    name: mig
+    wait: yes
+
+- name: Destroy velero CRDs
+  k8s:
+    state: absent
+    api_version: v1beta1
+    kind: CustomResourceDefinition
+    name: "{{ item }}"
+    wait: yes
+  with_items: "{{ velero_crds }}"

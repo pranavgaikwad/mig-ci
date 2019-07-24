@@ -6,7 +6,7 @@ parameters([string(defaultValue: 'v3.11', description: 'OCP3 version to test', n
 string(defaultValue: 'v4.1', description: 'OCP4 version to test', name: 'OCP4_VERSION', trim: false),
 string(defaultValue: '', description: 'OCP3 source cluster API endpoint', name: 'OCP3_CLUSTER_URL', trim: false, required: true),
 string(defaultValue: '', description: 'OCP4 destination cluster API endpoint', name: 'OCP4_CLUSTER_URL', trim: false, required: true),
-string(defaultValue: 'eu-west-1', description: 'AWS region where clusters are deployed', name: 'AWS_REGION', trim: false),
+string(defaultValue: '', description: 'AWS region where clusters are deployed', name: 'AWS_REGION', trim: false, required: true),
 string(defaultValue: 'https://github.com/fusor/mig-controller.git', description: 'Mig controller repo to test', name: 'MIG_CONTROLLER_REPO', trim: false),
 string(defaultValue: 'master', description: 'Mig controller repo branch to test', name: 'MIG_CONTROLLER_BRANCH', trim: false),
 string(defaultValue: 'https://github.com/fusor/mig-e2e.git', description: 'Mig e2e repo to test', name: 'MIG_E2E_REPO', trim: false),

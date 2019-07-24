@@ -24,6 +24,8 @@ booleanParam(defaultValue: true, description: 'EC2 terminate instances after bui
 
 // true/false build parameter that defines if we terminate instances once build is done
 def EC2_TERMINATE_INSTANCES = params.EC2_TERMINATE_INSTANCES
+// true/false build parameter that defines if we cleanup workspace once build is done
+def CLEAN_WORKSPACE = params.CLEAN_WORKSPACE
 
 def common_stages
 def utils
@@ -68,8 +70,12 @@ node {
         // Success or failure, always send notifications
         utils.notifyBuild(currentBuild.result)
         stage('Clean Up Environment') {
+          if (EC2_TERMINATE_INSTANCES) {
             utils.teardown_ocp3_agnosticd()
+          }
+          if (CLEAN_WORKSPACE) {
             cleanWs cleanWhenFailure: false, notFailBuild: true
+          }
         }
-    }
+     }
 }

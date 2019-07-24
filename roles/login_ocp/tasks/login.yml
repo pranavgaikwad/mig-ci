@@ -21,4 +21,4 @@
     until: login.rc == 0
     environment:
       KUBECONFIG: "{{ kubeconfig }}"
-    when: (oc_status is defined and oc_status is failed) or force_login|bool
+  when: (oc_status is defined and oc_status is failed) or force_login|bool

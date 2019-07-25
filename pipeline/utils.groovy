@@ -38,9 +38,6 @@ def notifyBuild(String buildStatus = 'STARTED') {
 
 
 def clone_related_repos() {
-  echo 'Cloning mig-e2e repo'
-  checkout([$class: 'GitSCM', branches: [[name: "*/master"]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'mig-e2e']], submoduleCfg: [], userRemoteConfigs: [[url: "https://github.com/fusor/mig-e2e.git"]]])
-
   echo 'Cloning ocp-mig-test-data repo'
   checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'ocp-mig-test-data']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/fusor/ocp-mig-test-data.git']]])
 }

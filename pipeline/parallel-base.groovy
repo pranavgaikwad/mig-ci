@@ -83,14 +83,18 @@ node {
                     common_stages.deploy_origin3_dev(SOURCE_KUBECONFIG).call()
                 }
             }, deploy_NFS: {
+                if (env.DEPLOYMENT_TYPE != 'agnosticd') {
                 common_stages.deploy_NFS(CLUSTER_NAME + '-' + BUILD_NUMBER).call()
+                }
             }, deploy_OCP4: {
                 common_stages.deployOCP4(TARGET_KUBECONFIG).call()
             },
             failFast: true
         }
 
-        common_stages.provision_pvs(SOURCE_KUBECONFIG, CLUSTER_NAME + '-' + BUILD_NUMBER).call()
+        if (env.DEPLOYMENT_TYPE != 'agnosticd') {
+           common_stages.provision_pvs(SOURCE_KUBECONFIG, CLUSTER_NAME + '-' + BUILD_NUMBER).call()
+        }
 
         common_stages.deploy_mig_controller_on_both(SOURCE_KUBECONFIG, TARGET_KUBECONFIG, false, true).call()
 
@@ -122,7 +126,9 @@ node {
                                 }, destroy_OCP4: {
                                     utils.teardown_OCP4()
                                 }, destroy_NFS: {
-                                    utils.teardown_nfs(CLUSTER_NAME + '-' + BUILD_NUMBER)
+                                    if (env.DEPLOYMENT_TYPE != 'agnosticd') {
+                                       utils.teardown_nfs(CLUSTER_NAME + '-' + BUILD_NUMBER)
+                                    }
                                 }, failFast: false
                             }
                         }

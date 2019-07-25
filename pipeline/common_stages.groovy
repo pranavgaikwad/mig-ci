@@ -120,6 +120,8 @@ def deploy_ocp3_agnosticd(kubeconfig) {
             'email': "${EMAIL}",
             'output_dir': "${WORKSPACE}",
             "update_packages": "false",
+            "support_instance_public_dns": "true",
+            "nfs_server_address": "support1.${CLUSTER_NAME}-v3-${BUILD_NUMBER}${BASESUFFIX}",
             // User admin to preserve consistency between different deployment types
             'admin_user': "${cluster_adm_user}",
             // Fix for commit # 8780932 to work

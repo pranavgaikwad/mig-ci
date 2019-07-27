@@ -373,6 +373,7 @@ def deploy_mig_controller_on_both(
       // Source
       withEnv([
           "KUBECONFIG=${source_kubeconfig}",
+          "MIG_CONTROLLER_IMG=${QUAYIO_CI_REPO}:${MIG_CONTROLLER_BRANCH}",
           "PATH+EXTRA=~/bin"]) {
         ansiColor('xterm') {
           ansiblePlaybook(
@@ -386,6 +387,7 @@ def deploy_mig_controller_on_both(
       // Target
       withEnv([
           "KUBECONFIG=${target_kubeconfig}",
+          "MIG_CONTROLLER_IMG=${QUAYIO_CI_REPO}:${MIG_CONTROLLER_BRANCH}",
           "PATH+EXTRA=~/bin"]) {
         ansiColor('xterm') {
           ansiblePlaybook(

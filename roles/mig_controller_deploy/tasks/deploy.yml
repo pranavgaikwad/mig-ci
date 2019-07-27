@@ -1,3 +1,21 @@
+- block:
+  - name: Update with mig controller custom image
+    lineinfile:
+      path: "{{ mig_controller_location }}/config/releases/latest/manifest.yaml"
+      regexp: '^(.*?)image:'
+      line: '\1image: {{ mig_controller_img }}'
+      backrefs: yes
+
+  - name: Update deploy script to use custom image
+    lineinfile:
+      path: "{{ mig_controller_location }}/hack/deploy/deploy_mig.sh"
+      regexp: '^(.*?)manifest.yaml'
+      line: 'oc apply -f {{ mig_controller_location }}/config/releases/latest/manifest.yaml'
+
+  - debug:
+      msg: "Mig controller will be deploy using {{ mig_controller_img }}"
+  when: mig_controller_owner_repo != "https://github.com/fusor/mig-controller.git"
+
 - name: Deploy mig controller and ui
   command: "{{ mig_controller_location }}/hack/deploy/deploy_mig.sh"
   register: deploy

@@ -3,6 +3,7 @@ cluster_version: "{{ lookup('env', 'CLUSTER_VERSION') or '4' }}"
 mig_controller_location: "{{ workspace }}/mig-controller"
 mig_controller_owner_repo: "{{ lookup('env', 'MIG_CONTROLLER_REPO') or 'https://github.com/fusor/mig-controller.git' }}"
 mig_controller_owner_branch: "{{ lookup('env', 'MIG_CONTROLLER_BRANCH') or 'master' }}"
+mig_controller_img: "{{ lookup('env', 'MIG_CONTROLLER_IMG') or 'quay.io/ocpmigrate/mig-controller:latest' }}"
 mig_controller_namespace: "mig"
 mig_controller_sa_name: "mig"
 mig_controller_host_cluster: true

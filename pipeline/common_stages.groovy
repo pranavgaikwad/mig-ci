@@ -367,7 +367,7 @@ def deploy_mig_controller_on_both(
         mig_controller_img = "${QUAYIO_CI_REPO}"
         mig_controller_version = "${MIG_CONTROLLER_BRANCH}"
       } else {
-          mig_controller_img = "https://github.com/fusor/mig-controller.git"
+          mig_controller_img = "quay.io/ocpmigrate/mig-controller"
           mig_controller_version = "latest"
       }
 

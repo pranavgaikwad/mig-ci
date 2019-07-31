@@ -1,5 +1,4 @@
 ---
-cluster_version: "{{ lookup('env', 'CLUSTER_VERSION') or '4' }}"
 mig_operator_location: "{{ workspace }}/mig-operator"
 mig_operator_repo: "{{ lookup('env', 'MIG_OPERATOR_REPO') or 'https://github.com/fusor/mig-operator.git' }}"
 mig_operator_branch: "{{ lookup('env', 'MIG_OPERATOR_BRANCH') or 'master' }}"

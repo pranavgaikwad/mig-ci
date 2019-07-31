@@ -343,15 +343,10 @@ def login_cluster(
 def deploy_mig_controller_on_both(
   source_kubeconfig,
   target_kubeconfig,
-  host_on_source = false,
-  source_ocp3 = true) {
-  def cluster_version
-  if (source_ocp3) {
-    cluster_version = 3
-  } else {
-    cluster_version = 4
-  }
-
+  mig_controller_src,
+  mig_controller_dst) {
+  // mig_controller_src boolean defines if the source cluster (OCP3) will host mig controller
+  // mig_controller_dst boolean defines if the destination cluster (OCP4) will host mig controller
   return {
     stage('Build mig-controller image and deploy on both clusters') {
       steps_finished << 'Build mig-controller image and deploy on both clusters'
@@ -370,29 +365,31 @@ def deploy_mig_controller_on_both(
         }
       }
 
-      // Source
+      // Source (OCP3)
       withEnv([
           "KUBECONFIG=${source_kubeconfig}",
-          "MIG_CONTROLLER_IMG=${QUAYIO_CI_REPO}:${MIG_CONTROLLER_BRANCH}",
+          "MIG_CONTROLLER_IMG=${QUAYIO_CI_REPO}",
+          "MIG_CONTROLLER_VERSION=${MIG_CONTROLLER_BRANCH}",
           "PATH+EXTRA=~/bin"]) {
         ansiColor('xterm') {
           ansiblePlaybook(
             playbook: 'mig_controller_deploy.yml',
-            extras: "-e mig_controller_host_cluster=${host_on_source}",
+            extras: "-e mig_controller_host_cluster=${mig_controller_src} -e mig_controller_ui=false",
             hostKeyChecking: false,
             unbuffered: true,
             colorized: true)
         }
       }
-      // Target
+      // Target (OCP4)
       withEnv([
           "KUBECONFIG=${target_kubeconfig}",
-          "MIG_CONTROLLER_IMG=${QUAYIO_CI_REPO}:${MIG_CONTROLLER_BRANCH}",
+          "MIG_CONTROLLER_IMG=${QUAYIO_CI_REPO}",
+          "MIG_CONTROLLER_VERSION=${MIG_CONTROLLER_BRANCH}",
           "PATH+EXTRA=~/bin"]) {
         ansiColor('xterm') {
           ansiblePlaybook(
             playbook: 'mig_controller_deploy.yml',
-            extras: "-e mig_controller_host_cluster=${!host_on_source}",
+            extras: "-e mig_controller_host_cluster=${mig_controller_dst} -e mig_controller_ui=false",
             hostKeyChecking: false,
             unbuffered: true,
             colorized: true)

@@ -350,8 +350,8 @@ def deploy_mig_controller_on_both(
   return {
     stage('Build mig-controller image and deploy on both clusters') {
       steps_finished << 'Build mig-controller image and deploy on both clusters'
-      // Create mig-controller docker image
-      if (env.QUAYIO_CI_REPO && "${MIG_CONTROLLER_REPO}" != "https://github.com/fusor/mig-controller.git") {
+      // Create custom mig-controller docker image if building a different mig-controller repo/branch
+      if ("${MIG_CONTROLLER_REPO}" != "https://github.com/fusor/mig-controller.git") {
         withEnv(["IMG=${QUAYIO_CI_REPO}:${MIG_CONTROLLER_BRANCH}"]) {
           dir('mig-controller') {
             sh 'make docker-build'
@@ -363,13 +363,19 @@ def deploy_mig_controller_on_both(
         withEnv(["IMG=${QUAYIO_CI_REPO}:${MIG_CONTROLLER_BRANCH}"]) {
           sh 'docker push $IMG'
         }
+        // Update mig-controller image and version to custom build or assume default
+        def mig_controller_img = "${QUAYIO_CI_REPO}"
+        def mig_controller_version = "${MIG_CONTROLLER_BRANCH}"
+      } else {
+          def mig_controller_img = "https://github.com/fusor/mig-controller.git"
+          def mig_controller_version = "latest"
       }
 
       // Source (OCP3)
       withEnv([
           "KUBECONFIG=${source_kubeconfig}",
-          "MIG_CONTROLLER_IMG=${QUAYIO_CI_REPO}",
-          "MIG_CONTROLLER_VERSION=${MIG_CONTROLLER_BRANCH}",
+          "MIG_CONTROLLER_IMG=${mig_controller_img}",
+          "MIG_CONTROLLER_VERSION=${mig_controller_version}",
           "PATH+EXTRA=~/bin"]) {
         ansiColor('xterm') {
           ansiblePlaybook(
@@ -383,8 +389,8 @@ def deploy_mig_controller_on_both(
       // Target (OCP4)
       withEnv([
           "KUBECONFIG=${target_kubeconfig}",
-          "MIG_CONTROLLER_IMG=${QUAYIO_CI_REPO}",
-          "MIG_CONTROLLER_VERSION=${MIG_CONTROLLER_BRANCH}",
+          "MIG_CONTROLLER_IMG=${mig_controller_img}",
+          "MIG_CONTROLLER_VERSION=${mig_controller_version}",
           "PATH+EXTRA=~/bin"]) {
         ansiColor('xterm') {
           ansiblePlaybook(

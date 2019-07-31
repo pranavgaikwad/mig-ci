@@ -364,11 +364,11 @@ def deploy_mig_controller_on_both(
           sh 'docker push $IMG'
         }
         // Update mig-controller image and version to custom build or assume default
-        def mig_controller_img = "${QUAYIO_CI_REPO}"
-        def mig_controller_version = "${MIG_CONTROLLER_BRANCH}"
+        mig_controller_img = "${QUAYIO_CI_REPO}"
+        mig_controller_version = "${MIG_CONTROLLER_BRANCH}"
       } else {
-          def mig_controller_img = "https://github.com/fusor/mig-controller.git"
-          def mig_controller_version = "latest"
+          mig_controller_img = "https://github.com/fusor/mig-controller.git"
+          mig_controller_version = "latest"
       }
 
       // Source (OCP3)

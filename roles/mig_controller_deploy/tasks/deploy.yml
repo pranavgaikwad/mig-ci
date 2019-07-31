@@ -1,5 +1,5 @@
 - debug:
-    msg: "Mig controller will be deploy using {{ mig_controller_img }}:{{ mig_controller_version }}"
+    msg: "Mig controller will deploy using {{ mig_controller_img }}:{{ mig_controller_version }}"
 
 - name: Deploy mig controller
   k8s:

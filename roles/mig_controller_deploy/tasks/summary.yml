@@ -1,4 +1,4 @@
 - name: Write mig_controller deployment summary to config/mig_controller.yml
   template:
-    src: mig_controller.yml.j2
+    src: mig_controller_e2e_sum.yml.j2
     dest: "{{ playbook_dir }}/config/mig_controller.yml"

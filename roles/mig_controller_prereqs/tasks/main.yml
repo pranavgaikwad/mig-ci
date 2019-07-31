@@ -3,12 +3,5 @@
 - name: Create AWS backup storage
   import_tasks: create_aws_backup_storage.yml
 
-- name: Apply velero OCP3 fixes
-  import_tasks: apply_ocp3_fixes.yml
-
-- name: Deploy velero
-  import_tasks: deploy_velero.yml
-
-- name: Prepare remote cluster
-  import_tasks: prepare_remote_cluster.yml
-  when: mig_controller_host_cluster|bool and mig_controller_remote_cluster_online|bool
+- name: Deploy mig operator
+  import_tasks: deploy_operator.yml

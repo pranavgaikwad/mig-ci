@@ -1,0 +1,21 @@
+- name: Clone the mig operator repo
+  git:
+    dest: "{{ mig_operator_location }}"
+    repo: "{{ mig_operator_repo }}"
+    version: "{{ mig_operator_branch }}"
+  ignore_errors: true
+
+- name: Deploy mig operator
+  k8s:
+    state : present
+    definition: "{{ lookup('file', '{{ mig_operator_location }}/operator.yml' )}}"
+
+- name: Check status of mig operator
+  k8s_facts:
+    kind: Pod
+    namespace: "{{ mig_controller_namespace }}"
+    label_selectors: "app=migration-operator"
+  register: pod
+  until: "true in (pod | json_query('resources[].status.containerStatuses[].ready'))"
+  retries: 30
+  delay: 10

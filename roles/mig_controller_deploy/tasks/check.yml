@@ -1,9 +1,32 @@
-- name: Check status of mig controller
+- name: Check velero status
+  k8s_facts:
+    kind: Pod
+    namespace: "{{ mig_controller_namespace }}"
+    label_selectors: "component=velero"
+  register: pod
+  until: "true in (pod | json_query('resources[].status.containerStatuses[].ready'))"
+  retries: 12
+  delay: 10
+  when: mig_controller_velero|bool
+
+- name: Check restic status
+  k8s_facts:
+    kind: Pod
+    namespace: "{{ mig_controller_namespace }}"
+    label_selectors: "name=restic"
+  register: pod
+  until: "true in (pod | json_query('resources[].status.containerStatuses[].ready'))"
+  retries: 12
+  delay: 10
+  when: mig_controller_velero|bool
+
+- name: Check mig controller status
   k8s_facts:
     kind: Pod
     namespace: "{{ mig_controller_namespace }}"
     label_selectors: "control-plane=controller-manager"
   register: pod
   until: "true in (pod | json_query('resources[].status.containerStatuses[].ready'))"
-  retries: 10
-  delay: 15
+  retries: 12
+  delay: 10
+  when: mig_controller_host_cluster|bool

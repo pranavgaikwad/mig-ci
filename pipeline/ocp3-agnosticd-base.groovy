@@ -5,9 +5,9 @@ properties([
 parameters([
 string(defaultValue: 'v3.11', description: 'OpenShift version to deploy', name: 'OCP3_VERSION', trim: false),
 string(defaultValue: 'jenkins-ci-agnosticd-base', description: 'Cluster name to deploy', name: 'CLUSTER_NAME', trim: false),
-string(defaultValue: 'jmatthew@redhat.com', description: 'Email to register the deploymnet', name: 'EMAIL', trim: false),
-string(defaultValue: '1', description: 'Node count for cluster deployment', name: 'NODE_COUNT', trim: false),
-string(defaultValue: '1', description: 'Node count for cluster deployment', name: 'MASTER_COUNT', trim: false),
+string(defaultValue: 'mig-ci@redhat.com', description: 'Email to register the deploymnet', name: 'EMAIL', trim: false),
+string(defaultValue: '1', description: 'OCP3 master instance count', name: 'OCP3_MASTER_INSTANCE_COUNT', trim: false),
+string(defaultValue: '1', description: 'OCP3 worker instance count', name: 'OCP3_WORKER_INSTANCE_COUNT', trim: false),
 string(defaultValue: '.mg.dog8code.com', description: 'Zone suffix for instance hostname address', name: 'BASESUFFIX', trim: false),
 string(defaultValue: 'Z2GE8CSGW2ZA8W', description: 'Zone id', name: 'HOSTZONEID', trim: false),
 string(defaultValue: 'ocp-workshop', description: 'AgnosticD environment type to deploy', name: 'ENVTYPE', trim: false),

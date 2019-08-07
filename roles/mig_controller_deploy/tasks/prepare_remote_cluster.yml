@@ -3,7 +3,7 @@
   block:
 
     - name: Extract SA token
-      shell: "{{ oc_binary }} sa get-token -n {{ mig_controller_namespace }} {{ mig_controller_sa_name }} | base64 -w 0"
+      shell: "{{ oc_binary }} sa get-token -n {{ mig_operator_namespace }} {{ mig_controller_sa_name }} | base64 -w 0"
       register: oc_sa_output
 
     - set_fact:

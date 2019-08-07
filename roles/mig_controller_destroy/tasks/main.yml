@@ -1,10 +1,22 @@
 ---
-- name: Destroy mig namespace
+- name: Include required vars
+  include_vars:
+    file: "{{ playbook_dir }}/roles/mig_controller_prereqs/defaults/main.yml"
+
+- name: Destroy migration namespace
   k8s:
     state: absent
     api_version: v1
     kind: Namespace
-    name: mig
+    name: "{{ mig_migration_namespace }}"
+    wait: yes
+
+- name: Destroy operator namespace
+  k8s:
+    state: absent
+    api_version: v1
+    kind: Namespace
+    name: "{{ mig_operator_namespace }}"
     wait: yes
 
 - name: Destroy velero CRDs

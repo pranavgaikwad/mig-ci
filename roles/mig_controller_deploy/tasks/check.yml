@@ -1,7 +1,7 @@
 - name: Check velero status
   k8s_facts:
     kind: Pod
-    namespace: "{{ mig_controller_namespace }}"
+    namespace: "{{ mig_migration_namespace }}"
     label_selectors: "component=velero"
   register: pod
   until: "true in (pod | json_query('resources[].status.containerStatuses[].ready'))"
@@ -12,7 +12,7 @@
 - name: Check restic status
   k8s_facts:
     kind: Pod
-    namespace: "{{ mig_controller_namespace }}"
+    namespace: "{{ mig_migration_namespace }}"
     label_selectors: "name=restic"
   register: pod
   until: "true in (pod | json_query('resources[].status.containerStatuses[].ready'))"
@@ -23,7 +23,7 @@
 - name: Check mig controller status
   k8s_facts:
     kind: Pod
-    namespace: "{{ mig_controller_namespace }}"
+    namespace: "{{ mig_operator_namespace }}"
     label_selectors: "control-plane=controller-manager"
   register: pod
   until: "true in (pod | json_query('resources[].status.containerStatuses[].ready'))"

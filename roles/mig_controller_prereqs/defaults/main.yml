@@ -1,4 +1,5 @@
 ---
+mig_operator_namespace: mig
 mig_operator_location: "{{ workspace }}/mig-operator"
 mig_operator_repo: "{{ lookup('env', 'MIG_OPERATOR_REPO') or 'https://github.com/fusor/mig-operator.git' }}"
 mig_operator_branch: "{{ lookup('env', 'MIG_OPERATOR_BRANCH') or 'master' }}"
@@ -7,7 +8,6 @@ mig_controller_repo: "{{ lookup('env', 'MIG_CONTROLLER_REPO') or 'https://github
 mig_controller_branch: "{{ lookup('env', 'MIG_CONTROLLER_BRANCH') or 'master' }}"
 mig_controller_img: "{{ lookup('env', 'MIG_CONTROLLER_IMG') or 'quay.io/ocpmigrate/mig-controller' }}"
 mig_controller_version: "{{ lookup('env', 'MIG_CONTROLLER_VERSION') or 'latest' }}"
-mig_controller_namespace: mig
 mig_controller_sa_name: mig
 mig_controller_host_cluster: true
 mig_controller_velero: true

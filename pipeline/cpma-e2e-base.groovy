@@ -88,7 +88,14 @@ node {
             "CPMA_CLUSTERNAME=${CURRENTCONTEXT}",
             "CPMA_CONFIGSOURCE=remote",
             "CPMA_WORKDIR=${data_dir}",
-            "CPMA_CREATECONFIG=no"]) {
+            "CPMA_SAVECONFIG=false",
+            "CPMA_ETCDCONFIGFILE=/etc/etcd/etcd.conf",
+            "CPMA_MASTERCONFIGFILE=/etc/origin/master/master-config.yaml",
+            "CPMA_REGISTRIESCONFIGFILE=/etc/containers/registries.conf",
+            "CPMA_NODECONFIGFILE=/etc/origin/node/node-config.yaml",
+            "CPMA_CRIOCONFIGFILE=/etc/crio/crio.conf",
+            "CPMA_SSHLOGIN=ec2-user",
+            "CPMA_SSHPORT=22"]) {
           sh "make build && ${WORKSPACE}/cpma/bin/cpma -i --debug --verbose"
         }
       }

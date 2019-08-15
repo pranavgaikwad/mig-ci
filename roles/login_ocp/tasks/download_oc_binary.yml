@@ -19,7 +19,10 @@
       dest: "{{ oc_arch }}"
 
   - name: "Unpack the binary"
-    command: tar -xzf {{ oc_arch }}  -C {{ oc_arch | dirname }}
+    unarchive:
+      src: "{{ oc_arch }}"
+      dest: "{{ oc_arch | dirname }}"
+      remote_src: yes
 
   - name: Install newly downloaded oc binary
     copy:

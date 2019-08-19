@@ -1,4 +1,4 @@
-openshift_installer_release: "4.1.4"
+openshift_installer_release: "4.1.12"
 openshift_installer_release_type: "linux"
 openshift_installer_release_url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ openshift_installer_release }}/openshift-install-{{ openshift_installer_release_type }}-{{ openshift_installer_release }}.tar.gz"
 ocp4_admin_user:  "{{ lookup('env', 'OCP4_ADMIN_USER') or 'admin' }}"

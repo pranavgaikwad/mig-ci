@@ -420,7 +420,7 @@ def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig) {
             "PATH+EXTRA=~/bin"]) {
             ansiColor('xterm') {
               ansiblePlaybook(
-                playbook: 'mig_controller_samples.yml',
+                playbook: "${env.E2E_PLAY}",
                 hostKeyChecking: false,
                 extras: "-e 'with_migrate=false'",
                 tags: "${e2e_tests[i]}",
@@ -433,7 +433,7 @@ def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig) {
             "PATH+EXTRA=~/bin"]) {
             ansiColor('xterm') {
               ansiblePlaybook(
-                playbook: 'mig_controller_samples.yml',
+                playbook: "${env.E2E_PLAY}",
                 hostKeyChecking: false,
                 extras: "-e 'with_deploy=false'",
                 tags: "${e2e_tests[i]}",

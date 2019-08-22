@@ -24,6 +24,7 @@ string(defaultValue: 'https://github.com/fusor/mig-controller.git', description:
 string(defaultValue: 'master', description: 'Mig controller repo branch to test', name: 'MIG_CONTROLLER_BRANCH', trim: false),
 string(defaultValue: 'https://github.com/fusor/mig-e2e.git', description: 'Mig e2e repo to test', name: 'MIG_E2E_REPO', trim: false),
 string(defaultValue: 'master', description: 'Mig e2e repo branch to test', name: 'MIG_E2E_BRANCH', trim: false),
+string(defaultValue: 'e2e_mig_samples.yml', description: 'e2e test playbook to run, see https://github.com/fusor/mig-e2e for details', name: 'E2E_PLAY', trim: false),
 string(defaultValue: 'all', description: 'e2e test tags to run, see https://github.com/fusor/mig-e2e for details, space delimited', name: 'E2E_TESTS', trim: false),
 string(defaultValue: 'quay.io/fbladilo/mig-controller', description: 'Repo for quay io mig-controller images', name: 'QUAYIO_CI_REPO', trim: false),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_quay_credentials', description: 'Credentials for quay.io container storage, used by mig-controller to push and pull images', name: 'QUAYIO_CREDENTIALS', required: true),

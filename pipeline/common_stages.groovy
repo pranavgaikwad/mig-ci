@@ -185,13 +185,17 @@ def deploy_ocp3_agnosticd(kubeconfig) {
 }
 
 def deployOCP4(kubeconfig) {
-  def release_version = "${OCP4_VERSION.substring(1)}"
-  def releases = [
-    '4.1': "4.1.13",
-    '4.2': "nightly",
-    'ightly': "nightly"
-  ]
-  def osrelease = releases["${release_version}"]
+  def osrelease = ""
+  if ("${OCP4_VERSION}" == "nightly") {
+    osrelease = "nightly"
+  } else {
+    def release_version = "${OCP4_VERSION.substring(1)}"
+    def releases = [
+      '4.1': "4.1.13",
+      '4.2': "nightly"
+    ]
+    osrelease = releases["${release_version}"]
+  }
 
 
   sh "echo './openshift-install destroy cluster &' >> destroy_env.sh"

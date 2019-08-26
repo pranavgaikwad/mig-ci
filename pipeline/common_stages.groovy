@@ -132,7 +132,7 @@ def deploy_ocp3_agnosticd(kubeconfig) {
           writeYaml file: 'vars.yml', data: vars
           vars = vars.collect { e -> '-e ' + e.key + '=' + e.value }
 
-          // Dump teardown wars on host
+          // Dump teardown vars on host
           def teardown_vars = [
             'aws_region': "${AWS_REGION}",
             'guid': "${CLUSTER_NAME}-v3-${BUILD_NUMBER}",
@@ -185,17 +185,30 @@ def deploy_ocp3_agnosticd(kubeconfig) {
 }
 
 def deployOCP4(kubeconfig) {
+  def osrelease = ""
+  if ("${OCP4_VERSION}" == "nightly") {
+    osrelease = "nightly"
+  } else {
+    def release_version = "${OCP4_VERSION.substring(1)}"
+    def releases = [
+      '4.1': "4.1.13",
+      '4.2': "nightly"
+    ]
+    osrelease = releases["${release_version}"]
+  }
+
+
   sh "echo './openshift-install destroy cluster &' >> destroy_env.sh"
   return {
     stage('Deploy OCP4 cluster') {
-      steps_finished << 'Deploy OCP4 ' + OCP4_VERSION
+      steps_finished << 'Deploy OCP4 ' + OCP4_VERSION + " (" + osrelease + ")"
       withCredentials([
           string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
           string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY'),
           [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP4_CREDENTIALS}", usernameVariable: 'OCP4_ADMIN_USER', passwordVariable: 'OCP4_ADMIN_PASSWD']
           ])
       {
-        withEnv(["KUBECONFIG=${kubeconfig}", "CLUSTER_NAME=${CLUSTER_NAME}-v4-${BUILD_NUMBER}"]){
+        withEnv(["KUBECONFIG=${kubeconfig}", "CLUSTER_NAME=${CLUSTER_NAME}-v4-${BUILD_NUMBER}", "OCP4_RELEASE=${osrelease}"]){
           ansiColor('xterm') {
             ansiblePlaybook(
               playbook: 'deploy_ocp4_cluster.yml',

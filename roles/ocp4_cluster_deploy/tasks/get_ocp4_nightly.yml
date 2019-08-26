@@ -1,0 +1,16 @@
+---
+- name: "Discover latest nightly installer release"
+  shell: wget -O - {{ openshift_installer_nightly_release_url_prefix }} 2>/dev/null \
+         | grep -i nightly \
+         | cut -d\> -f6 \
+         | sed -e 's|<a href=||g' -e 's|</a||g' -e 's|"||g' -e 's|/||g' \
+         | sort -u \
+         | tail -n1
+  args:
+    warn: no
+  register: latest_nightly
+
+- name: "Set variables to {{ latest_nightly.stdout }} release"
+  set_fact:
+    openshift_installer_release: "{{ latest_nightly.stdout }}"
+    openshift_installer_release_url: "{{ openshift_installer_nightly_release_url_prefix }}/{{ latest_nightly.stdout }}/openshift-install-{{ openshift_installer_release_type }}-{{ latest_nightly.stdout }}.tar.gz"

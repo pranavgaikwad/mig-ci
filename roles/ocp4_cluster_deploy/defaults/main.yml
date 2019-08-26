@@ -1,6 +1,7 @@
-openshift_installer_release: "4.1.12"
+openshift_installer_release: "{{ lookup('env', 'OCP4_RELEASE') or '4.1.13' }}"
 openshift_installer_release_type: "linux"
 openshift_installer_release_url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ openshift_installer_release }}/openshift-install-{{ openshift_installer_release_type }}-{{ openshift_installer_release }}.tar.gz"
 ocp4_admin_user:  "{{ lookup('env', 'OCP4_ADMIN_USER') or 'admin' }}"
 ocp4_admin_password:  "{{ lookup('env', 'OCP4_ADMIN_PASSWD') or 'r3dh4t1!' }}"
 ocp4_htpasswd_file: "{{ playbook_dir }}/ocp4-htpasswd"
+openshift_installer_nightly_release_url_prefix: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp-dev-preview/"

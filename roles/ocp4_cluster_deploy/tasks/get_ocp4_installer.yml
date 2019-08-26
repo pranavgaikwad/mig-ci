@@ -1,5 +1,9 @@
 ---
-- name: get installer
+- name: Get nightly
+  include_tasks: get_ocp4_nightly.yml
+  when: openshift_installer_release == "nightly"
+
+- name: Get installer
   unarchive:
     src: "{{ openshift_installer_release_url }}"
     dest: "{{ playbook_dir }}"

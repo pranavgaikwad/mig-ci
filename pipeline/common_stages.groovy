@@ -112,7 +112,7 @@ def deploy_ocp3_agnosticd(kubeconfig) {
             'subdomain_base_suffix': "${BASESUFFIX}",
             'node_instance_count': "${OCP3_WORKER_INSTANCE_COUNT}",
             'master_instance_count': "${OCP3_MASTER_INSTANCE_COUNT}",
-            'infranode_instance_count': "${OCP3_INFRA_INSTANCE_COUNT},
+            'infranode_instance_count': "${OCP3_INFRA_INSTANCE_COUNT}",
             'software_to_deploy': 'openshift',
             'redhat_registry_user': "${SUB_USER}",
             'redhat_registry_password': "${SUB_PASS}",

@@ -10,14 +10,7 @@
     kind: Namespace
     name: "{{ mig_migration_namespace }}"
     wait: yes
-
-- name: Destroy operator namespace
-  k8s:
-    state: absent
-    api_version: v1
-    kind: Namespace
-    name: "{{ mig_operator_namespace }}"
-    wait: yes
+    wait_timeout: 300
 
 - name: Destroy velero CRDs
   k8s:

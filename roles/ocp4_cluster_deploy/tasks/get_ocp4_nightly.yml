@@ -7,9 +7,9 @@
 
 - name: "Determine latest nightly installer release"
   set_fact:
-    latest_nightly: "{{ latest_nightly_page.content | regex_findall('\\b[-.0-9]{1,16}\\.nightly-[-.0-9]{10,20}\\b') | last  }}"
+    latest_nightly: "{{ latest_nightly_page.content | regex_findall('\\b\\d[-.0-9]{1,16}\\.nightly-[-.0-9]{10,20}\\d\\b') | last  }}"
 
 - name: "Set variables to {{ latest_nightly }} release"
   set_fact:
     openshift_installer_release: "{{ latest_nightly }}"
-    openshift_installer_release_url: "{{ openshift_installer_nightly_release_url_prefix }}/{{ latest_nightly }}/openshift-install-{{ openshift_installer_release_type }}-{{ latest_nightly }}.tar.gz"
+    openshift_installer_release_url: "{{ openshift_installer_nightly_release_url_prefix }}/openshift-install-{{ openshift_installer_release_type }}-{{ latest_nightly }}.tar.gz"

@@ -6,7 +6,15 @@ mig_controller_location: "{{ workspace }}/mig-controller"
 mig_controller_repo: "{{ lookup('env', 'MIG_CONTROLLER_REPO') or 'https://github.com/fusor/mig-controller.git' }}"
 mig_controller_branch: "{{ lookup('env', 'MIG_CONTROLLER_BRANCH') or 'master' }}"
 mig_controller_img: "{{ lookup('env', 'MIG_CONTROLLER_IMG') or 'quay.io/ocpmigrate/mig-controller' }}"
-mig_controller_version: "{{ lookup('env', 'MIG_CONTROLLER_VERSION') or 'latest' }}"
+mig_controller_tag: "{{ lookup('env', 'MIG_CONTROLLER_TAG') or 'latest' }}"
+mig_operator_img: "{{ lookup('env', 'MIG_OPERATOR_IMG') or 'quay.io/ocpmigrate/mig-operator' }}"
+mig_operator_tag: "{{ lookup('env', 'MIG_OPERATOR_TAG') or 'latest' }}"
+mig_ui_img: "{{ lookup('env', 'MIG_UI_IMG') or 'quay.io/ocpmigrate/mig-ui' }}"
+mig_ui_tag: "{{ lookup('env', 'MIG_UI_TAG') or 'latest' }}"
+mig_velero_img: "{{ lookup('env', 'MIG_VELERO_IMG') or 'quay.io/ocpmigrate/velero' }}"
+mig_velero_tag: "{{ lookup('env', 'MIG_VELERO_TAG') or 'latest' }}"
+mig_velero_plugin_img: "{{ lookup('env', 'MIG_VELERO_PLUGIN_IMG') or 'quay.io/ocpmigrate/migration-plugin' }}"
+mig_velero_plugin_tag: "{{ lookup('env', 'MIG_VELERO_PLUGIN_TAG') or 'latest' }}"
 mig_controller_sa_name: mig
 mig_controller_host_cluster: true
 mig_controller_velero: true

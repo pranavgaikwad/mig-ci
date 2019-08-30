@@ -1,6 +1,0 @@
-- hosts: localhost
-  roles:
-  - mig_tools_prereqs
-  - role: mig_tools_setup
-  vars_files:
-    - "{{ playbook_dir }}/config/defaults.yml"

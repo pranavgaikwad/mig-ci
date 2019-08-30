@@ -1,7 +1,7 @@
 - hosts: localhost
   tasks:
     - include_role:
-        name: mig_tools_setup
+        name: mig_controller_destroy
         tasks_from: destroy_s3_bucket.yml
   vars_files:
     - "{{ playbook_dir }}/config/defaults.yml"

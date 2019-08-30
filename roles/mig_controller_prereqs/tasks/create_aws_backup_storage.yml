@@ -10,14 +10,20 @@
       aws_caller_facts:
       register: caller_facts
 
+    - set_fact:
+        random: "{{ 100000 | random }}"
+
+    # Add randomization to arn_and_region to ensure uniquess within a region
     - name: Retrieve AWS account identifier (ARN) for use in resource tags
       set_fact:
         aws_account_arn: "{{ caller_facts.arn }}"
-        arn_and_region: "{{ caller_facts.arn }}-{{ ec2_region }}"
+        arn_and_region: "{{ caller_facts.arn }}-{{ ec2_region }}-{{ random }}"
 
-    # Set this separately to explicitly mention we are setting md5 hash to include uniqueness across regions
     - set_fact:
-        aws_resource_name: "velero-{{ arn_and_region | hash('md5') }}"
+        aws_resource_name: "velero-ci-{{ arn_and_region | hash('md5') }}"
+
+    - debug:
+        msg: "Will create s3 bucket : {{ aws_resource_name }}"
 
     - name: Create S3 bucket for backup storage of OpenShift resource definitions
       s3_bucket:

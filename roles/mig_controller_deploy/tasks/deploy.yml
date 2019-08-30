@@ -1,5 +1,10 @@
 - debug:
-    msg: "Mig controller will deploy using {{ mig_controller_img }}:{{ mig_controller_version }}"
+    msg: |
+         Mig controller will deploy using: 
+         {{ mig_controller_img }}:{{ mig_controller_tag }}
+         {{ mig_ui_img }}:{{ mig_ui_tag }}
+         {{ mig_velero_img }}:{{ mig_velero_tag }}
+         {{ mig_velero_plugin_img }}:{{ mig_velero_plugin_tag }}
 
 - name: Deploy mig controller
   k8s:

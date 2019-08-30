@@ -380,17 +380,21 @@ def deploy_mig_controller_on_both(
         }
         // Update mig-controller image and version to custom build or assume default
         mig_controller_img = "${QUAYIO_CI_REPO}"
-        mig_controller_version = "${MIG_CONTROLLER_BRANCH}"
+        mig_controller_tag = "${MIG_CONTROLLER_BRANCH}"
       } else {
           mig_controller_img = "quay.io/ocpmigrate/mig-controller"
-          mig_controller_version = "latest"
+          mig_controller_tag = "${MIG_CONTROLLER_TAG}"
       }
 
       // Source (OCP3)
       withEnv([
           "KUBECONFIG=${source_kubeconfig}",
           "MIG_CONTROLLER_IMG=${mig_controller_img}",
-          "MIG_CONTROLLER_VERSION=${mig_controller_version}",
+          "MIG_CONTROLLER_TAG=${mig_controller_tag}",
+          "MIG_OPERATOR_TAG=${MIG_OPERATOR_TAG}",
+          "MIG_UI_TAG=${MIG_UI_TAG}",
+          "MIG_VELERO_TAG=${MIG_VELERO_TAG}",
+          "MIG_VELERO_PLUGIN_TAG=${MIG_VELERO_PLUGIN_TAG}",
           "PATH+EXTRA=~/bin"]) {
         ansiColor('xterm') {
           ansiblePlaybook(
@@ -405,7 +409,11 @@ def deploy_mig_controller_on_both(
       withEnv([
           "KUBECONFIG=${target_kubeconfig}",
           "MIG_CONTROLLER_IMG=${mig_controller_img}",
-          "MIG_CONTROLLER_VERSION=${mig_controller_version}",
+          "MIG_CONTROLLER_TAG=${mig_controller_tag}",
+          "MIG_OPERATOR_TAG=${MIG_OPERATOR_TAG}",
+          "MIG_UI_TAG=${MIG_UI_TAG}",
+          "MIG_VELERO_TAG=${MIG_VELERO_TAG}",
+          "MIG_VELERO_PLUGIN_TAG=${MIG_VELERO_PLUGIN_TAG}",
           "PATH+EXTRA=~/bin"]) {
         ansiColor('xterm') {
           ansiblePlaybook(

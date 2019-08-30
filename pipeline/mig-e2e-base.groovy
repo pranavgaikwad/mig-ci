@@ -82,6 +82,8 @@ node {
         // Success or failure, always send notifications
         utils.notifyBuild(currentBuild.result)
         stage('Clean Up Environment') {
+          // Always attempt to remove s3 buckets
+          utils.teardown_s3_bucket()
           if (CLEAN_WORKSPACE) {
               cleanWs notFailBuild: true
           }

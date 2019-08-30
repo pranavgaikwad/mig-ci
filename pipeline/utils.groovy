@@ -283,5 +283,19 @@ def teardown_container_image() {
   }
 }
 
+def teardown_s3_bucket() {
+  withCredentials([
+    string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
+    string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
+    ]) {
+    ansiColor('xterm') {
+      ansiblePlaybook(
+        playbook: 's3_bucket_destroy.yml',
+        hostKeyChecking: false,
+        unbuffered: true,
+        colorized: true)
+    }
+  }
+}
 
 return this

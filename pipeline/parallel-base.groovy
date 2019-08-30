@@ -157,6 +157,8 @@ node {
                             }
                         }
                 }
+            // Always attempt to remove s3 buckets
+            utils.teardown_s3_bucket()
             if (CLEAN_WORKSPACE) {
                 utils.teardown_container_image()
                 cleanWs cleanWhenFailure: false, notFailBuild: true

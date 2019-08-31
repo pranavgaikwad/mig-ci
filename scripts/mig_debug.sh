@@ -11,8 +11,8 @@ DATE=`date`
 echo "############################## BEGIN MIG DEBUG ##################################"
 echo -e "\t\t\t$DATE"
 echo "#################################################################################"
-
-echo -n "Check status of oc session "
+echo
+echo -n "Check status of oc session : "
 oc_status=$( ${OC_BINARY} whoami )
 
 if [ $? -ne 0 ]; then
@@ -25,6 +25,7 @@ fi
 
 echo
 echo "##### Print OC client env #####"
+echo
 ${OC_BINARY} version
 echo 
 
@@ -45,7 +46,7 @@ if [ $? -ne 0 ]; then
 	echo
 else
 	WITH_CONTROLLER="true"
-	echo "Controller pod running : ${mig_controller_pod}"
+	echo "Controller pod found : "
 	echo
 	echo "====== Extract migmigrations ======"
 	echo
@@ -78,7 +79,7 @@ velero_pod=$( ${OC_BINARY} -n ${MIG_NS} get pods | grep velero | cut -d " " -f1 
 
 if [ ${WITH_CONTROLLER} == "true" ]; then
 	echo "=== Mig controller logs ==="
-#	${OC_BINARY} -n ${MIG_NS} logs ${mig_controller_pod}
+	${OC_BINARY} -n ${MIG_NS} logs ${mig_controller_pod}
 fi
 
 echo
@@ -121,7 +122,7 @@ for ns in ${E2E_NS}; do
 	echo
 	echo "====== $ns check pods not in running state ======"
 	echo
-	readarray -t bad_pods <<< $(${OC_BINARY} -n ${ns} get pods --no-headers --field-selector=status.phase!=Running | cut -d " " -f1)
+	readarray -t bad_pods <<< $(${OC_BINARY} -n ${ns} get pods --no-headers --field-selector=status.phase!=Running,status.phase!=Succeeded | cut -d " " -f1)
 	if [ ${#bad_pods[@]} -ne 0 ]; then
 		echo
 		echo "====== $ns extract logs for not running pods ======"

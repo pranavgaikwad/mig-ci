@@ -20,3 +20,12 @@
     name: "{{ item }}"
     wait: yes
   with_items: "{{ velero_crds }}"
+
+- name: Destroy cluster role bindings
+  k8s:
+    state: absent
+    api_version: rbac.authorization.k8s.io/v1beta1
+    kind: ClusterRoleBinding
+    name: "{{ item }}"
+    wait: yes
+  with_items: "{{ mig_cluster_role_bindings }}"

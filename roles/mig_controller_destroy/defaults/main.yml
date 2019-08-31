@@ -12,3 +12,7 @@ velero_crds:
   - schedules.velero.io
   - serverstatusrequests.velero.io
   - volumesnapshotlocations.velero.io
+mig_cluster_role_bindings:
+  - migration-operator
+  - velero
+  - mig-cluster-admin

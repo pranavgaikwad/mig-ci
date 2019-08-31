@@ -1,9 +1,15 @@
+- name: Check if mig operator repo exists
+  stat:
+    path: "{{ mig_operator_location }}"
+  register: op_repo
+
 - name: Clone the mig operator repo
   git:
     dest: "{{ mig_operator_location }}"
     repo: "{{ mig_operator_repo }}"
     version: "{{ mig_operator_branch }}"
   ignore_errors: true
+  when: not op_repo.stat.exists
 
 - name: Update operator to use {{ mig_operator_tag }} tag
   replace:

@@ -29,3 +29,6 @@
     name: "{{ item }}"
     wait: yes
   with_items: "{{ mig_cluster_role_bindings }}"
+
+- name: Destroy s3 bucket if present
+  include: destroy_s3_bucket.yml

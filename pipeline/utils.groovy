@@ -298,4 +298,10 @@ def teardown_s3_bucket() {
   }
 }
 
+def run_debug(kubeconfig) {
+  withEnv([ "KUBECONFIG=${kubeconfig}" ]) {
+    sh "${DEBUG_SCRIPT} ${DEBUG_SCRIPT_ARGS}"
+  }
+}
+
 return this

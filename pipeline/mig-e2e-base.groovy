@@ -20,19 +20,23 @@ string(defaultValue: 'latest', description: 'Mig controller version/tag to deplo
 string(defaultValue: 'latest', description: 'Mig ui version/tag to deploy', name: 'MIG_UI_TAG', trim: false),
 string(defaultValue: 'latest', description: 'Mig velero version/tag to deploy', name: 'MIG_VELERO_TAG', trim: false),
 string(defaultValue: 'latest', description: 'Mig velero plugin version/tag to deploy', name: 'MIG_VELERO_PLUGIN_TAG', trim: false),
+string(defaultValue: 'scripts/mig_debug.sh', description: 'Relative file path to debug script on MIG CI repo', name: 'DEBUG_SCRIPT', trim: false),
+string(defaultValue: '', description: 'Extra debug script arguments', name: 'DEBUG_SCRIPT_ARGS', trim: false),
 string(defaultValue: 'quay.io/fbladilo/mig-controller', description: 'Repo for quay io for custom mig-controller images, only used by GHPRB', name: 'QUAYIO_CI_REPO', trim: false),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_quay_credentials', description: 'Credentials for quay.io container storage, used by mig-controller to push and pull images', name: 'QUAYIO_CREDENTIALS', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_aws_access_key_id', description: 'EC2 access key ID for auth purposes', name: 'EC2_ACCESS_KEY_ID', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_aws_secret_access_key', description: 'EC2 private key needed to access instances, from Jenkins credentials store', name: 'EC2_SECRET_ACCESS_KEY', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_ocp4_admin_credentials', description: 'Cluster admin credentials used in OCP4 deployments', name: 'OCP4_CREDENTIALS', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_ocp3_admin_credentials', description: 'Cluster admin credentials used in OCP3 deployments', name: 'OCP3_CREDENTIALS', required: true),
+booleanParam(defaultValue: true, description: 'Enable debugging', name: 'DEBUG'),
 booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE')])])
 
 // true/false build parameter that defines if we cleanup workspace once build is done
 def CLEAN_WORKSPACE = params.CLEAN_WORKSPACE
 // Split e2e tests from string param
 def E2E_TESTS = params.E2E_TESTS.split(' ')
-
+// true/false enable debugging
+def DEBUG = params.DEBUG
 def common_stages
 def utils
 
@@ -83,6 +87,10 @@ node {
     } finally {
         // Success or failure, always send notifications
         utils.notifyBuild(currentBuild.result)
+	if (DEBUG) {
+          utils.run_debug(SOURCE_KUBECONFIG)
+          utils.run_debug(TARGET_KUBECONFIG)
+	}
         stage('Clean Up Environment') {
           // Always attempt to remove s3 buckets
           utils.teardown_s3_bucket()

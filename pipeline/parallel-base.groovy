@@ -135,6 +135,11 @@ node {
     } finally {
         // Success or failure, always send notifications
         utils.notifyBuild(currentBuild.result)
+        if (DEBUG) {
+          utils.run_debug(SOURCE_KUBECONFIG)
+          utils.run_debug(TARGET_KUBECONFIG)
+	}
+
         stage('Clean Up Environment') {
             // Always attempt to terminate instances if EC2_TERMINATE_INSTANCES is true
             if (EC2_TERMINATE_INSTANCES) {
@@ -162,6 +167,7 @@ node {
                             }
                         }
                 }
+
             // Always attempt to remove s3 buckets
             utils.teardown_s3_bucket()
             if (CLEAN_WORKSPACE) {

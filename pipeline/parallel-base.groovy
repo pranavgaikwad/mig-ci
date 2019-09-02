@@ -61,6 +61,8 @@ def CLEAN_WORKSPACE = params.CLEAN_WORKSPACE
 def E2E_RUN = params.E2E_RUN
 // Split e2e tests from string param
 def E2E_TESTS = params.E2E_TESTS.split(' ')
+// true/false enable debugging
+def DEBUG = params.DEBUG
 
 def common_stages
 def utils

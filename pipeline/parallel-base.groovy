@@ -166,7 +166,7 @@ node {
             utils.teardown_s3_bucket()
             if (CLEAN_WORKSPACE) {
                 utils.teardown_container_image()
-                cleanWs cleanWhenFailure: false, notFailBuild: true
+                cleanWs notFailBuild: true
             }
         }
     }

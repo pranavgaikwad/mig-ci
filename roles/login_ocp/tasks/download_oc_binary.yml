@@ -13,6 +13,20 @@
       - "{{ oc_target_location }}"
       - "{{ oc_arch | dirname }}"
 
+  - name: Fetch page content for latest client binary archive 
+    uri: 
+      url: "{{ release_url }}"
+      return_content: yes
+    register: client_page
+
+  - name: Determine latest client binary archive release
+    set_fact:
+      release_ver: "{{ client_page.content | regex_findall('<a.*openshift-client-linux[^<]+?>') | first | regex_search('o.*\\d[-.0-9]+\\d') }}"
+
+  - name: "Set variables for {{ release_ver }}"
+      oc_release_url: "{{ release_url }}/{{ release_ver }}.tar.gz"
+      oc_arch: "{{ oc_target_location }}/{{ release_ver }}/client.tar.gz }}"
+    
   - name: Get client binary archive
     get_url:
       url: "{{ oc_release_url }}"

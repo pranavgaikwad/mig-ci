@@ -14,7 +14,7 @@
 
     - name: "Determine {{ openshift_installer_release }} installer release"
       set_fact:
-              latest_release: "{{ page.content | regex_findall('<a.*openshift-install[^<]+?>') | last | regex_search(openshift_installer_regex_choices[openshift_installer_release]) }}"
+        latest_release: "{{ page.content | regex_findall('<a.*openshift-install[^<]+?>') | last | regex_search(openshift_installer_regex_choices[openshift_installer_release]) }}"
 
     - name: "Set variables to {{ latest_release }} release"
       set_fact:

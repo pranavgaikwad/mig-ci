@@ -35,6 +35,8 @@ string(defaultValue: 'latest', description: 'Mig controller version/tag to deplo
 string(defaultValue: 'latest', description: 'Mig ui version/tag to deploy', name: 'MIG_UI_TAG', trim: false),
 string(defaultValue: 'latest', description: 'Mig velero version/tag to deploy', name: 'MIG_VELERO_TAG', trim: false),
 string(defaultValue: 'latest', description: 'Mig velero plugin version/tag to deploy', name: 'MIG_VELERO_PLUGIN_TAG', trim: false),
+string(defaultValue: 'scripts/mig_debug.sh', description: 'Relative file path to debug script on MIG CI repo', name: 'DEBUG_SCRIPT', trim: false),
+string(defaultValue: '', description: 'Extra debug script arguments', name: 'DEBUG_SCRIPT_ARGS', trim: false),
 string(defaultValue: 'quay.io/fbladilo/mig-controller', description: 'Repo for quay io for custom mig-controller images, only used by GHPRB', name: 'QUAYIO_CI_REPO', trim: false),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_quay_credentials', description: 'Credentials for quay.io container storage, used by mig-controller to push and pull images', name: 'QUAYIO_CREDENTIALS', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'agnosticd_own_repo', description: 'Private repo address for openshift-ansible packages', name: 'AGND_REPO', required: true),
@@ -48,6 +50,7 @@ credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCre
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_ocp4_admin_credentials', description: 'Cluster admin credentials used in OCP4 deployments', name: 'OCP4_CREDENTIALS', required: true),
 booleanParam(defaultValue: true, description: 'Run e2e tests', name: 'E2E_RUN'),
 booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE'),
+booleanParam(defaultValue: false, description: 'Enable debugging', name: 'DEBUG'),
 booleanParam(defaultValue: true, description: 'EC2 terminate instances after build', name: 'EC2_TERMINATE_INSTANCES')])])
 
 // true/false build parameter that defines if we terminate instances once build is done
@@ -58,6 +61,8 @@ def CLEAN_WORKSPACE = params.CLEAN_WORKSPACE
 def E2E_RUN = params.E2E_RUN
 // Split e2e tests from string param
 def E2E_TESTS = params.E2E_TESTS.split(' ')
+// true/false enable debugging
+def DEBUG = params.DEBUG
 
 def common_stages
 def utils
@@ -132,6 +137,11 @@ node {
     } finally {
         // Success or failure, always send notifications
         utils.notifyBuild(currentBuild.result)
+        if (DEBUG) {
+          utils.run_debug(SOURCE_KUBECONFIG)
+          utils.run_debug(TARGET_KUBECONFIG)
+	}
+
         stage('Clean Up Environment') {
             // Always attempt to terminate instances if EC2_TERMINATE_INSTANCES is true
             if (EC2_TERMINATE_INSTANCES) {
@@ -159,11 +169,12 @@ node {
                             }
                         }
                 }
+
             // Always attempt to remove s3 buckets
             utils.teardown_s3_bucket()
             if (CLEAN_WORKSPACE) {
                 utils.teardown_container_image()
-                cleanWs cleanWhenFailure: false, notFailBuild: true
+                cleanWs notFailBuild: true
             }
         }
     }

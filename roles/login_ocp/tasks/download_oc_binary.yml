@@ -24,6 +24,7 @@
       release_ver: "{{ client_page.content | regex_findall('<a.*openshift-client-linux[^<]+?>') | first | regex_search('o.*\\d[-.0-9]+\\d') }}"
 
   - name: "Set variables for {{ release_ver }}"
+    set_fact:
       oc_release_url: "{{ release_url }}/{{ release_ver }}.tar.gz"
       oc_arch: "{{ oc_target_location }}/{{ release_ver }}/client.tar.gz }}"
     

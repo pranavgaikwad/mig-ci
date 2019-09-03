@@ -61,8 +61,6 @@ echo
 ${OC_BINARY} version
 echo 
 
-oc_url=$( ${OC_BINARY} whoami --show-server )
-
 echo
 echo "##### Print all resources on ${MIG_NS} namespace #####"
 echo

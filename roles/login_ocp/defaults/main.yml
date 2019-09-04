@@ -15,9 +15,6 @@ system_types:
 ocp_release_extension:
   'linux': 'tar.gz'
   'mac': 'zip'
-release_url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.1.13
-release_ver: openshift-client-{{ system_prefix }}-4.1.13
 system_prefix: "{{ system_types[ansible_os_family] | default('linux') }}"
-oc_release_url: "{{ release_url }}/{{ release_ver }}.{{ ocp_release_extension[system_prefix] }}"
-oc_arch: "{{ oc_target_location }}/{{ release_ver }}/client.{{ ocp_release_extension[system_prefix] }}"
 oc_target_location: "{{ oc_binary | dirname }}"
+release_url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest

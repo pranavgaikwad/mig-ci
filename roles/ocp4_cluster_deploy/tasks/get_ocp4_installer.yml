@@ -1,7 +1,27 @@
 ---
-- name: Get nightly
-  include_tasks: get_ocp4_nightly.yml
-  when: openshift_installer_release == "nightly"
+- name: "Gather details for using {{ openshift_installer_release }} release"
+  block:
+
+    - name: "Set URL for {{ openshift_installer_release }} release"
+      set_fact:
+        openshift_installer_dynamic_url: "{{ openshift_installer_release_prefix_url }}/{{ openshift_parent_dir_choices[openshift_installer_release] }}/latest"
+
+    - name: "Fetch {{ openshift_installer_release }} release content"
+      uri:
+        url: "{{ openshift_installer_dynamic_url }}"
+        return_content: yes
+      register: page
+
+    - name: "Determine {{ openshift_installer_release }} installer release"
+      set_fact:
+        latest_release: "{{ page.content | regex_findall('<a.*openshift-install[^<]+?>') | last | regex_search(openshift_installer_regex_choices[openshift_installer_release]) }}"
+
+    - name: "Set variables to {{ latest_release }} release"
+      set_fact:
+        openshift_installer_release: "{{ latest_release }}"
+        openshift_installer_release_url: "{{ openshift_installer_dynamic_url }}/openshift-install-{{ openshift_installer_release_type }}-{{ latest_release }}.tar.gz"
+
+  when: openshift_installer_release == "latest" or openshift_installer_release == "nightly"
 
 - name: Get installer
   unarchive:

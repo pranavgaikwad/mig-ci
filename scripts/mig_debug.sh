@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# Continue on errors, Jenkins runs shells -e
+set +e
+
 # Mig operator and velero logs disabled by default (they are very large), enable via script args as needed
 
 OC_BINARY=`which oc`

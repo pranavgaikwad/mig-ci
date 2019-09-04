@@ -57,26 +57,6 @@ def prepare_cpma(repo = '', branch = '') {
   checkout([$class: 'GitSCM', branches: [[name: branch]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'cpma']], submoduleCfg: [], userRemoteConfigs: [[url: repo]]])
 }
 
-
-def prepare_origin3_dev() {
-  echo 'Cloning origin3-dev repo'
-  checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'origin3-dev']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/fusor/origin3-dev.git']]])
-
-  dir('origin3-dev') {
-      sh 'cp -f config.yml.example config.yml'
-      sh 'rm -f overrides.yml'
-      def overrides = ['ec2_key': "${EC2_KEY}",
-          'ec2_private_key_file': "${KEYS_DIR}/${EC2_KEY}.pem",
-          'ec2_instance_type': "m4.large",
-          'ec2_repo_create': false,
-          'openshift_setup_client_version': "$OCP3_VERSION",
-          'openshift_setup_remote_auto_login': true,
-          'openshift_setup_cluster_retries': 5]
-      writeYaml file: 'overrides.yml', data: overrides
-  }
-}
-
-
 def clone_mig_controller() {
   echo 'Cloning mig-controller repo'
   checkout([$class: 'GitSCM', branches: [[name: "${MIG_CONTROLLER_BRANCH}"]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'mig-controller']], submoduleCfg: [], userRemoteConfigs: [[url: "${MIG_CONTROLLER_REPO}"]]])
@@ -142,51 +122,6 @@ def copy_public_keys() {
   PUBLIC_KEY = "${KEYS_DIR}/${env.EC2_KEY}.pub"
   withCredentials([file(credentialsId: "${env.EC2_PUB_KEY}", variable: "SSH_PUB_KEY")]) {
     sh "cat ${SSH_PUB_KEY} > ${KEYS_DIR}/${env.EC2_KEY}.pub"
-  }
-}
-
-
-def teardown_origin3_dev() {
-  if (EC2_TERMINATE_INSTANCES) {
-    withCredentials([
-      string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-      string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
-      ])
-    {
-      dir('origin3-dev') {
-        ansiColor('xterm') {
-          ansiblePlaybook(
-            playbook: 'terminate.yml',
-            extras: '-e "ec2_force_terminate_instances=true"',
-            hostKeyChecking: false,
-            unbuffered: true,
-            colorized: true)
-        }
-      }
-    }
-  }
-}
-
-
-def teardown_OCP3_OA(prefix = '') {
-  if (prefix != '') {
-    prefix = "-e prefix=${prefix}"
-  }
-  if (EC2_TERMINATE_INSTANCES) {
-    withCredentials([
-        string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-        string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY'),
-        ]) {
-      echo "Region: ${env.AWS_REGION}"
-      ansiColor('xterm') {
-        ansiblePlaybook(
-          playbook: 'destroy_ocp3_cluster.yml',
-          extras: "${prefix}",
-          hostKeyChecking: false,
-          unbuffered: true,
-          colorized: true)
-      }
-    }
   }
 }
 

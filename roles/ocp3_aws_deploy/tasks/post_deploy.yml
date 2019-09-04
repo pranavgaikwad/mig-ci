@@ -1,9 +1,0 @@
-- name: set admin permissions
-  command: oc adm policy add-cluster-role-to-user cluster-admin admin
-
-- name: Login info
-  debug:
-    msg:
-    - "Console address https://{{ inventory_hostname }}:8443/console"
-    - "User: admin, Password: admin"
-    - "You can login with 'oc login -u admin -p admin https://{{ inventory_hostname }}:8443 --insecure-skip-tls-verify=true'"

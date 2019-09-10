@@ -10,7 +10,7 @@ MIG_NS="openshift-migration"
 WITH_CONTROLLER="false"
 WITH_OPERATOR_LOGS=${WITH_OPERATOR_LOGS:-false}
 WITH_VELERO_LOGS=${WITH_VELERO_LOGS:-false}
-E2E_NS=${E2E_NS:-"sock-shop robot-shop parks-app mysql-persistent"}
+E2E_NS=${E2E_NS:-"sock-shop robot-shop parks-app mssql-example mediawiki mysql-persistent"}
 DATE=`date`
 
 # Process arguments if passed, assume defaults otherwise

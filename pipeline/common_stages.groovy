@@ -1,108 +1,101 @@
 // common_stages.groovy
+def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
 
-def deploy_ocp3_agnosticd(kubeconfig) {
-  def repo_version = "${OCP3_VERSION.substring(1)}"
+  def repo_version = "${cluster_version}"
+  def short_version = cluster_version.replace(".", "")
   def releases = [
-    '3.7': "3.7.23",
-    '3.9': "3.9.51",
-    '3.10': "3.10.34",
-    '3.11': "3.11.104"
+    '4.1': "4.1.0",
   ]
   def osrelease = releases["${repo_version}"]
-  def envtype = "ocp-workshop"
-  def cluster_adm_user = 'admin'
-  def console_addr = "https://master.${CLUSTER_NAME}-v3-${BUILD_NUMBER}${BASESUFFIX}:443"
-  sh "echo 'cd agnosticd && ansible-playbook ansible/configs/ocp-workshop/destroy_env.yml -e @teardown_vars.yml &' >> destroy_env.sh && echo 'cd -' >> destroy_env.sh"
+  def full_cluster_name = ''
+  def cluster_adm_user = ''
+  def cluster_adm_passwd = ''
+
+  if (PERSISTENT) {
+    echo "Cluster is a persistent build"
+    full_cluster_name = "${CLUSTER_NAME}-${short_version}"
+  } else {
+    echo "Cluster is not a persistent build"
+    full_cluster_name = "${CLUSTER_NAME}-${short_version}-${BUILD_NUMBER}"
+  }
+
+  echo "Cluster name is : ${full_cluster_name}"
+
+  def console_addr = "https://api.cluster-${full_cluster_name}.${full_cluster_name}${BASESUFFIX}:6443"
+
+  withCredentials([
+    [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP4_CREDENTIALS}", usernameVariable: 'OCP4_ADMIN_USER', passwordVariable: 'OCP4_ADMIN_PASSWD']]) {
+    cluster_adm_user = "${OCP4_ADMIN_USER}"
+    cluster_adm_passwd = "${OCP4_ADMIN_PASSWD}"
+  }
+
+  sh "cp -R mig-agnosticd/4.x mig-agnosticd/${cluster_version}"
   return {
-    stage('Deploy OCP3 cluster with agnosticd') {
-      steps_finished << 'Deploy agnosticd OCP3 workshop ' + OCP3_VERSION
-      withCredentials([
-          string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-          string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY'),
-          string(credentialsId: "$EC2_SUB_USER", variable: 'SUB_USER'),
-          string(credentialsId: "$EC2_SUB_PASS", variable: 'SUB_PASS'),
-          string(credentialsId: "$AGND_REPO", variable: 'OWN_REPO')
-          ])
-      {
-        dir('agnosticd') {
-          def vars = [
-            'guid': "${CLUSTER_NAME}-v3-${BUILD_NUMBER}",
-            'env_type': "${envtype}",
-            'own_repo_path': "${OWN_REPO}/${osrelease}",
-            'osrelease': "${osrelease}",
-            'repo_version': "${repo_version}",
-            'cloud_provider': 'ec2',
-            'bastion_instance_type': 't2.large',
-            'master_instance_type': "${OCP3_MASTER_INSTANCE_TYPE}",
-            'infranode_instance_type': "${OCP3_INFRA_INSTANCE_TYPE}",
-            'node_instance_type': "${OCP3_WORKER_INSTANCE_TYPE}",
-            'support_instance_type': 'm4.large',
-            'aws_region': "${AWS_REGION}",
+    stage('Deploy agnosticd OCP workshop ' + cluster_version) {
+      steps_finished << 'Deploy agnosticd OCP workshop ' + cluster_version
+
+        dir("mig-agnosticd/${cluster_version}") {
+          def my_vars = [
+            'email': "${EMAIL}",
+            'guid': "${full_cluster_name}",
+            'output_dir': "${WORKSPACE}/.agnosticd/{{ guid }}",
+            'subdomain_base_suffix': "${BASESUFFIX}",
             'HostedZoneId': "${HOSTZONEID}",
             'key_name': "${EC2_KEY}",
-            'ansible_ssh_private_key_file': "${PRIVATE_KEY}",
-            'subdomain_base_suffix': "${BASESUFFIX}",
-            'node_instance_count': "${OCP3_WORKER_INSTANCE_COUNT}",
-            'master_instance_count': "${OCP3_MASTER_INSTANCE_COUNT}",
-            'infranode_instance_count': "${OCP3_INFRA_INSTANCE_COUNT}",
-            'software_to_deploy': 'openshift',
-            'redhat_registry_user': "${SUB_USER}",
-            'redhat_registry_password': "${SUB_PASS}",
-            'aws_access_key_id': "${AWS_ACCESS_KEY_ID}",
-            'aws_secret_access_key': "${AWS_SECRET_ACCESS_KEY}",
-            'email': "${EMAIL}",
-            'output_dir': "${WORKSPACE}",
-            'update_packages': 'false',
-            'support_instance_public_dns': 'true',
-            'nfs_server_address': "support1.${CLUSTER_NAME}-v3-${BUILD_NUMBER}${BASESUFFIX}",
-            'nfs_exports_config': "*(insecure,rw,no_root_squash,no_wdelay,sync)",
-            // User admin to preserve consistency between different deployment types
-            'admin_user': "${cluster_adm_user}",
-            // Fix for commit # 8780932 to work
-            'course_name': 'ocp-workshop',
-            'platform': 'aws'
-          ]
-          sh 'rm -f vars.yml'
-          writeYaml file: 'vars.yml', data: vars
-          vars = vars.collect { e -> '-e ' + e.key + '=' + e.value }
-
-          // Dump teardown vars on host
-          def teardown_vars = [
-            'aws_region': "${AWS_REGION}",
-            'guid': "${CLUSTER_NAME}-v3-${BUILD_NUMBER}",
-            'env_type': "ocp-workshop",
             'cloud_provider': "ec2",
-            'aws_access_key_id': "${AWS_ACCESS_KEY_ID}",
-            'aws_secret_access_key': "${AWS_SECRET_ACCESS_KEY}"
+            'aws_region': "${AWS_REGION}",
+            'ansible_ssh_private_key_file': "${PRIVATE_KEY}"
           ]
-          sh 'rm -f teardown_vars.yml'
-          writeYaml file: 'teardown_vars.yml', data: teardown_vars
-          teardown_vars = teardown_vars.collect { e -> '-e ' + e.key + '=' + e.value }
+          writeYaml file: 'my_vars.yml', data: my_vars
 
-          withEnv(['PATH+EXTRA=~/.local/bin']) {
-            echo "Region: ${AWS_REGION}"
-            echo "Name: ${CLUSTER_NAME}"
-            echo "Version: ${OCP3_VERSION}"
+          // Apply extra tags as list
+          def readContent = readFile 'my_vars.yml'
+          writeFile file: 'my_vars.yml', text: readContent+"cloud_tags:\n- owner: \"{{ email }}\"\n"
+
+          sh 'mv ocp4_vars.yml ocp4_vars.yml.orig'
+
+          def ocp4_vars = [
+            'cloudformation_retries': "0",
+            'env_type': "ocp4-workshop",
+            'software_to_deploy': "none",
+            'ocp4_installer_version': "${osrelease}",
+            'osrelease': "${osrelease}",
+            'repo_version': "${repo_version}",
+            'install_ocp4': "true",
+            'install_opentlc_integration': "false",
+            'install_idm': "htpasswd",
+            'install_ipa_client': "false",
+            'default_workloads': '[]',
+            'bastion_instance_type': "t2.medium",
+            'clientvm_instance_type': "t2.medium",
+            'master_instance_type': "${OCP4_MASTER_INSTANCE_TYPE}",
+            'worker_instance_type': "${OCP4_WORKER_INSTANCE_TYPE}",
+            '_infra_node_instance_type': "${OCP4_INFRA_INSTANCE_TYPE}",
+            'clientvm_instance_count': "1",
+            'master_instance_count': "${OCP4_MASTER_INSTANCE_COUNT}",
+            'worker_instance_count': "${OCP4_WORKER_INSTANCE_COUNT}",
+            'admin_user': "${cluster_adm_user}",
+            'archive_dir': "{{ output_dir | dirname }}/archive"
+          ]
+          writeYaml file: 'ocp4_vars.yml', data: ocp4_vars
+          
+          withEnv([
+          'PATH+EXTRA=~/.local/bin',
+          "AGNOSTICD_HOME=${AGNOSTICD_HOME}",
+          'ANSIBLE_FORCE_COLOR=true'])
+          {
             ansiColor('xterm') {
-              ansiblePlaybook(
-                playbook: 'ansible/main.yml',
-                extras: "${vars.join(' ')}",
-                hostKeyChecking: false,
-                skippedTags: 'validate_cf_template, generate_env_keys',
-                unbuffered: true,
-                colorized: true)
+              sh './create_ocp4_workshop.sh'
             }
           }
         }
 
         def login_vars = [
-          "console_addr": "${console_addr}",
-          "user": "${cluster_adm_user}",
-          "passwd": "r3dh4t1!", // This value is not configurable
-          "kubeconfig": "${kubeconfig}"
+        "console_addr": "${console_addr}",
+        "user": "${cluster_adm_user}",
+        "passwd": "${cluster_adm_passwd}",
+        "kubeconfig": "${kubeconfig}"
         ]
-        sh 'rm -f login_vars.yml'
-        writeYaml file: 'login_vars.yml', data: login_vars
 
         login_vars = login_vars.collect { e -> '-e ' + e.key + '=' + e.value }
         ansiColor('xterm') {
@@ -114,13 +107,127 @@ def deploy_ocp3_agnosticd(kubeconfig) {
             colorized: true)
         }
       }
-    }
   }
 }
 
-def deployOCP4(kubeconfig) {
+def deploy_ocp3_agnosticd(kubeconfig, cluster_version) {
+  
+  def repo_version = "${cluster_version}"
+  def short_version = cluster_version.replace(".", "")
+  def releases = [
+    '3.7': "3.7.23",
+    '3.9': "3.9.51",
+    '3.10': "3.10.34",
+    '3.11': "3.11.129"
+  ]
+  def osrelease = releases["${repo_version}"]
+  def full_cluster_name = ''
+  def cluster_adm_user = ''
+  def cluster_adm_passwd = ''
+
+  if (PERSISTENT) {
+    echo "Cluster is a persistent build"
+    full_cluster_name = "${CLUSTER_NAME}-${short_version}"
+  } else {
+    echo "Cluster is not a persistent build"
+    full_cluster_name = "${CLUSTER_NAME}-${short_version}-${BUILD_NUMBER}"
+  }
+
+  echo "Cluster name is : ${full_cluster_name}"
+
+  def console_addr = "https://master.${full_cluster_name}${BASESUFFIX}:443"
+
+  withCredentials([
+    [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP3_CREDENTIALS}", usernameVariable: 'OCP3_ADMIN_USER', passwordVariable: 'OCP3_ADMIN_PASSWD']]) {
+    cluster_adm_user = "${OCP3_ADMIN_USER}"
+    cluster_adm_passwd = "${OCP3_ADMIN_PASSWD}"
+  }
+
+  sh "cp -R mig-agnosticd/3.x mig-agnosticd/${cluster_version}"
+  return {
+    stage('Deploy agnosticd OCP workshop ' + cluster_version) {
+      steps_finished << 'Deploy agnosticd OCP workshop ' + cluster_version
+
+        dir("mig-agnosticd/${cluster_version}") {
+          def my_vars = [
+            'email': "${EMAIL}",
+            'guid': "${full_cluster_name}",
+            'output_dir': "${WORKSPACE}/.agnosticd/{{ guid }}",
+            'subdomain_base_suffix': "${BASESUFFIX}",
+            'HostedZoneId': "${HOSTZONEID}",
+            'key_name': "${EC2_KEY}",
+            'cloud_provider': "ec2",
+            'aws_region': "${AWS_REGION}",
+            'ansible_ssh_private_key_file': "${PRIVATE_KEY}",
+            'install_glusterfs': "false"
+          ]
+          writeYaml file: 'my_vars.yml', data: my_vars
+
+          // Apply extra tags as list
+          def readContent = readFile 'my_vars.yml'
+          writeFile file: 'my_vars.yml', text: readContent+"cloud_tags:\n- owner: \"{{ email }}\"\n"
+    
+          sh 'mv ocp3_vars.yml ocp3_vars.yml.orig' 
+
+          def ocp3_vars = [
+            'env_type': "ocp-workshop",
+            'repo_version': "${repo_version}",
+            'osrelease': "${osrelease}",
+            'software_to_deploy': "openshift",
+            'course_name': "ocp-workshop",
+            'platform': "aws",
+            'install_k8s_modules': "true",
+            'update_packages': "${OCP3_UPDATE}",
+            'bastion_instance_type': "t2.large",
+            'master_instance_type': "${OCP3_MASTER_INSTANCE_TYPE}",
+            'infranode_instance_type': "${OCP3_INFRA_INSTANCE_TYPE}",
+            'node_instance_type': "${OCP3_WORKER_INSTANCE_TYPE}",
+            'support_instance_type': "m4.large",
+            'node_instance_count': "${OCP3_WORKER_INSTANCE_COUNT}",
+            'master_instance_count': "${OCP3_MASTER_INSTANCE_COUNT}",
+            'infranode_instance_count': "${OCP3_INFRA_INSTANCE_COUNT}",
+            'support_instance_public_dns': "true",
+            'nfs_server_address': "support1.{{ guid }}{{ subdomain_base_suffix }}",
+            'nfs_exports_config': "*(insecure,rw,no_root_squash,no_wdelay,sync)",
+            'archive_dir': "{{ output_dir | dirname }}/archive",
+            'admin_user': "${cluster_adm_user}"
+          ]
+          writeYaml file: 'ocp3_vars.yml', data: ocp3_vars
+
+          withEnv([
+          'PATH+EXTRA=~/.local/bin',
+          "AGNOSTICD_HOME=${AGNOSTICD_HOME}",
+          'ANSIBLE_FORCE_COLOR=true'])
+          {
+            ansiColor('xterm') {
+              sh './create_ocp3_workshop.sh'
+            }
+          }
+        }
+
+        def login_vars = [
+        "console_addr": "${console_addr}",
+        "user": "${cluster_adm_user}",
+        "passwd": "${cluster_adm_passwd}",
+        "kubeconfig": "${kubeconfig}"
+        ]
+
+        login_vars = login_vars.collect { e -> '-e ' + e.key + '=' + e.value }
+        ansiColor('xterm') {
+          ansiblePlaybook(
+            playbook: 'login.yml',
+            extras: "${login_vars.join(' ')}",
+            hostKeyChecking: false,
+            unbuffered: true,
+            colorized: true)
+        }
+    } 
+  }
+}
+
+def deploy_ocp4(kubeconfig, cluster_version) {
   def osrelease = ""
-  switch(OCP4_VERSION) {
+  switch(cluster_version) {
     case ['v4.1', '4.1', 'latest']:
       osrelease = "latest"
       break
@@ -128,21 +235,36 @@ def deployOCP4(kubeconfig) {
       osrelease = "nightly"
       break
     default:
-      osrelease = "${OCP4_VERSION}"
+      osrelease = "${cluster_version}"
       break
   }
 
+  def short_version = cluster_version.replace(".", "")
+  def full_cluster_name = ''
+
+  if (PERSISTENT) {
+    echo "Cluster is a persistent build"
+    full_cluster_name = "${CLUSTER_NAME}-${short_version}"
+  } else {
+    echo "Cluster is not a persistent build"
+    full_cluster_name = "${CLUSTER_NAME}-${short_version}-${BUILD_NUMBER}"
+  }
+
+  echo "Cluster name is : ${full_cluster_name}"
+
   sh "echo './openshift-install destroy cluster &' >> destroy_env.sh"
   return {
-    stage('Deploy OCP4 cluster') {
-      steps_finished << 'Deploy OCP4 ' + OCP4_VERSION + " (" + osrelease + ")"
+    stage('Deploy OCP cluster ' + cluster_version) {
+      steps_finished << 'Deploy OCP cluster ' + cluster_version + " (" + osrelease + ")"
       withCredentials([
           string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
           string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY'),
           [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP4_CREDENTIALS}", usernameVariable: 'OCP4_ADMIN_USER', passwordVariable: 'OCP4_ADMIN_PASSWD']
           ])
       {
-        withEnv(["KUBECONFIG=${kubeconfig}", "CLUSTER_NAME=${CLUSTER_NAME}-v4-${BUILD_NUMBER}", "OCP4_RELEASE=${osrelease}"]){
+        echo "OCP4 kubeconfig set to : ${kubeconfig}"
+        // Ensure DEST_CLUSTER_VERSION is set for single cluster deployments
+        withEnv(["KUBECONFIG=${kubeconfig}", "CLUSTER_NAME=${full_cluster_name}", "OCP4_RELEASE=${osrelease}", "DEST_CLUSTER_VERSION=${cluster_version}"]){
           ansiColor('xterm') {
             ansiblePlaybook(
               playbook: 'deploy_ocp4_cluster.yml',
@@ -155,63 +277,6 @@ def deployOCP4(kubeconfig) {
     }
   }
 }
-
-
-def deploy_NFS(prefix = '') {
-  if (prefix != '') {
-    prefix = "-e prefix=${prefix}"
-  }
-  withCredentials([
-      string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-      string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
-      ])
-  {
-    sh "echo 'export AWS_REGION=${AWS_REGION} AWS_ACCESS_KEY=${AWS_ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}' >> destroy_env.sh"
-    sh "echo 'ansible-playbook nfs_server_destroy.yml ${prefix} &' >> destroy_env.sh"
-  }
-  return {
-    stage('Configure NFS storage') {
-      steps_finished << 'Configure NFS storage'
-      ansiColor('xterm') {
-        ansiblePlaybook(
-          playbook: 'nfs_server_deploy.yml',
-          hostKeyChecking: false,
-          extras: "${prefix}",
-          unbuffered: true,
-          colorized: true)
-      }
-    }
-  }
-}
-
-
-def provision_pvs(kubeconfig, prefix = '') {
-  if (prefix != '') {
-    prefix = "-e prefix=${prefix}"
-  }
-  return {
-    stage('Provision PVs on source cluster') {
-      steps_finished << 'Provision PVs on source cluster'
-      withCredentials([
-        string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-        string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
-        ])
-      {
-        withEnv(["KUBECONFIG=${kubeconfig}"]) {
-          ansiColor('xterm') {
-            ansiblePlaybook(
-              playbook: 'nfs_provision_pvs.yml',
-              hostKeyChecking: false,
-              extras: "${prefix}",
-              unbuffered: true,
-              colorized: true)
-          }
-        }
-      }
-    }
-  }
-}
-
 
 def load_sample_data(kubeconfig) {
   return {
@@ -292,8 +357,8 @@ def deploy_mig_controller_on_both(
   target_kubeconfig,
   mig_controller_src,
   mig_controller_dst) {
-  // mig_controller_src boolean defines if the source cluster (OCP3) will host mig controller
-  // mig_controller_dst boolean defines if the destination cluster (OCP4) will host mig controller
+  // mig_controller_src boolean defines if the source cluster will host mig controller
+  // mig_controller_dst boolean defines if the destination cluster will host mig controller
   return {
     stage('Build mig-controller image and deploy on both clusters') {
       steps_finished << 'Build mig-controller image and deploy on both clusters'
@@ -318,7 +383,7 @@ def deploy_mig_controller_on_both(
           mig_controller_tag = "${MIG_CONTROLLER_TAG}"
       }
 
-      // Source (OCP3)
+      // Source
       withEnv([
           "KUBECONFIG=${source_kubeconfig}",
           "MIG_CONTROLLER_IMG=${mig_controller_img}",
@@ -337,7 +402,7 @@ def deploy_mig_controller_on_both(
             colorized: true)
         }
       }
-      // Target (OCP4)
+      // Target
       withEnv([
           "KUBECONFIG=${target_kubeconfig}",
           "MIG_CONTROLLER_IMG=${mig_controller_img}",

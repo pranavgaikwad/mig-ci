@@ -1,8 +1,0 @@
-- include_vars:
-    file: "{{ playbook_dir }}/config/defaults.yml"
-
-- include: pre_deploy.yml
-
-- include: deploy.yml
-
-- include: post_deploy.yml

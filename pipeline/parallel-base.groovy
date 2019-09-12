@@ -21,7 +21,6 @@ string(defaultValue: 'Z2GE8CSGW2ZA8W', description: 'Zone id', name: 'HOSTZONEID
 string(defaultValue: 'ocp-workshop', description: 'AgnosticD environment type to deploy', name: 'ENVTYPE', trim: false),
 string(defaultValue: 'ci', description: 'EC2 SSH key name to deploy on instances for remote access ', name: 'EC2_KEY', trim: false),
 string(defaultValue: 'us-west-1', description: 'AWS region to deploy instances', name: 'AWS_REGION', trim: false),
-string(defaultValue: 'agnosticd', description: 'Deployment type to choose', name: 'DEPLOYMENT_TYPE', trim: false),
 string(defaultValue: 'https://github.com/fusor/mig-operator.git', description: 'Mig operator repo to clone', name: 'MIG_OPERATOR_REPO', trim: false),
 string(defaultValue: 'master', description: 'Mig operator branch to test', name: 'MIG_OPERATOR_BRANCH', trim: false),
 string(defaultValue: 'https://github.com/fusor/mig-controller.git', description: 'Mig controller repo to test, only used by GHPRB', name: 'MIG_CONTROLLER_REPO', trim: false),
@@ -91,38 +90,20 @@ node {
             utils.copy_public_keys()
             utils.clone_related_repos()
             utils.clone_mig_e2e()
+            utils.prepare_agnosticd()
             if (env.MIG_CONTROLLER_REPO != 'https://github.com/fusor/mig-controller.git') {
             utils.clone_mig_controller()
-            }
-            if (env.DEPLOYMENT_TYPE == 'agnosticd') {
-                utils.prepare_agnosticd()
-            } else if (env.DEPLOYMENT_TYPE != 'OA') {
-                utils.prepare_origin3_dev()
             }
         }
 
         stage('Deploy clusters') {
             steps_finished << 'Deploy clusters'
             parallel deploy_OCP3: {
-                if (env.DEPLOYMENT_TYPE == 'agnosticd') {
-                    common_stages.deploy_ocp3_agnosticd(SOURCE_KUBECONFIG).call()
-                } else if (env.DEPLOYMENT_TYPE == 'OA') {
-                    common_stages.deployOCP3_OA(SOURCE_KUBECONFIG, CLUSTER_NAME + '-v3-' + BUILD_NUMBER).call()
-                } else {
-                    common_stages.deploy_origin3_dev(SOURCE_KUBECONFIG).call()
-                }
-            }, deploy_NFS: {
-                if (env.DEPLOYMENT_TYPE != 'agnosticd') {
-                common_stages.deploy_NFS(CLUSTER_NAME + '-' + BUILD_NUMBER).call()
-                }
+              common_stages.deploy_ocp3_agnosticd(SOURCE_KUBECONFIG).call()
             }, deploy_OCP4: {
                 common_stages.deployOCP4(TARGET_KUBECONFIG).call()
             },
             failFast: true
-        }
-
-        if (env.DEPLOYMENT_TYPE != 'agnosticd') {
-           common_stages.provision_pvs(SOURCE_KUBECONFIG, CLUSTER_NAME + '-' + BUILD_NUMBER).call()
         }
 
         common_stages.deploy_mig_controller_on_both(SOURCE_KUBECONFIG, TARGET_KUBECONFIG, false, true).call()
@@ -143,40 +124,20 @@ node {
 	}
 
         stage('Clean Up Environment') {
-            // Always attempt to terminate instances if EC2_TERMINATE_INSTANCES is true
-            if (EC2_TERMINATE_INSTANCES) {
-                        withCredentials([
-                            string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-                            string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
-                            ]) 
-                        {
-                            withEnv(['PATH+EXTRA=~/bin']) {
-                                parallel destroy_OCP3: {
-                                    if (env.DEPLOYMENT_TYPE == 'agnosticd') {
-                                        utils.teardown_ocp3_agnosticd()
-                                    } else if (env.DEPLOYMENT_TYPE == 'OA') {
-                                        utils.teardown_OCP3_OA(CLUSTER_NAME + '-v3-' + BUILD_NUMBER)
-                                    } else {
-                                        utils.teardown_origin3_dev()
-                                    }
-                                }, destroy_OCP4: {
-                                    utils.teardown_OCP4()
-                                }, destroy_NFS: {
-                                    if (env.DEPLOYMENT_TYPE != 'agnosticd') {
-                                       utils.teardown_nfs(CLUSTER_NAME + '-' + BUILD_NUMBER)
-                                    }
-                                }, failFast: false
-                            }
-                        }
-                }
-
-            // Always attempt to remove s3 buckets
-            utils.teardown_s3_bucket()
-            if (CLEAN_WORKSPACE) {
-                utils.teardown_container_image()
-                cleanWs notFailBuild: true
-            }
+          if (EC2_TERMINATE_INSTANCES) {
+            parallel destroy_OCP3: {
+              utils.teardown_ocp3_agnosticd()
+            }, destroy_OCP4: {
+            utils.teardown_OCP4()
+            },
+            failFast: false
+          }
+          utils.teardown_s3_bucket()
+          utils.teardown_container_image()
+          if (CLEAN_WORKSPACE) {
+            cleanWs notFailBuild: true
+          }
         }
-    }
-    }
+      }
+  }
 }

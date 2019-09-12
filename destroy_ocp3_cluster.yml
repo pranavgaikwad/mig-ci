@@ -1,3 +1,0 @@
-- hosts: localhost
-  roles:
-    - ocp3_aws_destroy

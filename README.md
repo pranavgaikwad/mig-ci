@@ -12,10 +12,8 @@ Jenkins _pipelines_ are used to provide the logic necessary to orchestrate the b
 | Pipeline | Purpose |
 | --- | --- |
 | `ocp3-agnosticd-base` | Deploys OCP3 using [agnosticd](https://github.com/fbladilo/testing#ocp3-agnosticd-multinode-in-aws), performs cluster sanity checks, multi-node cluster support |
-| `ocp3-oa-base` | Deploys OCP3 using [openshift ansible](https://github.com/fbladilo/testing#ocp3-oa-all-in-one-deployment-on-aws), performs cluster sanity checks, all-in-one cluster |
-| `ocp3-origin3-dev-base` | Deploys OCP3 using [origin3-dev](https://github.com/fusor/origin3-dev.git), all-in-one cluster |
 | `ocp4-base` | Deploys OCP4 and performs cluster sanity checks |
-| `parallel-base` | Deploys OCP3, OCP4, NFS server in parallel, installs cluster application migration tools and executes e2e migration tests|
+| `parallel-base` | Deploys OCP3, OCP4 in parallel, installs cluster application migration tools and executes e2e migration tests|
 | `cpma-e2e-base` | Works similar to `parallel-base`, deploys OCP3, OCP4, builds CPMA. After that extracts manifests from source cluster (OCP3) and applies them to the target cluster (OCP4). Arguments used in this pipeline are documented in https://github.com/fusor/cpma#e2e-tests |
 | `cpma-base` | Same as above, but expects only preprovisioned stable cluster to compare generated reports. Does not check the manifests extraction. Documented in https://github.com/fusor/cpma#e2e-tests |
 
@@ -91,58 +89,4 @@ When you are finished, just run the playbook to destroy NFS AWS instance:
 ## OCP3 agnosticd multinode in AWS
 
 This type of deployment is used in [parallel-base](https://github.com/fusor/mig-ci/blob/master/pipeline/parallel-base.groovy) pipeline, and is used for creation of multinode cluster. To setup a similar environment outside of CI, please refer to the [official](https://github.com/redhat-cop/agnosticd) doc.
-
-## OCP3 OA all-in-one deployment on AWS
-
-In order to execute an OCP3 all-in-one deployment, you need to supply SSH keys and define several environmental variables.
-
-Pre-requirements :
-
-- `WORKSPACE` - from [other variables](https://github.com/fusor/mig-ci#list-of-other-environment-variables).
-  - Create a directory in `$WORKSPACE/keys` and save your AWS SSH private key, it will be used to access the newly created instance. The name of the key is captured from `$EC2_KEY`.
-  - The resulting SSH private key file should be accessible in `${WORKSPACE}/keys/${EC2_KEY}.pem`.
-
-### Deploying OA cluster outside of CI :
-
-- Define *required* [environment variables](https://github.com/fusor/mig-ci#list-of-other-environment-variables), please ensure _pre-requirements_ are satisfied.
-
-- To deploy an OA `ansible-playbook deploy_ocp3_cluster.yml -e prefix=name_for_instance`. You can specify deployment type with `-e oa_deployment_type=openshift-enterprise/origin`. Default is the enterprise one. When prefix is not specified, you `ansible_user` variable will be used.
-
-If you want to select the upstream version of openshift, you can add `-e oa_deployment_type=origin` to the previous step.
-
-- To destroy the instance and all attached resources `ansible-playbook destroy_ocp3_cluster.yml -e prefix=name_for_instance`.
-
-Deployment usually takes around 40-80 minutes to complete. Logs are written in `$WORKSPACE/.install.log` file upon completion.
-
-In case that you don't want to set environment variables for every `deploy*` and `destroy*`, the playbook could be run with an external vars file located in `/config/adhoc_vars.yml`.
-
-Example:
-
-- `ansible-playbook deploy_ocp3_cluster.yml -e @config/adhoc_vars.yml`
-- `ansible-playbook destroy_ocp3_cluster.yml -e @config/adhoc_vars.yml`
-
-_**Note:**_ By default the RHEL7 does not have an access to the [official OpenShift bits](https://docs.openshift.com/enterprise/3.0/install_config/install/prerequisites.html#software-prerequisites) for the OA deployment. You must supply a RH account with a subscription that has access to the OCP official bits.
-
-### List of other environment variables:
-
-- `OCP3_VERSION` - version of cluster to be provisioned. Should be specified as 'v3\.[0-9]+'. If not set, will be used 'v3.11'.
-
-- `SUB_USER` - redhat subscription username for account, which have access to the openshift bits. Allows to setup an `enterprise` and `origin` OA deployment.
-
-- `SUB_PASS` - password for the redhat subscription account.
-
-- `AWS_REGION` - AWS region, in which all resources will be created.
-
-- `AWS_ACCESS_KEY_ID` - AWS access key id, which is used to access your AWS environment.
-
-- `AWS_SECRET_ACCESS_KEY` - AWS secret access key, used for authentication.
-
-- `WORKSPACE` - location of workspace directory. If not set, the default value is the directory where the playbook is run.
-
-- `EC2_KEY` - name of the SSH private key, which will be passed to the instance, and allow you to access the deployed instance via ssh. Set to `ci` by default. The key should be accessible at `${WORKSPACE}/keys/${EC2_KEY}.pem`.
-
-- `CLUSTER_NAME` - prefix for a newly created AWS EC2 instance. When not specified, your ansible username will be used. All EC2 instances are named by the following convention: `$CLUSTER_NAME-<instance role>-3.(7-11)`.
-
-- `KUBECONFIG` - *optional*, if this environment variable is set, then the `oc` binary will use the configuration file from there to perform any operations on cluster. By default the `~/.kube/config` is used. https://docs.openshift.com/container-platform/3.11/cli_reference/manage_cli_profiles.html
-
 - - - -

@@ -29,6 +29,7 @@
         region: "{{ ec2_region }}"
         tags:
           owner: "{{ aws_account_arn }}"
+      ignore_errors: true
 
     - name: Remove old aws backup storage access keys
       file:

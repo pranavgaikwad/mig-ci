@@ -23,9 +23,13 @@
 
   when: openshift_installer_release == "latest" or openshift_installer_release == "nightly"
 
-- name: Get installer
+- name: Get OCP4 installer
   unarchive:
     src: "{{ openshift_installer_release_url }}"
     dest: "{{ playbook_dir }}"
     mode: 0775
     remote_src: true
+  register: get_installer
+  until: get_installer is success
+  retries: 12
+  delay: 10

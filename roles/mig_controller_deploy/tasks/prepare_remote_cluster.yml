@@ -2,7 +2,7 @@
 - name: Start remote cluster tasks
   block:
 
-    - name: Extract SA token
+    - name: Extract remote cluster SA token
       shell: "{{ oc_binary }} sa get-token -n {{ mig_migration_namespace }} {{ mig_controller_sa_name }} | base64 -w 0"
       register: oc_sa_output
 
@@ -12,15 +12,15 @@
      # Fix me: need to find a better way to obtain the master API url from k8s_facts
      # Current context always returns only one entry 
 
-    - name: Extract cluster URL from current context
+    - name: Extract remote cluster URL from current context
       shell: "{{ oc_binary }} whoami --show-server"
       register: oc_config_output
 
     - set_fact:
-       dest_cluster_url: "{{ oc_config_output.stdout }}"
+       remote_cluster_url: "{{ oc_config_output.stdout }}"
 
     - debug:
-        msg: "Destination cluster URL set to: {{ dest_cluster_url }}"
+        msg: "Remote cluster URL set to: {{ remote_cluster_url }}"
 
   environment:
     KUBECONFIG: "{{ source_kubeconfig }}"

@@ -1,11 +1,9 @@
-// parallel-base.groovy
-
-// Set Job properties and triggers
+// mig-e2e-base.groovy
 properties([
-parameters([string(defaultValue: 'v3.11', description: 'OCP3 version to test', name: 'OCP3_VERSION', trim: false),
-string(defaultValue: 'v4.1', description: 'OCP4 version to test', name: 'OCP4_VERSION', trim: false),
-string(defaultValue: '', description: 'OCP3 source cluster API endpoint', name: 'OCP3_CLUSTER_URL', trim: false, required: true),
-string(defaultValue: '', description: 'OCP4 destination cluster API endpoint', name: 'OCP4_CLUSTER_URL', trim: false, required: true),
+parameters([choice(choices: ['3.7', '3.9', '3.10', '3.11', '4.1', 'nightly'], description: 'Source cluster version to test', name: 'SRC_CLUSTER_VERSION'),
+choice(choices: ['4.1', '3.11', '3.10', '3.9', '3.7', 'nightly'], description: 'Destination cluster version to test', name: 'DEST_CLUSTER_VERSION'),
+string(defaultValue: '', description: 'Source cluster API endpoint', name: 'SRC_CLUSTER_URL', trim: false, required: true),
+string(defaultValue: '', description: 'Destination cluster API endpoint', name: 'DEST_CLUSTER_URL', trim: false, required: true),
 string(defaultValue: '', description: 'AWS region where clusters are deployed', name: 'AWS_REGION', trim: false, required: true),
 string(defaultValue: 'https://github.com/fusor/mig-operator.git', description: 'Mig operator repo to clone', name: 'MIG_OPERATOR_REPO', trim: false),
 string(defaultValue: 'master', description: 'Mig operator branch to test', name: 'MIG_OPERATOR_BRANCH', trim: false),
@@ -51,15 +49,15 @@ node {
     ws("${WORKSPACE}-${BUILD_NUMBER}") {
     try {
         checkout scm
-        common_stages = load "${env.WORKSPACE}/pipeline/common_stages.groovy"
-        utils = load "${env.WORKSPACE}/pipeline/utils.groovy"
+        common_stages = load "${WORKSPACE}/pipeline/common_stages.groovy"
+        utils = load "${WORKSPACE}/pipeline/utils.groovy"
 
         utils.notifyBuild('STARTED')
 
         stage('Setup e2e environment') {
             steps_finished << 'Setup e2e environment'
 
-            utils.prepare_workspace("${env.OCP3_VERSION}", "${env.OCP4_VERSION}")
+            utils.prepare_workspace(SRC_CLUSTER_VERSION, DEST_CLUSTER_VERSION)
             utils.clone_mig_e2e()
             if (env.MIG_CONTROLLER_REPO != 'https://github.com/fusor/mig-controller.git') {
               utils.clone_mig_controller()
@@ -70,8 +68,8 @@ node {
           [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP3_CREDENTIALS}", usernameVariable: 'OCP3_ADMIN_USER', passwordVariable: 'OCP3_ADMIN_PASSWD'],
           [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP4_CREDENTIALS}", usernameVariable: 'OCP4_ADMIN_USER', passwordVariable: 'OCP4_ADMIN_PASSWD']
           ]) {
-              common_stages.login_cluster("${env.OCP3_CLUSTER_URL}", "${env.OCP3_ADMIN_USER}", "${env.OCP3_ADMIN_PASSWD}", "${env.OCP3_VERSION}", SOURCE_KUBECONFIG).call()
-              common_stages.login_cluster("${env.OCP4_CLUSTER_URL}", "${env.OCP4_ADMIN_USER}", "${env.OCP4_ADMIN_PASSWD}", "${env.OCP4_VERSION}", TARGET_KUBECONFIG).call()
+              common_stages.login_cluster("${SRC_CLUSTER_URL}", "${OCP3_ADMIN_USER}", "${OCP3_ADMIN_PASSWD}", "${SRC_CLUSTER_VERSION}", SOURCE_KUBECONFIG).call()
+              common_stages.login_cluster("${DEST_CLUSTER_URL}", "${OCP4_ADMIN_USER}", "${OCP4_ADMIN_PASSWD}", "${DEST_CLUSTER_VERSION}", TARGET_KUBECONFIG).call()
              }
         // Always ensure mig controller environment is clean before deployment
         utils.teardown_mig_controller(SOURCE_KUBECONFIG)

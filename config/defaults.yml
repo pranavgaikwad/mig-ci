@@ -13,9 +13,9 @@ ec2_private_key_file: "{{ workspace }}/keys/{{ ec2_key }}.pem"
 ec2_ssh_user: "ec2-user"
 
 oc_binary: "{{ workspace }}/bin/oc"
-ocp3_version: "{{ lookup('env', 'OCP3_VERSION') or 'v3.11' }}"
-ocp4_version: "{{ lookup('env', 'OCP4_VERSION') or 'v4.1' }}"
+src_cluster_version: "{{ lookup('env', 'SRC_CLUSTER_VERSION') or '3.7' }}"
+dest_cluster_version: "{{ lookup('env', 'DEST_CLUSTER_VERSION') or '4.1' }}"
 
 default_kube_location: "{{ workspace }}/kubeconfigs"
-source_kubeconfig: "{{ default_kube_location }}/ocp-{{ ocp3_version }}-kubeconfig"
-target_kubeconfig: "{{ default_kube_location }}/ocp-{{ ocp4_version }}-kubeconfig"
+source_kubeconfig: "{{ default_kube_location }}/ocp-{{ src_cluster_version }}-kubeconfig"
+target_kubeconfig: "{{ default_kube_location }}/ocp-{{ dest_cluster_version }}-kubeconfig"

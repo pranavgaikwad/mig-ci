@@ -11,9 +11,9 @@ Jenkins _pipelines_ are used to provide the logic necessary to orchestrate the b
 
 | Pipeline | Purpose |
 | --- | --- |
-| `ocp3-agnosticd-base` | Deploys OCP3 using [agnosticd](https://github.com/fbladilo/testing#ocp3-agnosticd-multinode-in-aws), performs cluster sanity checks, multi-node cluster support |
-| `ocp4-base` | Deploys OCP4 and performs cluster sanity checks |
-| `parallel-base` | Deploys OCP3, OCP4 in parallel, installs cluster application migration tools and executes e2e migration tests|
+| `ocp3-base` | Deploys OCP3 using [agnosticd](https://github.com/fbladilo/testing#ocp3-agnosticd-multinode-in-aws) |
+| `ocp4-base` | Deploys OCP4 using [agnosticd](https://github.com/fbladilo/testing#ocp3-agnosticd-multinode-in-aws) |
+| `parallel-base` | Deploys OCP3, OCP4 in parallel, installs cluster application migration tools and executes e2e migration tests |
 | `cpma-e2e-base` | Works similar to `parallel-base`, deploys OCP3, OCP4, builds CPMA. After that extracts manifests from source cluster (OCP3) and applies them to the target cluster (OCP4). Arguments used in this pipeline are documented in https://github.com/fusor/cpma#e2e-tests |
 | `cpma-base` | Same as above, but expects only preprovisioned stable cluster to compare generated reports. Does not check the manifests extraction. Documented in https://github.com/fusor/cpma#e2e-tests |
 
@@ -23,23 +23,25 @@ The use of _**trigger jobs**_ which are parameterized is key to the structure of
 
 ### CI job parameters
 
-Below are some of the parameters allowing the customization of mig CI jobs :
+Below are some of the most commonly used parameters allowing the customization of mig CI jobs :
 
 | Parameter | Purpose | Notes |
 | --- | --- | --- |
 | `AWS_REGION` | AWS region for resources to deploy | Default varies based on pipeline |
-| `OCP3_VERSION`| OCP3 version to deploy | Default is v3.11 |
-| `OCP4_VERSION`| OCP4 version to deploy | Default is v4.1 |
-| `NODE_COUNT` | Number of compute nodes to create | Same for source and target clusters, does not affect OA/origin3-dev clusters |
-| `MASTER_COUNT` | Number of master nodes to create | Same for source and target clusters, does not affect OA/origin3-dev clusters |
-| `CLUSTER_NAME` | Name of the cluster to deploy | The final deployment will use the following convention: `${CLUSTER_NAME}-v3-${BUILD_NUMBER}-${OCP3_VERSION}`. In AWS you can this value on instance tags GUID label|
+| `SRC_CLUSTER_VERSION`| OCP source cluster version to deploy | Default is v3.7 |
+| `DEST_CLUSTER_VERSION`| OCP destination cluster version to deploy | Default is v4.1 |
+| `OCP3_WORKER_INSTANCE_COUNT` | Number of OCP3 compute nodes to create |
+| `OCP3_MASTER_INSTANCE_COUNT` | Number of OCP3 master nodes to create |
+| `OCP4_WORKER_INSTANCE_COUNT` | Number of OCP4 compute nodes to create |
+| `OCP4_MASTER_INSTANCE_COUNT` | Number of OCP4 master nodes to create |
+| `CLUSTER_NAME` | Name of the cluster to deploy | The final deployment will use the following convention: `${CLUSTER_NAME}-<version>-${BUILD_NUMBER}`. In AWS you can use this value on instance tags GUID label|
 | `EC2_KEY` | Name of SSH public and private key | Default is `ci`, outside CI `libra` is recommended. Will be used to allow SSH access to instances |
-| `DEPLOYMENT_TYPE` | OCP3 deployment type | Could be `agnosticd`, `OA` or `cluster_up`|
-| `MIG_CONTROLLER_REPO` | source repository for mig-controller to test | Default is fusor |
-| `MIG_CONTROLLER_BRANCH` | source branch for mig-controller to test | Default is master |
+| `MIG_OPERATOR_REPO` | source repository for mig-operator to test | Default is fusor |
+| `MIG_OPERATOR_BRANCH` | source branch for mig-operator to test | Default is master |
 | `SUB_USER` | RH subscription username | Only used in OA deployments to access OCP bits |
 | `SUB_PASS` | RH subscription password | Only used in OA deployments to access OCP bits |
 | `CLEAN_WORKSPACE` | Clean Jenkins workspace after build | Default is true |
+| `E2E_RUN` | Run end-to-end tests after deployment | Default is true |
 | `EC2_TERMINATE_INSTANCES` | Terminate all instances on EC2 after build | Default is true |
 
 

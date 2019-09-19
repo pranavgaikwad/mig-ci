@@ -1,10 +1,8 @@
-// ocp311-OA-base.groovy
-
-// Set Job properties and triggers
+// ocp3-base
 properties([
 parameters([
-string(defaultValue: 'v3.11', description: 'OpenShift version to deploy', name: 'OCP3_VERSION', trim: false),
-string(defaultValue: 'jenkins-ci-agnosticd-base', description: 'Cluster name to deploy', name: 'CLUSTER_NAME', trim: false),
+choice(choices: ['3.7', '3.9', '3.10', '3.11'], description: 'OCP3 version to deploy', name: 'SRC_CLUSTER_VERSION'),
+string(defaultValue: 'jenkins-ci-ocp3-base', description: 'Cluster name to deploy', name: 'CLUSTER_NAME', trim: false),
 string(defaultValue: 'mig-ci@redhat.com', description: 'Email to register the deployment', name: 'EMAIL', trim: false),
 string(defaultValue: '1', description: 'OCP3 master instance count', name: 'OCP3_MASTER_INSTANCE_COUNT', trim: false),
 string(defaultValue: '1', description: 'OCP3 worker instance count', name: 'OCP3_WORKER_INSTANCE_COUNT', trim: false),
@@ -24,13 +22,19 @@ credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCre
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl', defaultValue: 'ci_pub_key', description: 'EC2 public key needed for agnosticd instances', name: 'EC2_PUB_KEY', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_rhel_sub_user', description: 'RHEL Openshift subscription account username', name: 'EC2_SUB_USER', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_rhel_sub_pass', description: 'RHEL Openshift subscription account password', name: 'EC2_SUB_PASS', required: true),
+credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl', defaultValue: 'ci_pull_secret', description: 'Pull secret needed for OCP4 deployments', name: 'OCP4_PULL_SECRET', required: true),
+credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_ocp3_admin_credentials', description: 'Cluster admin credentials used in OCP3 deployments', name: 'OCP3_CREDENTIALS', required: true),
+booleanParam(defaultValue: false, description: 'Update OCP3 cluster packages to latest', name: 'OCP3_UPDATE'),
+booleanParam(defaultValue: false, description: 'Persistent cluster builds with fixed hostname', name: 'PERSISTENT'),
 booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE'),
 booleanParam(defaultValue: true, description: 'EC2 terminate instances after build', name: 'EC2_TERMINATE_INSTANCES')])])
 
 // true/false build parameter that defines if we terminate instances once build is done
-def EC2_TERMINATE_INSTANCES = params.EC2_TERMINATE_INSTANCES
+EC2_TERMINATE_INSTANCES = params.EC2_TERMINATE_INSTANCES
 // true/false build parameter that defines if we cleanup workspace once build is done
-def CLEAN_WORKSPACE = params.CLEAN_WORKSPACE
+CLEAN_WORKSPACE = params.CLEAN_WORKSPACE
+// true/false persistent clusters
+PERSISTENT = params.PERSISTENT
 
 def common_stages
 def utils
@@ -42,7 +46,8 @@ echo "Build URL ${env.BUILD_URL}"
 echo "Job URL ${env.JOB_URL}"
 
 node {
-
+  sh "mkdir ${WORKSPACE}-${BUILD_NUMBER}"
+  ws("${WORKSPACE}-${BUILD_NUMBER}") {
     try {
         checkout scm
         utils = load "${env.WORKSPACE}/pipeline/utils.groovy"
@@ -51,18 +56,14 @@ node {
         utils.notifyBuild('STARTED')
 
         stage('Setup Build Environment OCP3') {
-            steps_finished << 'Setup Build Environment agnosticd OCP3 ' + "${OCP3_VERSION}"
-
-            utils.prepare_workspace("${env.OCP3_VERSION}", '')
-
+            steps_finished << 'Setup Build Environment OCP3 ' + SRC_CLUSTER_VERSION
+            utils.prepare_workspace(SRC_CLUSTER_VERSION, '')
             utils.copy_private_keys()
-
             utils.clone_related_repos()
-
             utils.prepare_agnosticd()
         }
 
-        common_stages.deploy_ocp3_agnosticd(SOURCE_KUBECONFIG).call()
+        common_stages.deploy_ocp3_agnosticd(SOURCE_KUBECONFIG, SRC_CLUSTER_VERSION).call()
 
         common_stages.load_sample_data(SOURCE_KUBECONFIG).call()
 
@@ -72,15 +73,15 @@ node {
         currentBuild.result = "FAILED"
         println(ex.toString())
     } finally {
-        // Success or failure, always send notifications
         utils.notifyBuild(currentBuild.result)
         stage('Clean Up Environment') {
           if (EC2_TERMINATE_INSTANCES) {
-            utils.teardown_ocp3_agnosticd()
+            utils.teardown_ocp_agnosticd(SRC_CLUSTER_VERSION)
           }
           if (CLEAN_WORKSPACE) {
             cleanWs cleanWhenFailure: false, notFailBuild: true
           }
         }
-     }
+      }
+  }
 }

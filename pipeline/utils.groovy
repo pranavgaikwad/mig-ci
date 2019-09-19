@@ -66,36 +66,65 @@ def clone_mig_controller() {
 def prepare_agnosticd() {
   sh 'test -e ~/.local/bin/aws || pip install awscli --upgrade --user'
 
-  sh 'rm -f agnosticd/ansible.cfg'
-
   checkout([$class: 'GitSCM', branches: [[name: 'development']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'agnosticd']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/redhat-cop/agnosticd.git']]])
 
-  // Fixes
-  withCredentials([file(credentialsId: "${env.EC2_PUB_KEY}", variable: "SSH_PUB_KEY")]) {
-    sh "cat ${SSH_PUB_KEY} > ${CLUSTER_NAME}-v3-${BUILD_NUMBER}key.pub"
-  }
+  checkout([$class: 'GitSCM', branches: [[name: 'master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'mig-agnosticd']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/fusor/mig-agnosticd.git']]])
 
-  withCredentials([file(credentialsId: "${env.EC2_PRIV_KEY}", variable: "SSH_PRIV_KEY")]) {
-    sh "cat ${SSH_PRIV_KEY} > ${CLUSTER_NAME}-v3-${BUILD_NUMBER}key"
-    sh "chmod 600 ${CLUSTER_NAME}-v3-${BUILD_NUMBER}key"
-  }
+  // Set agnosticd HOME
+  AGNOSTICD_HOME = "${env.WORKSPACE}/agnosticd"
+  
+  withCredentials([
+    string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
+    string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY'),
+    string(credentialsId: "$EC2_SUB_USER", variable: 'SUB_USER'),
+    string(credentialsId: "$EC2_SUB_PASS", variable: 'SUB_PASS'),
+    file(credentialsId: "${OCP4_PULL_SECRET}", variable: 'PULL_SECRET'),
+    string(credentialsId: "$AGND_REPO", variable: 'OWN_REPO')
+    ])
+      {
+        def pull_secret = readFile "${PULL_SECRET}"
+        dir('mig-agnosticd') {
 
-  def readContent = readFile 'agnosticd/ansible.cfg'
-  writeFile file: 'agnosticd/ansible.cfg', text: readContent+"\r\n\n[ssh_connection]\r\nssh_args = -C -o ControlMaster=auto -o ControlPersist=216000s -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+          def secret_vars = [
+            'aws_access_key_id': "${AWS_ACCESS_KEY_ID}",
+            'aws_secret_access_key': "${AWS_SECRET_ACCESS_KEY}",
+            'redhat_registry_user': "${SUB_USER}",
+            'redhat_registry_password': "${SUB_PASS}",
+            'ocp4_token': "${pull_secret}",
+            'own_repo_path': "${OWN_REPO}/{{ osrelease }}/"
+          ]
+        writeYaml file: 'secret.yml', data: secret_vars
+        }
+     }
 }
 
-def prepare_workspace(ocp3_version = '', ocp4_version = '') {
+def prepare_workspace(src_version = '', dest_version = '') {
   // Prepare EC2 key for ansible consumption
   KEYS_DIR = "${env.WORKSPACE}" + '/keys'
   sh "mkdir -p ${KEYS_DIR}"
   sh "mkdir -p ${env.WORKSPACE}/kubeconfigs"
-
-  // Target kubeconfig locations
-  if ("${ocp3_version}" != '') {
-    SOURCE_KUBECONFIG = "${env.WORKSPACE}/kubeconfigs/ocp-${ocp3_version}-kubeconfig"
+  
+  // Define kubeconfig locations based on version of source and dest clusters
+  if ("${src_version}" != '') {
+    SOURCE_KUBECONFIG = "${env.WORKSPACE}/kubeconfigs/ocp-${src_version}-kubeconfig"
+    
+    if(src_version.startsWith("3.")) {
+      SRC_IS_OCP3 = "true"
+      echo "SRC_CLUSTER is OCP3: ${SRC_IS_OCP3}"
+    } else {
+      SRC_IS_OCP3 = "false"
+    }
   }
-  if ("${ocp4_version}" != '') {
-    TARGET_KUBECONFIG = "${env.WORKSPACE}/kubeconfigs/ocp-${ocp4_version}-kubeconfig"
+
+  if ("${dest_version}" != '') {
+    TARGET_KUBECONFIG = "${env.WORKSPACE}/kubeconfigs/ocp-${dest_version}-kubeconfig"
+    
+    if(dest_version.startsWith("3.")) {
+      DEST_IS_OCP3 = "true"
+      echo "DEST_CLUSTER is OCP3: ${DEST_IS_OCP3}"
+    } else {
+      DEST_IS_OCP3 = "false"
+    }
   }
 
   OC_BINARY = "${env.WORKSPACE}/bin/oc"
@@ -125,41 +154,24 @@ def copy_public_keys() {
   }
 }
 
-def teardown_ocp3_agnosticd() {
-  if (EC2_TERMINATE_INSTANCES) {
-    dir("agnosticd") {
-      withCredentials([
-          string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-          string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY'),
-          ])
-      {
-        def teardown_vars = [
-          'aws_region': "${AWS_REGION}",
-          'guid': "${CLUSTER_NAME}-v3-${BUILD_NUMBER}",
-          'env_type': "ocp-workshop",
-          'cloud_provider': "ec2",
-          'aws_access_key_id': "${AWS_ACCESS_KEY_ID}",
-          'aws_secret_access_key': "${AWS_SECRET_ACCESS_KEY}"
-        ]
-        sh 'rm -f teardown_vars.yml'
-        writeYaml file: 'teardown_vars.yml', data: teardown_vars
-        teardown_vars = teardown_vars.collect { e -> '-e ' + e.key + '=' + e.value }
-
-        withEnv(['PATH+EXTRA=~/.local/bin']) {
-          ansiblePlaybook(
-            playbook: "ansible/configs/${ENVTYPE}/destroy_env.yml",
-            extras: "${teardown_vars.join(' ')}",
-            hostKeyChecking: false,
-            unbuffered: true,
-            colorized: true)
-        }
-      }
+def teardown_ocp_agnosticd(cluster_version) {
+  dir("mig-agnosticd/${cluster_version}") {
+    withEnv([
+      'PATH+EXTRA=~/.local/bin',
+      'ANSIBLE_FORCE_COLOR=true',
+      "AGNOSTICD_HOME=${AGNOSTICD_HOME}"]) {
+         ansiColor('xterm') {
+           if(cluster_version.startsWith("3.")) {
+             sh './delete_ocp3_workshop.sh'
+           } else {
+             sh './delete_ocp4_workshop.sh'
+           }
+         }
     }
   }
 }
 
-
-def teardown_OCP4() {
+def teardown_ocp4() {
   if (EC2_TERMINATE_INSTANCES) {
     withCredentials([
       string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
@@ -172,22 +184,6 @@ def teardown_OCP4() {
           unbuffered: true,
           colorized: true)
       }
-    }
-  }
-}
-
-def teardown_nfs(prefix = '') {
-  if (prefix != '') {
-    prefix = "-e prefix=${prefix}"
-  }
-  if (EC2_TERMINATE_INSTANCES) {
-    ansiColor('xterm') {
-      ansiblePlaybook(
-        playbook: 'nfs_server_destroy.yml',
-        hostKeyChecking: false,
-        extras: "${prefix}",
-        unbuffered: true,
-        colorized: true)
     }
   }
 }

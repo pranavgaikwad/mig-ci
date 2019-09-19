@@ -1,9 +1,7 @@
 // parallel-base.groovy
-
-// Set Job properties and triggers
 properties([
-parameters([string(defaultValue: 'v3.11', description: 'OCP3 version to deploy', name: 'OCP3_VERSION', trim: false),
-string(defaultValue: 'v4.1', description: 'OCP4 version to deploy', name: 'OCP4_VERSION', trim: false),
+parameters([choice(choices: ['3.7', '3.9', '3.10', '3.11', '4.1', 'nightly'], description: 'OCP version to deploy on source cluster', name: 'SRC_CLUSTER_VERSION'),
+choice(choices: ['4.1', '3.11', '3.10', '3.9', '3.7', 'nightly'], description: 'OCP version to deploy on destination cluster', name: 'DEST_CLUSTER_VERSION'),
 string(defaultValue: 'jenkins-ci-parallel-base', description: 'Cluster name to deploy', name: 'CLUSTER_NAME', trim: false),
 string(defaultValue: 'mig-ci@redhat.com', description: 'Email to register the deployment', name: 'EMAIL', trim: false),
 string(defaultValue: '1', description: 'OCP3 master instance count', name: 'OCP3_MASTER_INSTANCE_COUNT', trim: false),
@@ -16,9 +14,9 @@ string(defaultValue: '1', description: 'OCP4 master instance count', name: 'OCP4
 string(defaultValue: '1', description: 'OCP4 worker instance count', name: 'OCP4_WORKER_INSTANCE_COUNT', trim: false),
 string(defaultValue: 'm4.xlarge', description: 'OCP4 master instance type', name: 'OCP4_MASTER_INSTANCE_TYPE', trim: false),
 string(defaultValue: 'm4.xlarge', description: 'OCP4 worker instance type', name: 'OCP4_WORKER_INSTANCE_TYPE', trim: false),
+string(defaultValue: 'm4.large', description: 'OCP4 infra instance type', name: 'OCP4_INFRA_INSTANCE_TYPE', trim: false),
 string(defaultValue: '.mg.dog8code.com', description: 'Zone suffix for instance hostname address', name: 'BASESUFFIX', trim: false),
 string(defaultValue: 'Z2GE8CSGW2ZA8W', description: 'Zone id', name: 'HOSTZONEID', trim: false),
-string(defaultValue: 'ocp-workshop', description: 'AgnosticD environment type to deploy', name: 'ENVTYPE', trim: false),
 string(defaultValue: 'ci', description: 'EC2 SSH key name to deploy on instances for remote access ', name: 'EC2_KEY', trim: false),
 string(defaultValue: 'us-west-1', description: 'AWS region to deploy instances', name: 'AWS_REGION', trim: false),
 string(defaultValue: 'https://github.com/fusor/mig-operator.git', description: 'Mig operator repo to clone', name: 'MIG_OPERATOR_REPO', trim: false),
@@ -47,8 +45,11 @@ credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringC
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_rhel_sub_pass', description: 'RHEL Openshift subscription account password', name: 'EC2_SUB_PASS', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl', defaultValue: 'ci_pull_secret', description: 'Pull secret needed for OCP4 deployments', name: 'OCP4_PULL_SECRET', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_ocp4_admin_credentials', description: 'Cluster admin credentials used in OCP4 deployments', name: 'OCP4_CREDENTIALS', required: true),
+credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_ocp3_admin_credentials', description: 'Cluster admin credentials used in OCP3 deployments', name: 'OCP3_CREDENTIALS', required: true),
 booleanParam(defaultValue: true, description: 'Run e2e tests', name: 'E2E_RUN'),
+booleanParam(defaultValue: false, description: 'Update OCP3 cluster packages to latest', name: 'OCP3_UPDATE'),
 booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE'),
+booleanParam(defaultValue: false, description: 'Persistent cluster builds with fixed hostname', name: 'PERSISTENT'),
 booleanParam(defaultValue: false, description: 'Enable debugging', name: 'DEBUG'),
 booleanParam(defaultValue: true, description: 'EC2 terminate instances after build', name: 'EC2_TERMINATE_INSTANCES')])])
 
@@ -62,6 +63,8 @@ def E2E_RUN = params.E2E_RUN
 def E2E_TESTS = params.E2E_TESTS.split(' ')
 // true/false enable debugging
 def DEBUG = params.DEBUG
+// true/false persistent clusters
+PERSISTENT = params.PERSISTENT
 
 def common_stages
 def utils
@@ -77,18 +80,16 @@ node {
     ws("${WORKSPACE}-${BUILD_NUMBER}") {
     try {
         checkout scm
-        common_stages = load "${env.WORKSPACE}/pipeline/common_stages.groovy"
-        utils = load "${env.WORKSPACE}/pipeline/utils.groovy"
+        common_stages = load "${WORKSPACE}/pipeline/common_stages.groovy"
+        utils = load "${WORKSPACE}/pipeline/utils.groovy"
 
         utils.notifyBuild('STARTED')
 
-        stage('Setup for source and target cluster') {
-            steps_finished << 'Setup for source and target cluster'
-
-            utils.prepare_workspace("${env.OCP3_VERSION}", "${env.OCP4_VERSION}")
+        stage('Setup for source and destination cluster') {
+            steps_finished << 'Setup for source and destination cluster'
+            utils.prepare_workspace(SRC_CLUSTER_VERSION, DEST_CLUSTER_VERSION)
             utils.copy_private_keys()
             utils.copy_public_keys()
-            utils.clone_related_repos()
             utils.clone_mig_e2e()
             utils.prepare_agnosticd()
             if (env.MIG_CONTROLLER_REPO != 'https://github.com/fusor/mig-controller.git') {
@@ -98,18 +99,35 @@ node {
 
         stage('Deploy clusters') {
             steps_finished << 'Deploy clusters'
-            parallel deploy_OCP3: {
-              common_stages.deploy_ocp3_agnosticd(SOURCE_KUBECONFIG).call()
-            }, deploy_OCP4: {
-                common_stages.deployOCP4(TARGET_KUBECONFIG).call()
+            parallel deploy_src_cluster: {
+              if (SRC_IS_OCP3 == 'true') {
+                common_stages.deploy_ocp3_agnosticd(SOURCE_KUBECONFIG, SRC_CLUSTER_VERSION).call()
+              } else {
+                  if (SRC_CLUSTER_VERSION == 'nightly') {
+                    common_stages.deploy_ocp4(SOURCE_KUBECONFIG, SRC_CLUSTER_VERSION).call()
+                  } else {
+                      common_stages.deploy_ocp4_agnosticd(SOURCE_KUBECONFIG, SRC_CLUSTER_VERSION).call()
+                    }
+                }
+            }, deploy_dest_cluster: {
+                 if (DEST_IS_OCP3 == 'true') {
+                 common_stages.deploy_ocp3_agnosticd(TARGET_KUBECONFIG, DEST_CLUSTER_VERSION).call()
+              } else {
+                  if (DEST_CLUSTER_VERSION == 'nightly') {
+                    common_stages.deploy_ocp4(TARGET_KUBECONFIG, DEST_CLUSTER_VERSION).call()
+                  } else {
+                      common_stages.deploy_ocp4_agnosticd(TARGET_KUBECONFIG, DEST_CLUSTER_VERSION).call()
+                    }
+                }
+
             },
             failFast: true
         }
 
-        common_stages.deploy_mig_controller_on_both(SOURCE_KUBECONFIG, TARGET_KUBECONFIG, false, true).call()
+       common_stages.deploy_mig_controller_on_both(SOURCE_KUBECONFIG, TARGET_KUBECONFIG, false, true).call()
 
         if (E2E_RUN) {
-           common_stages.execute_migration(E2E_TESTS, SOURCE_KUBECONFIG, TARGET_KUBECONFIG).call()
+          common_stages.execute_migration(E2E_TESTS, SOURCE_KUBECONFIG, TARGET_KUBECONFIG).call()
         }
 
     } catch (Exception ex) {
@@ -125,14 +143,23 @@ node {
 
         stage('Clean Up Environment') {
           if (EC2_TERMINATE_INSTANCES) {
-            parallel destroy_OCP3: {
-              utils.teardown_ocp3_agnosticd()
-            }, destroy_OCP4: {
-            utils.teardown_OCP4()
+            parallel destroy_src_cluster: {
+              if (SRC_CLUSTER_VERSION == 'nightly') {
+                utils.teardown_ocp4()
+              } else {
+                  utils.teardown_ocp_agnosticd(SRC_CLUSTER_VERSION)
+                }
+            }, destroy_dest_cluster: {
+
+              if (DEST_CLUSTER_VERSION == 'nightly') {
+                utils.teardown_ocp4()
+              } else {
+                  utils.teardown_ocp_agnosticd(DEST_CLUSTER_VERSION)
+                }
             },
             failFast: false
+            utils.teardown_s3_bucket()
           }
-          utils.teardown_s3_bucket()
           utils.teardown_container_image()
           if (CLEAN_WORKSPACE) {
             cleanWs notFailBuild: true

@@ -34,7 +34,7 @@ Below are some of the most commonly used parameters allowing the customization o
 | `OCP3_MASTER_INSTANCE_COUNT` | Number of OCP3 master nodes to create |
 | `OCP4_WORKER_INSTANCE_COUNT` | Number of OCP4 compute nodes to create |
 | `OCP4_MASTER_INSTANCE_COUNT` | Number of OCP4 master nodes to create |
-| `CLUSTER_NAME` | Name of the cluster to deploy | The final deployment will use the following convention: `${CLUSTER_NAME}-<version>-${BUILD_NUMBER}`. In AWS you can this value on instance tags GUID label|
+| `CLUSTER_NAME` | Name of the cluster to deploy | The final deployment will use the following convention: `${CLUSTER_NAME}-<version>-${BUILD_NUMBER}`. In AWS you can use this value on instance tags GUID label|
 | `EC2_KEY` | Name of SSH public and private key | Default is `ci`, outside CI `libra` is recommended. Will be used to allow SSH access to instances |
 | `MIG_OPERATOR_REPO` | source repository for mig-operator to test | Default is fusor |
 | `MIG_OPERATOR_BRANCH` | source branch for mig-operator to test | Default is master |

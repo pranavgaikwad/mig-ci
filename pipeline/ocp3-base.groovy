@@ -59,14 +59,10 @@ node {
             steps_finished << 'Setup Build Environment OCP3 ' + SRC_CLUSTER_VERSION
             utils.prepare_workspace(SRC_CLUSTER_VERSION, '')
             utils.copy_private_keys()
-            utils.clone_related_repos()
             utils.prepare_agnosticd()
         }
 
         common_stages.deploy_ocp3_agnosticd(SOURCE_KUBECONFIG, SRC_CLUSTER_VERSION).call()
-
-        common_stages.load_sample_data(SOURCE_KUBECONFIG).call()
-
         common_stages.sanity_checks(SOURCE_KUBECONFIG).call()
 
     } catch (Exception ex) {

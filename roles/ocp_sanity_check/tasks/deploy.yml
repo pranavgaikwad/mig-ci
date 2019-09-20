@@ -1,0 +1,4 @@
+- name: Deploy nginx sample
+  k8s:
+    state : present
+    definition: "{{ lookup('file', 'nginx.yml' )}}"

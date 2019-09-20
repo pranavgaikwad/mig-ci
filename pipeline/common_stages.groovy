@@ -278,30 +278,6 @@ def deploy_ocp4(kubeconfig, cluster_version) {
   }
 }
 
-def load_sample_data(kubeconfig) {
-  return {
-    stage('Load Sample Data/Apps on OCP3') {
-      steps_finished << 'Load Sample Data/Apps on OCP3'
-      dir('ocp-mig-test-data') {
-        withEnv([
-            'PATH+EXTRA=~/bin',
-            "KUBECONFIG=${kubeconfig}"])
-          {
-          ansiColor('xterm') {
-            ansiblePlaybook(
-              playbook: 'nginx.yml',
-              extras: '-e "with_backup=false" -e "with_restore=false"',
-              hostKeyChecking: false,
-              unbuffered: true,
-              colorized: true)
-          }
-        }
-      }
-    }
-  }
-}
-
-
 def sanity_checks(kubeconfig) {
   return {
     stage('Run OCP3 Sanity Checks') {
@@ -310,8 +286,8 @@ def sanity_checks(kubeconfig) {
         ansiColor('xterm') {
           ansiblePlaybook(
             playbook: 'ocp_sanity_check.yml',
+            extras: "-e oc_binary=oc",
             hostKeyChecking: false,
-            extras: "-e oc_binary=/var/lib/jenkins/bin/oc",
             unbuffered: true,
             colorized: true)
         }

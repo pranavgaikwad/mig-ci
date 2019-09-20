@@ -9,4 +9,8 @@
   uri:
     url: "http://{{ nginx_route.resources[0].spec.host }}"
     method: GET
+    return_content: yes
   register: uri
+  until: "'nginx' in uri.content"
+  retries: 6
+  delay: 10

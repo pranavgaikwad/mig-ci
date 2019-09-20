@@ -9,6 +9,9 @@
       url: "{{ release_url }}"
       return_content: yes
     register: client_page
+    until: client_page is success
+    retries: 12
+    delay: 10
 
   - name: Determine latest client binary archive release
     set_fact:
@@ -32,6 +35,10 @@
     get_url:
       url: "{{ oc_release_url }}"
       dest: "{{ oc_arch }}"
+    register: get_client
+    until: get_client is success
+    retries: 12
+    delay: 10
 
   - name: "Unpack the binary"
     unarchive:

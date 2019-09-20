@@ -10,8 +10,8 @@
       uri:
         url: "{{ openshift_installer_dynamic_url }}"
         return_content: yes
-      register: get_page
-      until: get_page is success
+      register: page
+      until: page is success
       retries: 12
       delay: 10
 

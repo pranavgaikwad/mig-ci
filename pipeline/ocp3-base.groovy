@@ -9,7 +9,7 @@ string(defaultValue: '1', description: 'OCP3 worker instance count', name: 'OCP3
 string(defaultValue: '1', description: 'OCP3 infra instance count', name: 'OCP3_INFRA_INSTANCE_COUNT', trim: false),
 string(defaultValue: 'm4.large', description: 'OCP3 master instance type', name: 'OCP3_MASTER_INSTANCE_TYPE', trim: false),
 string(defaultValue: 'm4.xlarge', description: 'OCP3 worker instance type', name: 'OCP3_WORKER_INSTANCE_TYPE', trim: false),
-string(defaultValue: 'm4.large', description: 'OCP3 infra instance type', name: 'OCP3_INFRA_INSTANCE_TYPE', trim: false),
+string(defaultValue: 'm4.xlarge', description: 'OCP3 infra instance type', name: 'OCP3_INFRA_INSTANCE_TYPE', trim: false),
 string(defaultValue: '.mg.dog8code.com', description: 'Zone suffix for instance hostname address', name: 'BASESUFFIX', trim: false),
 string(defaultValue: 'Z2GE8CSGW2ZA8W', description: 'Zone id', name: 'HOSTZONEID', trim: false),
 string(defaultValue: 'ocp-workshop', description: 'AgnosticD environment type to deploy', name: 'ENVTYPE', trim: false),

@@ -12,8 +12,10 @@ spec:
   mig_controller_version: {{ mig_controller_tag }}
   mig_ui_image: {{ mig_ui_img }}
   mig_ui_version: {{ mig_ui_tag }}
-  velero_image: {{ mig_velero_img }}:{{ mig_velero_tag }}
-  velero_plugin_image: {{ mig_velero_plugin_img }}:{{ mig_velero_plugin_tag }}
+  velero_image: {{ mig_velero_img }}
+  velero_version: {{ mig_velero_tag }}
+  velero_plugin_image: {{ mig_velero_plugin_img }}
+  velero_plugin_version: {{ mig_velero_plugin_tag }}
   
   #To install the controller on Openshift 3 you will need to configure the API endpoint:
   #mig_ui_cluster_api_endpoint: https://replace-with-openshift-cluster-hostname:8443/api

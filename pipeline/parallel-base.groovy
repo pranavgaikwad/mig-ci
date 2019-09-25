@@ -48,6 +48,7 @@ credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.Usernam
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_ocp3_admin_credentials', description: 'Cluster admin credentials used in OCP3 deployments', name: 'OCP3_CREDENTIALS', required: true),
 booleanParam(defaultValue: true, description: 'Run e2e tests', name: 'E2E_RUN'),
 booleanParam(defaultValue: false, description: 'Update OCP3 cluster packages to latest', name: 'OCP3_UPDATE'),
+booleanParam(defaultValue: true, description: 'Provision OCP3 glusterfs', name: 'OCP3_GLUSTERFS'),
 booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE'),
 booleanParam(defaultValue: false, description: 'Persistent cluster builds with fixed hostname', name: 'PERSISTENT'),
 booleanParam(defaultValue: false, description: 'Enable debugging', name: 'DEBUG'),
@@ -65,6 +66,8 @@ def E2E_TESTS = params.E2E_TESTS.split(' ')
 def DEBUG = params.DEBUG
 // true/false persistent clusters
 PERSISTENT = params.PERSISTENT
+// true/false provision glusterfs
+OCP3_GLUSTERFS = params.OCP3_GLUSTERFS
 
 def common_stages
 def utils

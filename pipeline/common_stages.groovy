@@ -159,7 +159,7 @@ def deploy_ocp3_agnosticd(kubeconfig, cluster_version) {
             'cloud_provider': "ec2",
             'aws_region': "${AWS_REGION}",
             'ansible_ssh_private_key_file': "${PRIVATE_KEY}",
-            'install_glusterfs': "false"
+            'install_glusterfs': "${OCP3_GLUSTERFS}"
           ]
           writeYaml file: 'my_vars.yml', data: my_vars
 

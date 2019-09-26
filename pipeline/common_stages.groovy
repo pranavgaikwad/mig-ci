@@ -111,7 +111,7 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
           'ANSIBLE_FORCE_COLOR=true'])
           {
             ansiColor('xterm') {
-//              sh './create_ocp4_workshop.sh'
+              sh './create_ocp4_workshop.sh'
             }
           }
         }
@@ -123,15 +123,15 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
         "kubeconfig": "${kubeconfig}"
         ]
 
-//        login_vars = login_vars.collect { e -> '-e ' + e.key + '=' + e.value }
-//        ansiColor('xterm') {
-//          ansiblePlaybook(
-//            playbook: 'login.yml',
-//            extras: "${login_vars.join(' ')}",
-//            hostKeyChecking: false,
-//            unbuffered: true,
-//            colorized: true)
-//        }
+        login_vars = login_vars.collect { e -> '-e ' + e.key + '=' + e.value }
+        ansiColor('xterm') {
+          ansiblePlaybook(
+            playbook: 'login.yml',
+            extras: "${login_vars.join(' ')}",
+            hostKeyChecking: false,
+            unbuffered: true,
+            colorized: true)
+        }
       }
   }
 }

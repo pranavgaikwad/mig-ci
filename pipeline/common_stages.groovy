@@ -97,7 +97,7 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
           // Add extra vars for nightly builds
           if ("${cluster_version}" == "nightly") {
             def ocp4_data = readYaml file: 'ocp4_vars.yml'
-            def ocp4_nightly_data = readYaml file: '../ocp4_nightly_release.yml'
+            def ocp4_nightly_data = readYaml file: "${WORKSPACE}/ocp4_nightly_release.yml"
             ocp4_data.ocp4_installer_use_dev_preview = "true"
             ocp4_data.ocp4_installer_url = ocp4_nightly_data.ocp4_installer_url
             ocp4_data.ocp4_client_url = ocp4_nightly_data.ocp4_client_url

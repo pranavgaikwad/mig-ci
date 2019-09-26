@@ -1,0 +1,31 @@
+- name: Fetch OCP4 nightly release content
+  uri:
+    url: "{{ openshift_installer_release_prefix_url }}/{{ openshift_parent_dir_choices['nightly'] }}/latest"
+    return_content: yes
+  register: page
+  until: page is success
+  retries: 12
+  delay: 10
+
+- name: Determine OCP4 nightly installer release
+  set_fact:
+    installer_latest_release: "{{ page.content | regex_findall('<a.*openshift-install[^<]+?>') | last | regex_search(openshift_installer_regex_choices['nightly']) }}"
+
+- name: Determine OCP4 nightly client release
+  set_fact:
+    client_latest_release: "{{ page.content | regex_findall('<a.*openshift-client[^<]+?>') | last | regex_search(openshift_installer_regex_choices['nightly']) }}"
+
+- name: Set variables to OCP4 nightly release
+  set_fact:
+    openshift_installer_release_url: "{{ openshift_installer_release_prefix_url }}/{{ openshift_parent_dir_choices['nightly'] }}/latest/openshift-install-linux-{{ installer_latest_release }}.tar.gz"
+    openshift_client_release_url: "{{ openshift_installer_release_prefix_url }}/{{ openshift_parent_dir_choices['nightly'] }}/latest/openshift-client-linux-{{ client_latest_release }}.tar.gz"
+
+- debug:
+    msg: 
+    - "OCP4 nightly installer release : {{ openshift_installer_release_url }}"
+    - "OCP4 nightly client release : {{ openshift_client_release_url }}"
+
+- name: Write nightly release to ocp4_nightly_release.yml
+  template:
+    src: ocp4_nightly_release.yml.j2
+    dest: "{{ playbook_dir }}/ocp4_nightly_release.yml"

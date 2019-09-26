@@ -68,7 +68,7 @@ node {
         utils.notifyBuild(currentBuild.result)
         stage('Clean Up Environment') {
           if (EC2_TERMINATE_INSTANCES) {
-            utils.teardown_ocp4()
+            utils.teardown_ocp_agnosticd(SRC_CLUSTER_VERSION)
           }
           if (CLEAN_WORKSPACE) {
             cleanWs cleanWhenFailure: false, notFailBuild: true

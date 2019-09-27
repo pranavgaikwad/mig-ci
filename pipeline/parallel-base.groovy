@@ -106,23 +106,14 @@ node {
               if (SRC_IS_OCP3 == 'true') {
                 common_stages.deploy_ocp3_agnosticd(SOURCE_KUBECONFIG, SRC_CLUSTER_VERSION).call()
               } else {
-                  if (SRC_CLUSTER_VERSION == 'nightly') {
-                    common_stages.deploy_ocp4(SOURCE_KUBECONFIG, SRC_CLUSTER_VERSION).call()
-                  } else {
-                      common_stages.deploy_ocp4_agnosticd(SOURCE_KUBECONFIG, SRC_CLUSTER_VERSION).call()
-                    }
+                  common_stages.deploy_ocp4_agnosticd(SOURCE_KUBECONFIG, SRC_CLUSTER_VERSION).call()
                 }
             }, deploy_dest_cluster: {
                  if (DEST_IS_OCP3 == 'true') {
                  common_stages.deploy_ocp3_agnosticd(TARGET_KUBECONFIG, DEST_CLUSTER_VERSION).call()
               } else {
-                  if (DEST_CLUSTER_VERSION == 'nightly') {
-                    common_stages.deploy_ocp4(TARGET_KUBECONFIG, DEST_CLUSTER_VERSION).call()
-                  } else {
-                      common_stages.deploy_ocp4_agnosticd(TARGET_KUBECONFIG, DEST_CLUSTER_VERSION).call()
+                  common_stages.deploy_ocp4_agnosticd(TARGET_KUBECONFIG, DEST_CLUSTER_VERSION).call()
                     }
-                }
-
             },
             failFast: true
         }
@@ -147,18 +138,9 @@ node {
         stage('Clean Up Environment') {
           if (EC2_TERMINATE_INSTANCES) {
             parallel destroy_src_cluster: {
-              if (SRC_CLUSTER_VERSION == 'nightly') {
-                utils.teardown_ocp4()
-              } else {
-                  utils.teardown_ocp_agnosticd(SRC_CLUSTER_VERSION)
-                }
+              utils.teardown_ocp_agnosticd(SRC_CLUSTER_VERSION)
             }, destroy_dest_cluster: {
-
-              if (DEST_CLUSTER_VERSION == 'nightly') {
-                utils.teardown_ocp4()
-              } else {
-                  utils.teardown_ocp_agnosticd(DEST_CLUSTER_VERSION)
-                }
+              utils.teardown_ocp_agnosticd(DEST_CLUSTER_VERSION)
             },
             failFast: false
             utils.teardown_s3_bucket()

@@ -3,8 +3,11 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
 
   def repo_version = "${cluster_version}"
   def short_version = cluster_version.replace(".", "")
+
+  // Even for nightly releases, osrelease must map to a valid 4.x value on agnosticd repos (clientvm/bastion req)
   def releases = [
     '4.1': "4.1.0",
+    'nightly': "4.1.0",
   ]
   def osrelease = releases["${repo_version}"]
   def full_cluster_name = ''
@@ -27,6 +30,18 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
     [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP4_CREDENTIALS}", usernameVariable: 'OCP4_ADMIN_USER', passwordVariable: 'OCP4_ADMIN_PASSWD']]) {
     cluster_adm_user = "${OCP4_ADMIN_USER}"
     cluster_adm_passwd = "${OCP4_ADMIN_PASSWD}"
+  }
+
+  if ("${cluster_version}" == "nightly") {
+    echo "Cluster is a nightly build"
+    // Fetch and dump OCP4 nightly release data
+    ansiColor('xterm') {
+      ansiblePlaybook(
+        playbook: 'ocp4_dump_nightly_release.yml',
+        hostKeyChecking: false,
+        unbuffered: true,
+        colorized: true)
+    }
   }
 
   sh "cp -R mig-agnosticd/4.x mig-agnosticd/${cluster_version}"
@@ -78,6 +93,17 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
             'archive_dir': "{{ output_dir | dirname }}/archive"
           ]
           writeYaml file: 'ocp4_vars.yml', data: ocp4_vars
+
+          // Add extra vars for nightly builds
+          if ("${cluster_version}" == "nightly") {
+            def ocp4_data = readYaml file: 'ocp4_vars.yml'
+            def ocp4_nightly_data = readYaml file: "${WORKSPACE}/ocp4_nightly_release.yml"
+            ocp4_data.ocp4_installer_use_dev_preview = "true"
+            ocp4_data.ocp4_installer_url = ocp4_nightly_data.ocp4_installer_url
+            ocp4_data.ocp4_client_url = ocp4_nightly_data.ocp4_client_url
+            sh 'rm -f ocp4_vars.yml'
+            writeYaml file: 'ocp4_vars.yml', data: ocp4_data
+          }
           
           withEnv([
           'PATH+EXTRA=~/.local/bin',

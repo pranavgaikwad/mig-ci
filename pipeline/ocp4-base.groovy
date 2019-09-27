@@ -57,14 +57,9 @@ node {
           utils.prepare_workspace(SRC_CLUSTER_VERSION, '')
           utils.copy_private_keys()
           utils.copy_public_keys()
-        }
-
-        if (SRC_CLUSTER_VERSION == 'nightly') {
-          common_stages.deploy_ocp4(SOURCE_KUBECONFIG, SRC_CLUSTER_VERSION).call()
-        } else {
           utils.prepare_agnosticd()
-          common_stages.deploy_ocp4_agnosticd(SOURCE_KUBECONFIG, SRC_CLUSTER_VERSION).call()
         }
+          common_stages.deploy_ocp4_agnosticd(SOURCE_KUBECONFIG, SRC_CLUSTER_VERSION).call()
 
     } catch (Exception ex) {
         currentBuild.result = "FAILED"
@@ -73,11 +68,7 @@ node {
         utils.notifyBuild(currentBuild.result)
         stage('Clean Up Environment') {
           if (EC2_TERMINATE_INSTANCES) {
-            if (SRC_CLUSTER_VERSION == 'nightly') {
-               utils.teardown_ocp4()
-            } else {
-               utils.teardown_ocp_agnosticd(SRC_CLUSTER_VERSION)
-            }
+            utils.teardown_ocp_agnosticd(SRC_CLUSTER_VERSION)
           }
           if (CLEAN_WORKSPACE) {
             cleanWs cleanWhenFailure: false, notFailBuild: true

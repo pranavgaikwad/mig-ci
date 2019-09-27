@@ -11,20 +11,13 @@
   ignore_errors: true
   when: not op_repo.stat.exists
 
-- name: Update operator to use {{ mig_operator_tag }} tag
-  replace:
-    path: "{{ mig_operator_location }}/operator.yml"
-    backup: yes
-    regexp: '^(.*?)image:(.*)'
-    replace: '\1image: {{ mig_operator_img }}:{{ mig_operator_tag }}'
-
 - debug:
-    msg: "Mig operator will deploy using {{ mig_operator_img }}:{{ mig_operator_tag }}"
+    msg: "Mig operator will deploy using release : {{ mig_operator_tag }}"
 
 - name: Deploy mig operator
   k8s:
     state : present
-    definition: "{{ lookup('file', '{{ mig_operator_location }}/operator.yml' )}}"
+    definition: "{{ lookup('file', '{{ mig_operator_location }}/deploy/non-olm/{{ mig_operator_tag }}/operator.yml' )}}"
 
 - name: Check status of mig operator
   k8s_facts:

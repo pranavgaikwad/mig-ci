@@ -23,6 +23,7 @@ credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringC
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_rhel_sub_pass', description: 'RHEL Openshift subscription account password', name: 'EC2_SUB_PASS', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_ocp4_admin_credentials', description: 'Cluster admin credentials used in OCP4 deployments', name: 'OCP4_CREDENTIALS', required: true),
 booleanParam(defaultValue: false, description: 'Persistent cluster builds with fixed hostname', name: 'PERSISTENT'),
+booleanParam(defaultValue: true, description: 'Deploy CEPH workload on destination cluster', name: 'CEPH'),
 booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE'),
 booleanParam(defaultValue: true, description: 'EC2 terminate instances after build', name: 'EC2_TERMINATE_INSTANCES')])])
 
@@ -32,6 +33,9 @@ EC2_TERMINATE_INSTANCES = params.EC2_TERMINATE_INSTANCES
 CLEAN_WORKSPACE = params.CLEAN_WORKSPACE
 // true/false persistent clusters
 PERSISTENT = params.PERSISTENT
+// true/false persistent clusters
+CEPH = params.CEPH
+
 
 def common_stages
 def utils
@@ -60,6 +64,7 @@ node {
           utils.prepare_agnosticd()
         }
           common_stages.deploy_ocp4_agnosticd(SOURCE_KUBECONFIG, SRC_CLUSTER_VERSION).call()
+          common_stages.deploy_ceph(SRC_CLUSTER_VERSION).call()
 
     } catch (Exception ex) {
         currentBuild.result = "FAILED"

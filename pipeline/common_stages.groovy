@@ -263,6 +263,7 @@ def deploy_ceph(cluster_version) {
         steps_finished << 'Deploy CEPH workload on ' + cluster_version
         dir("mig-agnosticd/workloads") {
           withEnv([
+            "AGNOSTICD_HOME=${AGNOSTICD_HOME}",
             'ANSIBLE_FORCE_COLOR=true'])
           {
             ansiColor('xterm') {

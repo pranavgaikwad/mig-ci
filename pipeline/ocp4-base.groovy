@@ -33,7 +33,7 @@ EC2_TERMINATE_INSTANCES = params.EC2_TERMINATE_INSTANCES
 CLEAN_WORKSPACE = params.CLEAN_WORKSPACE
 // true/false persistent clusters
 PERSISTENT = params.PERSISTENT
-// true/false persistent clusters
+// true/false provision ceph
 CEPH = params.CEPH
 
 

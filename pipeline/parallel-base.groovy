@@ -49,6 +49,7 @@ credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.Usernam
 booleanParam(defaultValue: true, description: 'Run e2e tests', name: 'E2E_RUN'),
 booleanParam(defaultValue: false, description: 'Update OCP3 cluster packages to latest', name: 'OCP3_UPDATE'),
 booleanParam(defaultValue: true, description: 'Provision OCP3 glusterfs', name: 'OCP3_GLUSTERFS'),
+booleanParam(defaultValue: true, description: 'Deploy CEPH workload on destination cluster', name: 'CEPH'),
 booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE'),
 booleanParam(defaultValue: false, description: 'Persistent cluster builds with fixed hostname', name: 'PERSISTENT'),
 booleanParam(defaultValue: false, description: 'Enable debugging', name: 'DEBUG'),
@@ -68,6 +69,8 @@ def DEBUG = params.DEBUG
 PERSISTENT = params.PERSISTENT
 // true/false provision glusterfs
 OCP3_GLUSTERFS = params.OCP3_GLUSTERFS
+// true/false provision ceph
+CEPH = params.CEPH
 
 def common_stages
 def utils
@@ -113,6 +116,7 @@ node {
                  common_stages.deploy_ocp3_agnosticd(TARGET_KUBECONFIG, DEST_CLUSTER_VERSION).call()
               } else {
                   common_stages.deploy_ocp4_agnosticd(TARGET_KUBECONFIG, DEST_CLUSTER_VERSION).call()
+                  common_stages.deploy_ceph(DEST_CLUSTER_VERSION).call()
                     }
             },
             failFast: true

@@ -45,6 +45,7 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
   }
 
   sh "cp -R mig-agnosticd/4.x mig-agnosticd/${cluster_version}"
+  sh "echo 'cd mig-agnosticd/${cluster_version} && ./delete_ocp4_workshop.sh &' >> destroy_env.sh"
   return {
     stage('Deploy agnosticd OCP workshop ' + cluster_version) {
       steps_finished << 'Deploy agnosticd OCP workshop ' + cluster_version
@@ -170,6 +171,7 @@ def deploy_ocp3_agnosticd(kubeconfig, cluster_version) {
   }
 
   sh "cp -R mig-agnosticd/3.x mig-agnosticd/${cluster_version}"
+  sh "echo 'cd mig-agnosticd/${cluster_version} && ./delete_ocp3_workshop.sh &' >> destroy_env.sh"
   return {
     stage('Deploy agnosticd OCP workshop ' + cluster_version) {
       steps_finished << 'Deploy agnosticd OCP workshop ' + cluster_version

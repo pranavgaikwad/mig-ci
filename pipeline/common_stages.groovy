@@ -387,6 +387,7 @@ def deploy_mig_controller_on_both(
   mig_controller_dst) {
   // mig_controller_src boolean defines if the source cluster will host mig controller
   // mig_controller_dst boolean defines if the destination cluster will host mig controller
+  sh "echo 'ansible-playbook s3_bucket_destroy.yml &' >> destroy_env.sh"
   return {
     stage('Build mig-controller image and deploy on both clusters') {
       steps_finished << 'Build mig-controller image and deploy on both clusters'

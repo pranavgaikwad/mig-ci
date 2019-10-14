@@ -123,6 +123,7 @@ def prepare_workspace(src_version = '', dest_version = '') {
 
   OC_BINARY = "${env.WORKSPACE}/bin/oc"
   sh 'touch destroy_env.sh && chmod +x destroy_env.sh'
+  sh "echo 'export AWS_REGION=${AWS_REGION} AWS_ACCESS_KEY=${AWS_ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}' >> destroy_env.sh"
 }
 
 

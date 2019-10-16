@@ -9,6 +9,7 @@ mig_controller_img: "{{ lookup('env', 'MIG_CONTROLLER_IMG') or 'quay.io/ocpmigra
 mig_controller_tag: "{{ lookup('env', 'MIG_CONTROLLER_TAG') or 'latest' }}"
 mig_operator_img: "{{ lookup('env', 'MIG_OPERATOR_IMG') or 'quay.io/ocpmigrate/mig-operator' }}"
 mig_operator_tag: "{{ lookup('env', 'MIG_OPERATOR_TAG') or 'latest' }}"
+mig_operator_use_olm: "{{ lookup('env', 'MIG_OPERATOR_USE_OLM') or 'false' }}"
 mig_ui_img: "{{ lookup('env', 'MIG_UI_IMG') or 'quay.io/ocpmigrate/mig-ui' }}"
 mig_ui_tag: "{{ lookup('env', 'MIG_UI_TAG') or 'latest' }}"
 mig_velero_img: "{{ lookup('env', 'MIG_VELERO_IMG') or 'quay.io/ocpmigrate/velero' }}"

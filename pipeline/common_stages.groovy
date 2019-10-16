@@ -6,7 +6,7 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
 
   // Even for nightly releases, osrelease must map to a valid 4.x value on agnosticd repos (clientvm/bastion req)
   def releases = [
-    '4.1': "4.1.0",
+    '4.1': "4.1.13",
     'nightly': "4.1.0",
   ]
   def osrelease = releases["${repo_version}"]
@@ -410,12 +410,24 @@ def deploy_mig_controller_on_both(
           mig_controller_tag = "${MIG_CONTROLLER_TAG}"
       }
 
+      def SRC_USE_OLM = false
+      def DEST_USE_OLM = false
+      if (USE_OLM) {
+        if (SRC_CLUSTER_VERSION.startsWith("4.")) {
+          SRC_USE_OLM = true
+        }
+        if (DEST_CLUSTER_VERSION.startsWith("4.")) {
+          DEST_USE_OLM = true
+        }
+      } 
+
       // Source
       withEnv([
           "KUBECONFIG=${source_kubeconfig}",
           "MIG_CONTROLLER_IMG=${mig_controller_img}",
           "MIG_CONTROLLER_TAG=${mig_controller_tag}",
           "MIG_OPERATOR_TAG=${MIG_OPERATOR_TAG}",
+          "MIG_OPERATOR_USE_OLM=${SRC_USE_OLM}",
           "MIG_UI_TAG=${MIG_UI_TAG}",
           "MIG_VELERO_TAG=${MIG_VELERO_TAG}",
           "MIG_VELERO_PLUGIN_TAG=${MIG_VELERO_PLUGIN_TAG}",
@@ -435,6 +447,7 @@ def deploy_mig_controller_on_both(
           "MIG_CONTROLLER_IMG=${mig_controller_img}",
           "MIG_CONTROLLER_TAG=${mig_controller_tag}",
           "MIG_OPERATOR_TAG=${MIG_OPERATOR_TAG}",
+          "MIG_OPERATOR_USE_OLM=${DEST_USE_OLM}",
           "MIG_UI_TAG=${MIG_UI_TAG}",
           "MIG_VELERO_TAG=${MIG_VELERO_TAG}",
           "MIG_VELERO_PLUGIN_TAG=${MIG_VELERO_PLUGIN_TAG}",

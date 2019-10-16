@@ -12,12 +12,83 @@
   when: not op_repo.stat.exists
 
 - debug:
-    msg: "Mig operator will deploy using release : {{ mig_operator_tag }}"
+    msg: 
+      - "Mig operator will deploy using OLM : {{ mig_operator_use_olm }}"
+      - "Mig operator will deploy using release : {{ mig_operator_tag }}"
 
+- name: "Deploy mig operator using OLM"
+  block:
+
+    - name: "Create OperatorSource"
+      k8s:
+        state: present
+        definition: "{{ lookup('file', '{{ mig_operator_location }}/mig-operator-source.yaml' )}}"
+      register: mig_operator_source_created
+      until: mig_operator_source_created is succeeded
+      retries: 30
+      delay: 30
+
+    - name: "Wait for OperatorSource to settle"
+      wait_for:
+        timeout: 90
+
+    - name: "Wait for OLM to reconcile OperatorSource creation"
+      k8s_facts:
+        kind: Pod
+        namespace: openshift-marketplace
+        label_selectors: "marketplace.catalogSourceConfig=ocpmigrate-operators"
+      register: pod
+      until: "true in (pod | json_query('resources[].status.containerStatuses[].ready'))"
+      retries: 60
+      delay: 45
+
+    - name: "Confirm service availability"
+      k8s_facts:
+        kind: Service
+        namespace: openshift-marketplace
+        name: ocpmigrate-operators
+        label_selectors: "marketplace.catalogSourceConfig=ocpmigrate-operators"
+      register: service
+      until: "'grpc' in (service | json_query('resources[].spec.ports[].name'))"
+      retries: 15
+      delay: 10
+
+    - name: "Create {{ mig_migration_namespace }} namespace"
+      k8s:
+        name: "{{ mig_migration_namespace }}"
+        kind: Namespace
+        state: present
+      
+    - name: "Get grpc_endpoint IP:port of ocpmigrate-operators service"
+      set_fact:
+        grpc_endpoint: "{{ service | json_query('resources[0].spec.clusterIP') }}:{{ service | json_query('resources[0].spec.ports[0].port') }}"
+
+    - name: "Create CatalogSource"
+      k8s:
+        state: present
+        definition: "{{ lookup('template', 'mig-operator-catalogsource.yml.j2' ) }}"
+
+    - name: "Create OperatorGroup"
+      k8s:
+        state: present
+        definition: "{{ lookup('template', 'mig-operator-operatorgroup.yml.j2' ) }}"
+
+    - name: "Create Subscription"
+      k8s:
+        state: present
+        definition: "{{ lookup('template', 'mig-operator-subscription.yml.j2' ) }}"
+
+  when: mig_operator_use_olm|bool 
+      
 - name: Deploy mig operator
   k8s:
     state : present
     definition: "{{ lookup('file', '{{ mig_operator_location }}/deploy/non-olm/{{ mig_operator_tag }}/operator.yml' )}}"
+  when: not mig_operator_use_olm|bool 
+
+- name: "Wait for mig operator deployment to settle"
+  wait_for:
+    timeout: 45
 
 - name: Check status of mig operator
   k8s_facts:

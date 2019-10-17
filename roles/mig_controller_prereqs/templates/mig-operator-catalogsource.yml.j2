@@ -1,0 +1,13 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  labels:
+    csc-owner-name: installed-custom-openshift-migration
+    csc-owner-namespace: openshift-marketplace
+  name: installed-custom-openshift-migration
+  namespace: {{ mig_migration_namespace }}
+spec:
+  sourceType: grpc
+  address: {{ grpc_endpoint }}
+  displayName: Custom Operators
+  publisher: Custom

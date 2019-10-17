@@ -4,7 +4,7 @@
     return_content: yes
   register: page
   until: page is success
-  retries: 12
+  retries: 15
   delay: 10
 
 - name: Determine OCP4 nightly installer release

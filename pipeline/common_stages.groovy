@@ -256,9 +256,8 @@ def deploy_ceph(cluster_version) {
   if (cluster_version == "nightly") {
     short_version = '4'
   }
-
-  if (CEPH) {
-    return {
+  return {
+    if (CEPH) {
       stage('Deploy CEPH workload on ' + cluster_version) {
         steps_finished << 'Deploy CEPH workload on ' + cluster_version
         dir("mig-agnosticd/workloads") {

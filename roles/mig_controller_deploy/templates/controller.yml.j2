@@ -12,7 +12,7 @@ spec:
   mig_controller_image: {{ mig_controller_img }}
   mig_controller_version: {{ mig_controller_tag }}
   mig_ui_image: {{ mig_ui_img }}
-{% if mig_operator_tag == 'stable' %}
+{% if mig_operator_tag == 'stable' and mig_operator_use_olm is sameas true %}
   snapshot_tag: {{ mig_operator_tag }}
 {% endif %}
   mig_ui_version: {{ mig_ui_tag }}

@@ -119,9 +119,7 @@ node {
                  common_stages.deploy_ocp3_agnosticd(TARGET_KUBECONFIG, DEST_CLUSTER_VERSION).call()
               } else {
                   common_stages.deploy_ocp4_agnosticd(TARGET_KUBECONFIG, DEST_CLUSTER_VERSION).call()
-                  if (CEPH) {
-                    common_stages.deploy_ceph(DEST_CLUSTER_VERSION).call()
-                }
+                  common_stages.deploy_ceph(DEST_CLUSTER_VERSION).call()
                     }
             },
             failFast: true

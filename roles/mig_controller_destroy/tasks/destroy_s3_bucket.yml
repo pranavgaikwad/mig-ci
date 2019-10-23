@@ -3,7 +3,7 @@
     path: "{{ playbook_dir }}/config/velero_aws_creds.yml"
   register: creds
 
-- name: Destroy S3 bucket if present
+- name: Destroy S3 bucket and IAM related creds if present
   block:
 
     - name: Get bucket info
@@ -18,18 +18,51 @@
       set_fact:
         aws_account_arn: "{{ caller_facts.arn }}"
 
+    - name: Set AWS resource name
+      set_fact:
+        aws_resource_name: "{{ velero_aws_bucket_name }}"
+
     - debug:
-        msg: "Will destroy s3 bucket : {{ velero_aws_bucket_name }}"
+        msg: "Will destroy s3 bucket : {{ aws_resource_name }}"
 
     - name: Delete S3 bucket for backup storage of OpenShift resource definitions
       s3_bucket:
         state: absent
         force: true
-        name: "{{ velero_aws_bucket_name }}"
+        name: "{{ aws_resource_name }}"
         region: "{{ ec2_region }}"
         tags:
           owner: "{{ aws_account_arn }}"
       ignore_errors: true
+
+    - name: Get AWS access key info for Velero IAM user
+      iam:
+        iam_type: user
+        name: "{{ aws_resource_name }}"
+        state: present
+      register: iam_result
+
+    - name: Remove existing AWS access keys for Velero IAM user
+      iam:
+        iam_type: user
+        name: "{{ aws_resource_name }}"
+        state: update
+        access_key_ids: "{{ item.access_key_id }}"
+        access_key_state: remove
+      loop: "{{ iam_result.user_meta.access_keys }}"
+      ignore_errors: true
+
+    - name: Remove IAM policy for velero user access to S3 bucket and EBS volume storage
+      iam_policy:
+        state: absent
+        iam_type: user
+        iam_name: "{{ aws_resource_name }}"
+        policy_name: "{{ aws_resource_name }}"
+
+    - name: Remove IAM user for Velero to assume role of
+      iam_user:
+        state: absent
+        name: "{{ aws_resource_name }}"
 
     - name: Remove old aws backup storage access keys
       file:

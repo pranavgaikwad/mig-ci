@@ -66,6 +66,12 @@ ${OC_BINARY} version
 echo 
 
 echo
+echo "##### Print OCP cluster storage classes #####"
+echo
+${OC_BINARY} describe sc
+echo 
+
+echo
 echo "##### Print all resources on ${MIG_NS} namespace #####"
 echo
 oc -n ${MIG_NS} get all
@@ -103,10 +109,6 @@ else
 	echo "====== Extract migclusters ======"
 	echo
         ${OC_BINARY} -n ${MIG_NS} describe migcluster
-	echo
-	echo "====== Extract clusters ======"
-	echo
-        ${OC_BINARY} -n ${MIG_NS} describe cluster
 	echo
 fi
 

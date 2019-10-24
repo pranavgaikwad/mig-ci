@@ -63,9 +63,9 @@ def prepare_agnosticd() {
   checkout([$class: 'GitSCM', branches: [[name: 'development']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'agnosticd']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/redhat-cop/agnosticd.git']]])
 
   checkout([$class: 'GitSCM', branches: [[name: 'master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'mig-agnosticd']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/fusor/mig-agnosticd.git']]])
-
-  // Set agnosticd HOME
+  // Set agnosticd HOME and add to destroy script
   AGNOSTICD_HOME = "${env.WORKSPACE}/agnosticd"
+  sh "echo 'export AGNOSTICD_HOME=${AGNOSTICD_HOME}' >> destroy_env.sh"
   
   withCredentials([
     string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
@@ -89,6 +89,7 @@ def prepare_agnosticd() {
           ]
         writeYaml file: 'secret.yml', data: secret_vars
         }
+       sh "echo 'export AWS_REGION=${AWS_REGION} AWS_ACCESS_KEY=${AWS_ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}' >> destroy_env.sh"
      }
 }
 

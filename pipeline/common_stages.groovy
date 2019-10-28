@@ -262,6 +262,7 @@ def deploy_ceph(cluster_version) {
     if (CEPH) {
       stage('Deploy CEPH workload on ' + cluster_version) {
         steps_finished << 'Deploy CEPH workload on ' + cluster_version
+        sh 'sleep 180'
         dir("mig-agnosticd/workloads") {
           withEnv([
             "AGNOSTICD_HOME=${AGNOSTICD_HOME}",

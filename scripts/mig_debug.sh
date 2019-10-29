@@ -10,7 +10,7 @@ MIG_NS="openshift-migration"
 WITH_CONTROLLER="false"
 WITH_OPERATOR_LOGS=${WITH_OPERATOR_LOGS:-false}
 WITH_VELERO_LOGS=${WITH_VELERO_LOGS:-false}
-E2E_NS=${E2E_NS:-"sock-shop robot-shop parks-app mssql-example mediawiki mysql-persistent"}
+E2E_NS=${E2E_NS:-"sock-shop robot-shop parks-app mssql-example mediawiki mysql-persistent ocp-25000-sets ocp-25021-cronjob ocp-25090-jobs ocp-25212-initcont ocp-24997-confmap"}
 DATE=`date`
 
 # Process arguments if passed, assume defaults otherwise

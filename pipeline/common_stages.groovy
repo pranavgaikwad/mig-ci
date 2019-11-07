@@ -1,15 +1,19 @@
 // common_stages.groovy
 def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
 
-  def repo_version = "${cluster_version}"
+  def repo_version = "4.1.0" // Must map to a valid version in `own_repo_path:`
   def short_version = cluster_version.replace(".", "")
 
   // Even for nightly releases, osrelease must map to a valid 4.x value on agnosticd repos (clientvm/bastion req)
   def releases = [
     '4.1': "4.1.13",
+    '4.2': "4.2.0",
+    'latest-4.1': "4.1.0",
+    'latest-4.2': "4.1.0",
+    'latest': "4.1.0",
     'nightly': "4.1.0",
   ]
-  def osrelease = releases["${repo_version}"]
+  def osrelease = releases["${cluster_version}"]
   def full_cluster_name = ''
   def cluster_adm_user = ''
   def cluster_adm_passwd = ''
@@ -32,15 +36,26 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
     cluster_adm_passwd = "${OCP4_ADMIN_PASSWD}"
   }
 
-  if ("${cluster_version}" == "nightly") {
-    echo "Cluster is a nightly build"
+  def CORRECT_OCP4_RELEASE = "${osrelease}"
+  if (!cluster_version.startsWith("4.")) {
+     CORRECT_OCP4_RELEASE = "${cluster_version}"
+  }
+
+  if ("${cluster_version}" == "nightly" 
+     || "${cluster_version}" == "latest" 
+     || "${cluster_version}" == "latest-4.1" 
+     || "${cluster_version}" == "latest-4.2"
+     ) {
+    echo "Cluster is a ${cluster_version} build"
     // Fetch and dump OCP4 nightly release data
-    ansiColor('xterm') {
-      ansiblePlaybook(
-        playbook: 'ocp4_dump_nightly_release.yml',
-        hostKeyChecking: false,
-        unbuffered: true,
-        colorized: true)
+    withEnv(["OCP4_RELEASE=${CORRECT_OCP4_RELEASE}"]){
+      ansiColor('xterm') {
+        ansiblePlaybook(
+          playbook: 'ocp4_dump_release.yml',
+          hostKeyChecking: false,
+          unbuffered: true,
+          colorized: true)
+      }
     }
   }
 
@@ -75,7 +90,7 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
             'env_type': "ocp4-workshop",
             'software_to_deploy': "none",
             'ocp4_installer_version': "${osrelease}",
-            'osrelease': "${osrelease}",
+            'osrelease': "${repo_version}",
             'repo_version': "${repo_version}",
             'install_ocp4': "true",
             'install_opentlc_integration': "false",
@@ -96,12 +111,16 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
           writeYaml file: 'ocp4_vars.yml', data: ocp4_vars
 
           // Add extra vars for nightly builds
-          if ("${cluster_version}" == "nightly") {
+          if ("${cluster_version}" == "nightly"
+             || "${cluster_version}" == "latest" 
+             || "${cluster_version}" == "latest-4.1" 
+             || "${cluster_version}" == "latest-4.2"
+             ) {
             def ocp4_data = readYaml file: 'ocp4_vars.yml'
-            def ocp4_nightly_data = readYaml file: "${WORKSPACE}/ocp4_nightly_release.yml"
+            def ocp4_dumped_data = readYaml file: "${WORKSPACE}/ocp4_release.yml"
             ocp4_data.ocp4_installer_use_dev_preview = "true"
-            ocp4_data.ocp4_installer_url = ocp4_nightly_data.ocp4_installer_url
-            ocp4_data.ocp4_client_url = ocp4_nightly_data.ocp4_client_url
+            ocp4_data.ocp4_installer_url = ocp4_dumped_data.ocp4_installer_url
+            ocp4_data.ocp4_client_url = ocp4_dumped_data.ocp4_client_url
             sh 'rm -f ocp4_vars.yml'
             writeYaml file: 'ocp4_vars.yml', data: ocp4_data
           }
@@ -109,6 +128,7 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
           withEnv([
           'PATH+EXTRA=~/.local/bin',
           "AGNOSTICD_HOME=${AGNOSTICD_HOME}",
+          "OCP4_RELEASE=${CORRECT_OCP4_RELEASE}",
           'ANSIBLE_FORCE_COLOR=true'])
           {
             ansiColor('xterm') {
@@ -281,10 +301,13 @@ def deploy_ceph(cluster_version) {
 def deploy_ocp4(kubeconfig, cluster_version) {
   def osrelease = ""
   switch(cluster_version) {
-    case ['v4.1', '4.1', 'latest']:
-      osrelease = "latest"
+    case ['v4.1', '4.1', 'latest-4.1']:
+      osrelease = "latest-4.1"
       break
-    case [ 'v4.2', '4.2', 'nightly']:
+    case ['v4.2', '4.2', 'latest-4.2', 'latest']:
+      osrelease = "latest-4.2"
+      break
+    case [ 'v4.3', '4.3', 'nightly']:
       osrelease = "nightly"
       break
     default:

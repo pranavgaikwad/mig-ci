@@ -12,6 +12,7 @@ config/velero_aws_creds.yml
 config/pull-secret
 config/mig_controller.yml
 ocp4_nightly_release.yml
+ocp4_release.yml
 metadata.json
 openshift-install
 terraform*

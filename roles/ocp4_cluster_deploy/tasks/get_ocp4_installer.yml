@@ -4,7 +4,7 @@
 
     - name: "Set URL for {{ openshift_installer_release }} release"
       set_fact:
-        openshift_installer_dynamic_url: "{{ openshift_installer_release_prefix_url }}/{{ openshift_parent_dir_choices[openshift_installer_release] }}/latest"
+        openshift_installer_dynamic_url: "{{ openshift_installer_release_prefix_url }}/{{ openshift_parent_dir_choices[openshift_installer_release] }}/{{ openshift_parent_subdir_choices[openshift_installer_release] }}"
 
     - name: "Fetch {{ openshift_installer_release }} release content"
       uri:
@@ -24,7 +24,7 @@
         openshift_installer_release: "{{ latest_release }}"
         openshift_installer_release_url: "{{ openshift_installer_dynamic_url }}/openshift-install-{{ openshift_installer_release_type }}-{{ latest_release }}.tar.gz"
 
-  when: openshift_installer_release == "latest" or openshift_installer_release == "nightly"
+  when: openshift_installer_release == "latest-4.1" or openshift_installer_release == "latest-4.2" or openshift_installer_release == "latest" or openshift_installer_release == "nightly"
 
 - name: Get OCP4 installer
   unarchive:

@@ -2,6 +2,6 @@
   tasks:
     - include_role:
         name: ocp4_cluster_deploy
-        tasks_from: dump_ocp4_nightly.yml
+        tasks_from: dump_ocp4.yml
   vars_files:
     - "{{ playbook_dir }}/config/defaults.yml"

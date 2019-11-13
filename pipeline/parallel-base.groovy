@@ -1,7 +1,7 @@
 // parallel-base.groovy
 properties([
-parameters([choice(choices: ['3.7', '3.9', '3.10', '3.11', '4.1', 'nightly'], description: 'OCP version to deploy on source cluster', name: 'SRC_CLUSTER_VERSION'),
-choice(choices: ['4.1', '3.11', '3.10', '3.9', '3.7', 'nightly'], description: 'OCP version to deploy on destination cluster', name: 'DEST_CLUSTER_VERSION'),
+parameters([choice(choices: ['3.7', '3.9', '3.10', '3.11', '4.1', '4.2', 'nightly'], description: 'OCP version to deploy on source cluster', name: 'SRC_CLUSTER_VERSION'),
+choice(choices: ['4.2', '3.11', '3.10', '3.9', '3.7', '4.1', 'nightly'], description: 'OCP version to deploy on destination cluster', name: 'DEST_CLUSTER_VERSION'),
 string(defaultValue: 'jenkins-ci-parallel-base', description: 'Cluster name to deploy', name: 'CLUSTER_NAME', trim: false),
 string(defaultValue: 'mig-ci@redhat.com', description: 'Email to register the deployment', name: 'EMAIL', trim: false),
 string(defaultValue: '1', description: 'OCP3 master instance count', name: 'OCP3_MASTER_INSTANCE_COUNT', trim: false),
@@ -50,7 +50,7 @@ booleanParam(defaultValue: true, description: 'Run e2e tests', name: 'E2E_RUN'),
 booleanParam(defaultValue: false, description: 'Update OCP3 cluster packages to latest', name: 'OCP3_UPDATE'),
 booleanParam(defaultValue: true, description: 'Provision glusterfs workload on OCP3', name: 'OCP3_GLUSTERFS'),
 booleanParam(defaultValue: true, description: 'Provision CEPH workload on destination cluster', name: 'CEPH'),
-booleanParam(defaultValue: true, description: 'Deploy mig operator using OLM on OCP4', name: 'USE_OLM'),
+booleanParam(defaultValue: false, description: 'Deploy mig operator using OLM on OCP4', name: 'USE_OLM'),
 booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE'),
 booleanParam(defaultValue: false, description: 'Persistent cluster builds with fixed hostname', name: 'PERSISTENT'),
 booleanParam(defaultValue: false, description: 'Enable debugging', name: 'DEBUG'),

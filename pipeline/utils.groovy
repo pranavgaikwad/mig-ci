@@ -60,7 +60,8 @@ def clone_mig_controller() {
 def prepare_agnosticd() {
   sh 'test -e ~/.local/bin/aws || pip install awscli --upgrade --user'
 
-  checkout([$class: 'GitSCM', branches: [[name: 'development']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'agnosticd']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/redhat-cop/agnosticd.git']]])
+// Fix checkout to commit before boto removal on agnosticd development branch , see https://github.com/fusor/mig-agnosticd/issues/95
+  checkout([$class: 'GitSCM', branches: [[name: '29adb480cfcbc5e60800eb65691b7150377c94b7']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'agnosticd']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/redhat-cop/agnosticd.git']]])
 
   checkout([$class: 'GitSCM', branches: [[name: 'master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'mig-agnosticd']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/fusor/mig-agnosticd.git']]])
   // Set agnosticd HOME and add to destroy script

@@ -1,7 +1,7 @@
 // mig-e2e-base.groovy
 properties([
-parameters([choice(choices: ['3.7', '3.9', '3.10', '3.11', '4.1', 'nightly'], description: 'Source cluster version to test', name: 'SRC_CLUSTER_VERSION'),
-choice(choices: ['4.1', '3.11', '3.10', '3.9', '3.7', 'nightly'], description: 'Destination cluster version to test', name: 'DEST_CLUSTER_VERSION'),
+parameters([choice(choices: ['3.7', '3.9', '3.10', '3.11', '4.1', '4.2', 'nightly'], description: 'Source cluster version to test', name: 'SRC_CLUSTER_VERSION'),
+choice(choices: ['4.2', '3.11', '3.10', '3.9', '3.7', '4.1', 'nightly'], description: 'Destination cluster version to test', name: 'DEST_CLUSTER_VERSION'),
 string(defaultValue: '', description: 'Source cluster API endpoint', name: 'SRC_CLUSTER_URL', trim: false, required: true),
 string(defaultValue: '', description: 'Destination cluster API endpoint', name: 'DEST_CLUSTER_URL', trim: false, required: true),
 string(defaultValue: '', description: 'AWS region where clusters are deployed', name: 'AWS_REGION', trim: false, required: true),
@@ -26,9 +26,12 @@ credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringC
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_aws_secret_access_key', description: 'EC2 private key needed to access instances, from Jenkins credentials store', name: 'EC2_SECRET_ACCESS_KEY', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_ocp4_admin_credentials', description: 'Cluster admin credentials used in OCP4 deployments', name: 'OCP4_CREDENTIALS', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_ocp3_admin_credentials', description: 'Cluster admin credentials used in OCP3 deployments', name: 'OCP3_CREDENTIALS', required: true),
+booleanParam(defaultValue: false, description: 'Deploy mig operator using OLM on OCP4', name: 'USE_OLM'),
 booleanParam(defaultValue: false, description: 'Enable debugging', name: 'DEBUG'),
 booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE')])])
 
+// true/false build parameter that defines if we use OLM to deploy mig operator on OCP4
+USE_OLM = params.USE_OLM
 // true/false build parameter that defines if we cleanup workspace once build is done
 def CLEAN_WORKSPACE = params.CLEAN_WORKSPACE
 // Split e2e tests from string param

@@ -16,3 +16,8 @@ mig_cluster_role_bindings:
   - migration-operator
   - velero
   - mig-cluster-admin
+  - migration-manager-rolebinding
+  - manager-rolebinding
+mig_cluster_roles:
+  - migration-manager-role
+  - manager-role

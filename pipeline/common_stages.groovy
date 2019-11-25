@@ -59,11 +59,23 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
     }
   }
 
+  def OLM_TEXT = ' using non-OLM'
+  if (USE_OLM) {
+    OLM_TEXT = ' using OLM'
+  }
+  sh "mkdir olm"
   sh "cp -R mig-agnosticd/4.x mig-agnosticd/${cluster_version}"
   sh "echo 'cd mig-agnosticd/${cluster_version} && ./delete_ocp4_workshop.sh &' >> destroy_env.sh"
   return {
-    stage('Deploy agnosticd OCP workshop ' + cluster_version) {
-      steps_finished << 'Deploy agnosticd OCP workshop ' + cluster_version
+    stage('Deploy agnosticd OCP workshop ' + cluster_version + OLM_TEXT) {
+      steps_finished << 'Deploy agnosticd OCP workshop ' + cluster_version + OLM_TEXT
+
+        dir("olm") {
+          def olm_vars = [
+            'olm_cluster_version': "${cluster_version}"
+          ]
+          writeYaml file: 'olm_vars.yml', data: olm_vars
+        }
 
         dir("mig-agnosticd/${cluster_version}") {
           def my_vars = [
@@ -439,10 +451,10 @@ def deploy_mig_controller_on_both(
       def SRC_USE_OLM = false
       def DEST_USE_OLM = false
       if (USE_OLM) {
-        if (SRC_CLUSTER_VERSION.startsWith("4.")) {
+        if (!SRC_CLUSTER_VERSION.startsWith("3.")) {
           SRC_USE_OLM = true
         }
-        if (DEST_CLUSTER_VERSION.startsWith("4.")) {
+        if (!DEST_CLUSTER_VERSION.startsWith("3.")) {
           DEST_USE_OLM = true
         }
       } 

@@ -6,6 +6,21 @@
          {{ mig_velero_img }}:{{ mig_velero_tag }}
          {{ mig_velero_plugin_img }}:{{ mig_velero_plugin_tag }}
 
+- name: Deploying mig contoller using OLM
+  block:
+
+    - name: Include required vars
+      include_vars:  "{{ lookup('first_found', olm_files) }}"
+      vars:
+        olm_files:
+          - "{{ playbook_dir }}/olm/olm_vars.yml"
+          - "{{ playbook_dir }}/roles/mig_controller_prereqs/defaults/olm_vars.yml"
+    
+    - debug:
+        msg: "OLM cluster version: {{ olm_cluster_version }}"
+
+  when: mig_operator_use_olm|bool
+    
 - name: Deploy mig controller
   k8s:
     state: present

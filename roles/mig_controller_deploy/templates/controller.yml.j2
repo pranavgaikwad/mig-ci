@@ -9,11 +9,20 @@ spec:
   migration_controller: {{ mig_controller_host_cluster }}
   migration_ui: {{ mig_controller_ui }}
   olm_managed: {{ mig_operator_use_olm }}
+  restic_timeout: {{ mig_controller_restic_timeout }}
+  mig_pv_limit: {{ mig_controller_mig_pv_limit }}
+  mig_pod_limit: {{ mig_controller_mig_pod_limit }}
+  mig_namespace_limit: {{ mig_controller_mig_namespace_limit }}
   mig_controller_image: {{ mig_controller_img }}
   mig_controller_version: {{ mig_controller_tag }}
   mig_ui_image: {{ mig_ui_img }}
 {% if mig_operator_tag == 'stable' and mig_operator_use_olm is sameas true %}
   snapshot_tag: {{ mig_operator_tag }}
+{% endif %}
+{% if olm_cluster_version is defined %}
+{% if '4.1' in olm_cluster_version|string %}
+  deprecated_cors_configuration: true
+{% endif %}
 {% endif %}
   mig_ui_version: {{ mig_ui_tag }}
   velero_image: {{ mig_velero_img }}

@@ -1,1 +1,5 @@
 ---
+mig_controller_restic_timeout: "{{ lookup('env', 'RESTIC_TIMEOUT') or '1h' }}"
+mig_controller_mig_pv_limit: "{{ lookup('env', 'MIG_PV_LIMIT') or '100' }}"
+mig_controller_mig_pod_limit: "{{ lookup('env', 'MIG_POD_LIMIT') or '100' }}"
+mig_controller_mig_namespace_limit: "{{ lookup('env', 'MIG_NAMESPACE_LIMIT') or '10' }}"

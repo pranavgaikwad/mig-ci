@@ -32,6 +32,7 @@ string(defaultValue: 'latest', description: 'Mig controller version/tag to deplo
 string(defaultValue: 'latest', description: 'Mig ui version/tag to deploy', name: 'MIG_UI_TAG', trim: false),
 string(defaultValue: 'latest', description: 'Mig velero version/tag to deploy', name: 'MIG_VELERO_TAG', trim: false),
 string(defaultValue: 'latest', description: 'Mig velero plugin version/tag to deploy', name: 'MIG_VELERO_PLUGIN_TAG', trim: false),
+string(defaultValue: 'latest', description: 'Mig velero restic restore helper version/tag to deploy', name: 'MIG_VELERO_RESTIC_RESTORE_HELPER_TAG', trim: false),
 string(defaultValue: 'scripts/mig_debug.sh', description: 'Relative file path to debug script on MIG CI repo', name: 'DEBUG_SCRIPT', trim: false),
 string(defaultValue: '', description: 'Extra debug script arguments', name: 'DEBUG_SCRIPT_ARGS', trim: false),
 string(defaultValue: 'quay.io/fbladilo/mig-controller', description: 'Repo for quay io for custom mig-controller images, only used by GHPRB', name: 'QUAYIO_CI_REPO', trim: false),

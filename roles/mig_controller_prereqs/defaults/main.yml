@@ -16,6 +16,8 @@ mig_velero_img: "{{ lookup('env', 'MIG_VELERO_IMG') or 'quay.io/ocpmigrate/veler
 mig_velero_tag: "{{ lookup('env', 'MIG_VELERO_TAG') or 'latest' }}"
 mig_velero_plugin_img: "{{ lookup('env', 'MIG_VELERO_PLUGIN_IMG') or 'quay.io/ocpmigrate/migration-plugin' }}"
 mig_velero_plugin_tag: "{{ lookup('env', 'MIG_VELERO_PLUGIN_TAG') or 'latest' }}"
+mig_velero_restic_restore_helper_img: "{{ lookup('env', 'MIG_VELERO_RESTIC_RESTORE_HELPER_IMG') or 'quay.io/ocpmigrate/velero-restic-restore-helper' }}"
+mig_velero_restic_restore_helper_tag: "{{ lookup('env', 'MIG_VELERO_RESTIC_RESTORE_HELPER_TAG') or 'latest' }}"
 mig_controller_sa_name: mig
 mig_controller_host_cluster: true
 mig_controller_velero: true

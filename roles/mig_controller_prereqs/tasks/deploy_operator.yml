@@ -1,9 +1,9 @@
-- name: Check if mig operator repo exists
+- name: "Check if mig operator repo exists"
   stat:
     path: "{{ mig_operator_location }}"
   register: op_repo
 
-- name: Clone the mig operator repo
+- name: "Clone the mig operator repo"
   git:
     dest: "{{ mig_operator_location }}"
     repo: "{{ mig_operator_repo }}"
@@ -19,6 +19,18 @@
 - name: "Deploy mig operator using OLM"
   block:
 
+    - name: "Include required vars"
+      include_vars:  "{{ lookup('first_found', olm_files) }}"
+      vars:
+        olm_files:
+          - "{{ playbook_dir }}/olm/olm_vars.yml"
+          - "{{ playbook_dir }}/roles/mig_controller_prereqs/defaults/olm_vars.yml"
+    
+    - debug:
+        msg: 
+          - "OLM cluster version: {{ olm_cluster_version }}"
+          - "Using mig operator selector: {{ mig_operator_selector[olm_cluster_version] }}"
+
     - name: "Create OperatorSource"
       k8s:
         state: present
@@ -28,19 +40,15 @@
       retries: 30
       delay: 30
 
-    - name: "Wait for OperatorSource to settle"
-      wait_for:
-        timeout: 90
-
     - name: "Wait for OLM to reconcile OperatorSource creation"
       k8s_facts:
         kind: Pod
         namespace: openshift-marketplace
-        label_selectors: "marketplace.catalogSourceConfig=ocpmigrate-operators"
+        label_selectors: "{{ mig_operator_selector[olm_cluster_version] }}"
       register: pod
-      until: "true in (pod | json_query('resources[].status.containerStatuses[].ready'))"
-      retries: 60
-      delay: 45
+      until: pod.get("resources", []) | length > 0 and true in (pod | json_query('resources[].status.containerStatuses[].ready'))
+      retries: 15
+      delay: 12
 
     - name: "Confirm service availability"
       k8s_facts:
@@ -51,7 +59,7 @@
       register: service
       until: "'grpc' in (service | json_query('resources[].spec.ports[].name'))"
       retries: 15
-      delay: 10
+      delay: 12
 
     - name: "Create {{ mig_migration_namespace }} namespace"
       k8s:
@@ -80,22 +88,18 @@
 
   when: mig_operator_use_olm|bool 
       
-- name: Deploy mig operator
+- name: "Deploy mig operator"
   k8s:
     state : present
     definition: "{{ lookup('file', '{{ mig_operator_location }}/deploy/non-olm/{{ mig_operator_tag }}/operator.yml' )}}"
   when: not mig_operator_use_olm|bool 
 
-- name: "Wait for mig operator deployment to settle"
-  wait_for:
-    timeout: 45
-
-- name: Check status of mig operator
+- name: "Check status of mig operator"
   k8s_facts:
     kind: Pod
     namespace: "{{ mig_migration_namespace }}"
     label_selectors: "app=migration-operator"
   register: pod
-  until: "true in (pod | json_query('resources[].status.containerStatuses[].ready'))"
+  until: pod.get("resources", []) | length > 0 and true in (pod | json_query('resources[].status.containerStatuses[].ready'))
   retries: 60
-  delay: 10
+  delay: 15

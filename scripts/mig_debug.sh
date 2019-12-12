@@ -10,7 +10,7 @@ MIG_NS="openshift-migration"
 WITH_CONTROLLER="false"
 WITH_OPERATOR_LOGS=${WITH_OPERATOR_LOGS:-false}
 WITH_VELERO_LOGS=${WITH_VELERO_LOGS:-false}
-E2E_NS=${E2E_NS:-"sock-shop robot-shop parks-app mssql-example mediawiki mysql-persistent ocp-25000-sets ocp-25021-cronjob ocp-25090-jobs ocp-25212-initcont ocp-24997-confmap"}
+E2E_NS=${E2E_NS:-"sock-shop robot-shop parks-app mssql-example mediawiki mysql-persistent ocp-25000-sets ocp-25021-cronjob ocp-25090-jobs ocp-25212-initcont ocp-24997-confmap ocp-24995-role ocp-25986-maxpods nginx-pv ocp-24659-mysql ocp-24686-project ocp-24769-cakephp ocp-24730-django ocp-26032-maxns ocp-26160-max-pvs"}
 DATE=`date`
 
 # Process arguments if passed, assume defaults otherwise
@@ -69,7 +69,13 @@ echo
 echo "##### Print OCP cluster storage classes #####"
 echo
 ${OC_BINARY} describe sc
-echo 
+echo
+
+echo
+echo "##### Print OCP rook-ceph ns #####"
+echo
+${OC_BINARY} -n rook-ceph get all
+echo
 
 echo
 echo "##### Print all resources on ${MIG_NS} namespace #####"

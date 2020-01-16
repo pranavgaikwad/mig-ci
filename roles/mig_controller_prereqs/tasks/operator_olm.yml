@@ -1,0 +1,9 @@
+---
+
+- name: "Deploy using OLM upstream operator"
+  import_tasks: operator_upstream_olm.yml
+  when: not mig_operator_use_downstream|bool
+
+- name: "Deploy using OLM downstream operator"
+  import_tasks: operator_downstream_olm.yml
+  when: mig_operator_use_downstream|bool

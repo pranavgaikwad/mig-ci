@@ -1,0 +1,29 @@
+- name: "Deploy downstream mig operator using OLM"
+  block:
+
+    - name: "Include required vars"
+      include_vars:  "{{ lookup('first_found', olm_files) }}"
+      vars:
+        olm_files:
+          - "{{ playbook_dir }}/olm/olm_vars.yml"
+          - "{{ playbook_dir }}/roles/mig_controller_deploy/defaults/olm_vars.yml"
+
+    - debug:
+        msg:
+          - "OLM cluster version: {{ olm_cluster_version }}"
+
+    - name: "Create {{ mig_migration_namespace }} namespace"
+      k8s:
+        name: "{{ mig_migration_namespace }}"
+        kind: Namespace
+        state: present
+
+    - name: "Create OperatorGroup"
+      k8s:
+        state: present
+        definition: "{{ lookup('template', 'mig-operator-operatorgroup.yml.j2' ) }}"
+
+    - name: "Create operator subscription"
+      k8s:
+        state: present
+        definition: "{{ lookup('template', 'mig-operator-subscription-downstream.yml.j2' ) }}"

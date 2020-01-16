@@ -11,95 +11,25 @@
   ignore_errors: true
   when: not op_repo.stat.exists
 
+- assert:
+    that:
+      - mig_operator_release != 'latest'
+    fail_msg: "latest is not a valid release for downstream CAM deployments"
+  when: mig_operator_use_downstream|bool
+
 - debug:
     msg: 
-      - "Mig operator will deploy using OLM : {{ mig_operator_use_olm }}"
-      - "Mig operator will deploy using release : {{ mig_operator_tag }}"
+      - "Operator will deploy using OLM : {{ mig_operator_use_olm }}"
+      - "Operator use downstream release : {{ mig_operator_use_downstream }}"
+      - "Operator will deploy using release : {{ mig_operator_release }}"
 
-- name: "Deploy mig operator using OLM"
-  block:
+- name: "Deploy using OLM operator"
+  import_tasks: operator_olm.yml
+  when: mig_operator_use_olm|bool
 
-    - name: "Include required vars"
-      include_vars:  "{{ lookup('first_found', olm_files) }}"
-      vars:
-        olm_files:
-          - "{{ playbook_dir }}/olm/olm_vars.yml"
-          - "{{ playbook_dir }}/roles/mig_controller_prereqs/defaults/olm_vars.yml"
-    
-    - debug:
-        msg: 
-          - "OLM cluster version: {{ olm_cluster_version }}"
-          - "Using mig operator selector: {{ mig_operator_selector[olm_cluster_version] }}"
+- name: "Deploy using non-OLM operator"
+  import_tasks: operator_non_olm.yml
+  when: not mig_operator_use_olm|bool
 
-    - name: "Create OperatorSource"
-      k8s:
-        state: present
-        definition: "{{ lookup('file', '{{ mig_operator_location }}/mig-operator-source.yaml' )}}"
-      register: mig_operator_source_created
-      until: mig_operator_source_created is succeeded
-      retries: 30
-      delay: 30
-
-    - name: "Wait for OLM to reconcile OperatorSource creation"
-      k8s_facts:
-        kind: Pod
-        namespace: openshift-marketplace
-        label_selectors: "{{ mig_operator_selector[olm_cluster_version] }}"
-      register: pod
-      until: pod.get("resources", []) | length > 0 and true in (pod | json_query('resources[].status.containerStatuses[].ready'))
-      retries: 15
-      delay: 12
-
-    - name: "Confirm service availability"
-      k8s_facts:
-        kind: Service
-        namespace: openshift-marketplace
-        name: ocpmigrate-operators
-        label_selectors: "marketplace.catalogSourceConfig=ocpmigrate-operators"
-      register: service
-      until: "'grpc' in (service | json_query('resources[].spec.ports[].name'))"
-      retries: 15
-      delay: 12
-
-    - name: "Create {{ mig_migration_namespace }} namespace"
-      k8s:
-        name: "{{ mig_migration_namespace }}"
-        kind: Namespace
-        state: present
-      
-    - name: "Get grpc_endpoint IP:port of ocpmigrate-operators service"
-      set_fact:
-        grpc_endpoint: "{{ service | json_query('resources[0].spec.clusterIP') }}:{{ service | json_query('resources[0].spec.ports[0].port') }}"
-
-    - name: "Create CatalogSource"
-      k8s:
-        state: present
-        definition: "{{ lookup('template', 'mig-operator-catalogsource.yml.j2' ) }}"
-
-    - name: "Create OperatorGroup"
-      k8s:
-        state: present
-        definition: "{{ lookup('template', 'mig-operator-operatorgroup.yml.j2' ) }}"
-
-    - name: "Create Subscription"
-      k8s:
-        state: present
-        definition: "{{ lookup('template', 'mig-operator-subscription.yml.j2' ) }}"
-
-  when: mig_operator_use_olm|bool 
-      
-- name: "Deploy mig operator"
-  k8s:
-    state : present
-    definition: "{{ lookup('file', '{{ mig_operator_location }}/deploy/non-olm/{{ mig_operator_tag }}/operator.yml' )}}"
-  when: not mig_operator_use_olm|bool 
-
-- name: "Check status of mig operator"
-  k8s_facts:
-    kind: Pod
-    namespace: "{{ mig_migration_namespace }}"
-    label_selectors: "app=migration-operator"
-  register: pod
-  until: pod.get("resources", []) | length > 0 and true in (pod | json_query('resources[].status.containerStatuses[].ready'))
-  retries: 60
-  delay: 15
+- name: "Check operator status"
+  import_tasks: operator_check.yml

@@ -1,0 +1,36 @@
+---
+
+- assert:
+    that:
+      - rh_sub_user != ''
+      - rh_sub_pass != ''
+    fail_msg: "rh_sub_user and rh_sub_pass variables must be set for podman based CAM deployments"
+
+- name: "Deploy CAM downstream operator using podman"
+  block:
+    - name: "Login to {{ rh_registry }}"
+      shell: "podman login registry.redhat.io -u {{ rh_sub_user }} -p {{ rh_sub_pass }}"
+
+    - name: "Prepare CAM downstream image"
+      shell: "podman create registry.redhat.io/rhcam-1-0/openshift-migration-rhel7-operator:v1.0"
+      register: podman_create
+
+    - name: "Extract operator.yml from CAM downstream image"
+      shell: "podman cp {{ podman_create.stdout }}:/operator.yml {{ playbook_dir }}"
+
+    - name: "Extract controller-3.yml from CAM downstream image"
+      shell: "podman cp {{ podman_create.stdout }}:/controller-3.yml {{ playbook_dir }}"
+       
+    - name: "Update ownership of extracted files"
+      file:
+        path: "{{ item }}"
+        owner: "{{ ansible_user }}"
+      loop: 
+        - "{{ playbook_dir }}/operator.yml"
+        - "{{ playbook_dir }}/controller-3.yml"
+  become: true
+
+- name: "Create CAM downstream operator"
+  k8s:
+    state: present
+    definition: "{{ lookup('file', '{{ playbook_dir }}/operator.yml' ) }}"

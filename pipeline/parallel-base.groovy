@@ -27,12 +27,7 @@ string(defaultValue: 'https://github.com/fusor/mig-e2e.git', description: 'Mig e
 string(defaultValue: 'master', description: 'Mig e2e repo branch to test', name: 'MIG_E2E_BRANCH', trim: false),
 string(defaultValue: 'e2e_mig_samples.yml', description: 'e2e test playbook to run, see https://github.com/fusor/mig-e2e for details', name: 'E2E_PLAY', trim: false),
 string(defaultValue: 'all', description: 'e2e test tags to run, see https://github.com/fusor/mig-e2e for details, space delimited', name: 'E2E_TESTS', trim: false),
-string(defaultValue: 'latest', description: 'Mig operator version/tag to deploy', name: 'MIG_OPERATOR_TAG', trim: false),
-string(defaultValue: 'latest', description: 'Mig controller version/tag to deploy', name: 'MIG_CONTROLLER_TAG', trim: false),
-string(defaultValue: 'latest', description: 'Mig ui version/tag to deploy', name: 'MIG_UI_TAG', trim: false),
-string(defaultValue: 'latest', description: 'Mig velero version/tag to deploy', name: 'MIG_VELERO_TAG', trim: false),
-string(defaultValue: 'latest', description: 'Mig velero plugin version/tag to deploy', name: 'MIG_VELERO_PLUGIN_TAG', trim: false),
-string(defaultValue: 'latest', description: 'Mig velero restic restore helper version/tag to deploy', name: 'MIG_VELERO_RESTIC_RESTORE_HELPER_TAG', trim: false),
+string(defaultValue: 'latest', description: 'Mig Operator/CAM release to deploy', name: 'MIG_OPERATOR_RELEASE', trim: false),
 string(defaultValue: 'scripts/mig_debug.sh', description: 'Relative file path to debug script on MIG CI repo', name: 'DEBUG_SCRIPT', trim: false),
 string(defaultValue: '', description: 'Extra debug script arguments', name: 'DEBUG_SCRIPT_ARGS', trim: false),
 string(defaultValue: 'quay.io/fbladilo/mig-controller', description: 'Repo for quay io for custom mig-controller images, only used by GHPRB', name: 'QUAYIO_CI_REPO', trim: false),
@@ -48,10 +43,11 @@ credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCre
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_ocp4_admin_credentials', description: 'Cluster admin credentials used in OCP4 deployments', name: 'OCP4_CREDENTIALS', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_ocp3_admin_credentials', description: 'Cluster admin credentials used in OCP3 deployments', name: 'OCP3_CREDENTIALS', required: true),
 booleanParam(defaultValue: true, description: 'Run e2e tests', name: 'E2E_RUN'),
-booleanParam(defaultValue: false, description: 'Update OCP3 cluster packages to latest', name: 'OCP3_UPDATE'),
+booleanParam(defaultValue: true, description: 'Update OCP3 cluster packages to latest', name: 'OCP3_UPDATE'),
 booleanParam(defaultValue: true, description: 'Provision glusterfs workload on OCP3', name: 'OCP3_GLUSTERFS'),
 booleanParam(defaultValue: true, description: 'Provision CEPH workload on destination cluster', name: 'CEPH'),
 booleanParam(defaultValue: true, description: 'Deploy mig operator using OLM on OCP4', name: 'USE_OLM'),
+booleanParam(defaultValue: false, description: 'Deploy using downstream images', name: 'USE_DOWNSTREAM'),
 booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE'),
 booleanParam(defaultValue: false, description: 'Persistent cluster builds with fixed hostname', name: 'PERSISTENT'),
 booleanParam(defaultValue: false, description: 'Enable debugging', name: 'DEBUG'),
@@ -59,6 +55,8 @@ booleanParam(defaultValue: true, description: 'EC2 terminate instances after bui
 
 // true/false build parameter that defines if we use OLM to deploy mig operator on OCP4
 USE_OLM = params.USE_OLM
+// true/false build parameter that defines if we will deploy CAM/controller using downstream images
+USE_DOWNSTREAM = params.USE_DOWNSTREAM
 // true/false build parameter that defines if we terminate instances once build is done
 def EC2_TERMINATE_INSTANCES = params.EC2_TERMINATE_INSTANCES
 // true/false build parameter that defines if we cleanup workspace once build is done

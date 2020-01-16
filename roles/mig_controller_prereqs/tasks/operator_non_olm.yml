@@ -1,0 +1,9 @@
+---
+
+- name: "Deploy using non-OLM upstream operator"
+  import_tasks: operator_upstream_non_olm.yml
+  when: not mig_operator_use_downstream|bool
+
+- name: "Deploy using non-OLM downstream operator"
+  import_tasks: operator_downstream_non_olm.yml
+  when: mig_operator_use_downstream|bool

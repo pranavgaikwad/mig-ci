@@ -8,7 +8,7 @@
 
 - name: "Deploy CAM downstream operator using podman"
   block:
-    - name: "Login to {{ rh_registry }}"
+    - name: "Login to RH registry"
       shell: "podman login registry.redhat.io -u {{ rh_sub_user }} -p {{ rh_sub_pass }}"
 
     - name: "Prepare CAM downstream image"
@@ -28,6 +28,10 @@
       loop: 
         - "{{ playbook_dir }}/operator.yml"
         - "{{ playbook_dir }}/controller-3.yml"
+
+    - name: "Clean up podman image cache"
+      shell: "podman rmi -af"
+
   become: true
 
 - name: "Create CAM downstream operator"

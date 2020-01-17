@@ -466,6 +466,7 @@ def deploy_mig_controller_on_both(
       withEnv([
           "KUBECONFIG=${source_kubeconfig}",
           "MIG_OPERATOR_USE_OLM=${SRC_USE_OLM}",
+          "MIG_OPERATOR_USE_DOWNSTREAM=${USE_DOWNSTREAM}",
           "SUB_USER=${SUB_USER}",
           "SUB_PASS=${SUB_PASS}",
           "PATH+EXTRA=~/bin"]) {
@@ -482,6 +483,7 @@ def deploy_mig_controller_on_both(
       withEnv([
           "KUBECONFIG=${target_kubeconfig}",
           "MIG_OPERATOR_USE_OLM=${DEST_USE_OLM}",
+          "MIG_OPERATOR_USE_DOWNSTREAM=${USE_DOWNSTREAM}",
           "SUB_USER=${SUB_USER}",
           "SUB_PASS=${SUB_PASS}",
           "PATH+EXTRA=~/bin"]) {

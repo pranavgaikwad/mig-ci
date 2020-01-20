@@ -445,7 +445,7 @@ def deploy_mig_controller_on_both(
         mig_controller_tag = "${MIG_CONTROLLER_BRANCH}"
       } else {
           mig_controller_img = "quay.io/ocpmigrate/mig-controller"
-          mig_controller_tag = "${MIG_CONTROLLER_TAG}"
+          mig_controller_tag = "${MIG_CONTROLLER_BRANCH}"
       }
 
       def SRC_USE_OLM = false
@@ -458,17 +458,17 @@ def deploy_mig_controller_on_both(
           DEST_USE_OLM = true
         }
       } 
-
+      withCredentials([
+        string(credentialsId: "$EC2_SUB_USER", variable: 'SUB_USER'),
+        string(credentialsId: "$EC2_SUB_PASS", variable: 'SUB_PASS')])
+      {
       // Source
       withEnv([
           "KUBECONFIG=${source_kubeconfig}",
-          "MIG_CONTROLLER_IMG=${mig_controller_img}",
-          "MIG_CONTROLLER_TAG=${mig_controller_tag}",
-          "MIG_OPERATOR_TAG=${MIG_OPERATOR_TAG}",
           "MIG_OPERATOR_USE_OLM=${SRC_USE_OLM}",
-          "MIG_UI_TAG=${MIG_UI_TAG}",
-          "MIG_VELERO_TAG=${MIG_VELERO_TAG}",
-          "MIG_VELERO_PLUGIN_TAG=${MIG_VELERO_PLUGIN_TAG}",
+          "MIG_OPERATOR_USE_DOWNSTREAM=${USE_DOWNSTREAM}",
+          "SUB_USER=${SUB_USER}",
+          "SUB_PASS=${SUB_PASS}",
           "PATH+EXTRA=~/bin"]) {
         ansiColor('xterm') {
           ansiblePlaybook(
@@ -482,13 +482,10 @@ def deploy_mig_controller_on_both(
       // Target
       withEnv([
           "KUBECONFIG=${target_kubeconfig}",
-          "MIG_CONTROLLER_IMG=${mig_controller_img}",
-          "MIG_CONTROLLER_TAG=${mig_controller_tag}",
-          "MIG_OPERATOR_TAG=${MIG_OPERATOR_TAG}",
           "MIG_OPERATOR_USE_OLM=${DEST_USE_OLM}",
-          "MIG_UI_TAG=${MIG_UI_TAG}",
-          "MIG_VELERO_TAG=${MIG_VELERO_TAG}",
-          "MIG_VELERO_PLUGIN_TAG=${MIG_VELERO_PLUGIN_TAG}",
+          "MIG_OPERATOR_USE_DOWNSTREAM=${USE_DOWNSTREAM}",
+          "SUB_USER=${SUB_USER}",
+          "SUB_PASS=${SUB_PASS}",
           "PATH+EXTRA=~/bin"]) {
         ansiColor('xterm') {
           ansiblePlaybook(
@@ -499,6 +496,7 @@ def deploy_mig_controller_on_both(
             colorized: true)
         }
       }
+    }
     }
   }
 }

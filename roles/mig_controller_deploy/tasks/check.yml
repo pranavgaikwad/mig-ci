@@ -5,7 +5,7 @@
     label_selectors: "component=velero"
   register: pod
   until: "true in (pod | json_query('resources[].status.containerStatuses[].ready'))"
-  retries: 12
+  retries: 30
   delay: 10
   when: mig_controller_velero|bool
 
@@ -16,7 +16,7 @@
     label_selectors: "name=restic"
   register: pod
   until: "true in (pod | json_query('resources[].status.containerStatuses[].ready'))"
-  retries: 12
+  retries: 30
   delay: 10
   when: mig_controller_velero|bool
 
@@ -27,6 +27,6 @@
     label_selectors: "control-plane=controller-manager"
   register: pod
   until: "true in (pod | json_query('resources[].status.containerStatuses[].ready'))"
-  retries: 12
+  retries: 30
   delay: 10
   when: mig_controller_host_cluster|bool

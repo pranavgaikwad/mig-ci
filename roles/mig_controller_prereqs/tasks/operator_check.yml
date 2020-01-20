@@ -1,0 +1,10 @@
+---
+- name: "Check status of mig operator"
+  k8s_facts:
+    kind: Pod
+    namespace: "{{ mig_migration_namespace }}"
+    label_selectors: "app={{ mig_operator_label_selector[mig_operator_release] }}"
+  register: pod
+  until: pod.get("resources", []) | length > 0 and true in (pod | json_query('resources[].status.containerStatuses[].ready'))
+  retries: 60
+  delay: 15

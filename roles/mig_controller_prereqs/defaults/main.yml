@@ -2,26 +2,19 @@
 mig_operator_location: "{{ workspace }}/mig-operator"
 mig_operator_repo: "{{ lookup('env', 'MIG_OPERATOR_REPO') or 'https://github.com/fusor/mig-operator.git' }}"
 mig_operator_branch: "{{ lookup('env', 'MIG_OPERATOR_BRANCH') or 'master' }}"
+mig_operator_release: "{{ lookup('env', 'MIG_OPERATOR_RELEASE') or 'latest' }}"
+mig_operator_use_olm: "{{ lookup('env', 'MIG_OPERATOR_USE_OLM') or 'false' }}"
+mig_operator_use_downstream: "{{ lookup('env', 'MIG_OPERATOR_USE_DOWNSTREAM') or 'false' }}"
+mig_operator_selector: { '4.1': 'marketplace.catalogSourceConfig=ocpmigrate-operators', '4.2': 'marketplace.operatorSource=ocpmigrate-operators', 'nightly': 'marketplace.operatorSource=ocpmigrate-operators', '4.3': 'marketplace.operatorSource=ocpmigrate-operators', 'latest-4.1': 'marketplace.catalogSourceConfig=ocpmigrate-operators', 'latest-4.2': 'marketplace.operatorSource=ocpmigrate-operators', 'latest': 'marketplace.operatorSource=ocpmigrate-operators' }
+mig_operator_label_selector: { 'v1.0.0': 'migration-operator', 'v1.0.1': 'migration-operator', 'latest': 'migration' }
 mig_controller_location: "{{ workspace }}/mig-controller"
 mig_controller_repo: "{{ lookup('env', 'MIG_CONTROLLER_REPO') or 'https://github.com/fusor/mig-controller.git' }}"
 mig_controller_branch: "{{ lookup('env', 'MIG_CONTROLLER_BRANCH') or 'master' }}"
-mig_controller_img: "{{ lookup('env', 'MIG_CONTROLLER_IMG') or 'quay.io/ocpmigrate/mig-controller' }}"
-mig_controller_tag: "{{ lookup('env', 'MIG_CONTROLLER_TAG') or 'latest' }}"
-mig_operator_img: "{{ lookup('env', 'MIG_OPERATOR_IMG') or 'quay.io/ocpmigrate/mig-operator' }}"
-mig_operator_tag: "{{ lookup('env', 'MIG_OPERATOR_TAG') or 'latest' }}"
-mig_operator_use_olm: "{{ lookup('env', 'MIG_OPERATOR_USE_OLM') or 'false' }}"
-mig_operator_selector: { '4.1': 'marketplace.catalogSourceConfig=ocpmigrate-operators', '4.2': 'marketplace.operatorSource=ocpmigrate-operators', 'nightly': 'marketplace.operatorSource=ocpmigrate-operators', '4.3': 'marketplace.operatorSource=ocpmigrate-operators', 'latest-4.1': 'marketplace.catalogSourceConfig=ocpmigrate-operators', 'latest-4.2': 'marketplace.operatorSource=ocpmigrate-operators', 'latest': 'marketplace.operatorSource=ocpmigrate-operators' }
-mig_ui_img: "{{ lookup('env', 'MIG_UI_IMG') or 'quay.io/ocpmigrate/mig-ui' }}"
-mig_ui_tag: "{{ lookup('env', 'MIG_UI_TAG') or 'latest' }}"
-mig_velero_img: "{{ lookup('env', 'MIG_VELERO_IMG') or 'quay.io/ocpmigrate/velero' }}"
-mig_velero_tag: "{{ lookup('env', 'MIG_VELERO_TAG') or 'latest' }}"
-mig_velero_plugin_img: "{{ lookup('env', 'MIG_VELERO_PLUGIN_IMG') or 'quay.io/ocpmigrate/migration-plugin' }}"
-mig_velero_plugin_tag: "{{ lookup('env', 'MIG_VELERO_PLUGIN_TAG') or 'latest' }}"
-mig_velero_restic_restore_helper_img: "{{ lookup('env', 'MIG_VELERO_RESTIC_RESTORE_HELPER_IMG') or 'quay.io/ocpmigrate/velero-restic-restore-helper' }}"
-mig_velero_restic_restore_helper_tag: "{{ lookup('env', 'MIG_VELERO_RESTIC_RESTORE_HELPER_TAG') or 'latest' }}"
 mig_controller_sa_name: mig
 mig_controller_host_cluster: true
 mig_controller_velero: true
 mig_controller_ui: true
 mig_controller_remote_cluster_online: true
 mig_migration_namespace: openshift-migration
+rh_sub_user: "{{ lookup('env', 'SUB_USER') }}"
+rh_sub_pass: "{{ lookup('env', 'SUB_PASS') }}"

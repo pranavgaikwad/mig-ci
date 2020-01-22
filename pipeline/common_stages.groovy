@@ -174,7 +174,7 @@ def deploy_ocp3_agnosticd(kubeconfig, cluster_version) {
   def repo_version = "${cluster_version}"
   def short_version = cluster_version.replace(".", "")
   def releases = [
-    '3.7': "3.7.23",
+    '3.7': "3.7.119",
     '3.9': "3.9.99",
     '3.10': "3.10.34",
     '3.11': "3.11.129"

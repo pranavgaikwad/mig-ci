@@ -1,16 +1,29 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
+{% if mig_operator_use_downstream|bool is sameas true %}
+  name: cam-operator
+{% else %}
   name: mig-operator
+{% endif %}
   namespace: {{ mig_migration_namespace }}
 spec:
 {% if mig_operator_release == 'latest' %}
-  channel: {{ mig_operator_release }}
-{% else %}
+  channel: latest
+{% elif mig_operator_release is version_compare('v1.1', '<') %}
   channel: release-v1
+{% elif mig_operator_release is version_compare('v1.2', '<') %}
+  channel: release-v1.1
 {% endif %}
   installPlanApproval: Automatic
+{% if mig_operator_use_downstream|bool is sameas true %}
+  name: cam-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  startingCSV: cam-operator.{{ mig_operator_release }}
+{% else %}
   name: mig-operator
   source: installed-custom-openshift-migration
   sourceNamespace: {{ mig_migration_namespace }}
   startingCSV: mig-operator.{{ mig_operator_release }}
+{% endif %}

@@ -6,7 +6,6 @@ mig_operator_release: "{{ lookup('env', 'MIG_OPERATOR_RELEASE') or 'latest' }}"
 mig_operator_use_olm: "{{ lookup('env', 'MIG_OPERATOR_USE_OLM') or 'false' }}"
 mig_operator_use_downstream: "{{ lookup('env', 'MIG_OPERATOR_USE_DOWNSTREAM') or 'false' }}"
 mig_operator_selector: { '4.1': 'marketplace.catalogSourceConfig=ocpmigrate-operators', '4.2': 'marketplace.operatorSource=ocpmigrate-operators', 'nightly': 'marketplace.operatorSource=ocpmigrate-operators', '4.3': 'marketplace.operatorSource=ocpmigrate-operators', 'latest-4.1': 'marketplace.catalogSourceConfig=ocpmigrate-operators', 'latest-4.2': 'marketplace.operatorSource=ocpmigrate-operators', 'latest': 'marketplace.operatorSource=ocpmigrate-operators' }
-mig_operator_label_selector: { 'v1.0.0': 'migration-operator', 'v1.0.1': 'migration-operator', 'latest': 'migration' }
 mig_controller_location: "{{ workspace }}/mig-controller"
 mig_controller_repo: "{{ lookup('env', 'MIG_CONTROLLER_REPO') or 'https://github.com/fusor/mig-controller.git' }}"
 mig_controller_branch: "{{ lookup('env', 'MIG_CONTROLLER_BRANCH') or 'master' }}"

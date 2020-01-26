@@ -10,7 +10,7 @@ MIG_NS="openshift-migration"
 WITH_CONTROLLER="false"
 WITH_OPERATOR_LOGS=${WITH_OPERATOR_LOGS:-false}
 WITH_VELERO_LOGS=${WITH_VELERO_LOGS:-false}
-E2E_NS=${E2E_NS:-"sock-shop robot-shop parks-app mssql-example mediawiki mysql-persistent ocp-25000-sets ocp-25021-cronjob ocp-25090-jobs ocp-25212-initcont ocp-24997-confmap ocp-24995-role ocp-25986-maxpods nginx-pv ocp-24659-mysql ocp-24686-project ocp-24769-cakephp ocp-24730-django ocp-26032-maxns ocp-26160-max-pvs"}
+E2E_NS=${E2E_NS:-"sock-shop robot-shop parks-app mssql-example mediawiki mysql-persistent ocp-25000-sets ocp-25021-cronjob ocp-25090-jobs ocp-25212-initcont ocp-24997-confmap ocp-24995-role ocp-25986-maxpods nginx-pv ocp-24659-mysql ocp-24686-project ocp-24769-cakephp ocp-26032-maxns ocp-26160-max-pvs ocp-24787-redis ocp-24797-mongodb"}
 DATE=`date`
 
 # Process arguments if passed, assume defaults otherwise
@@ -91,7 +91,7 @@ echo
 
 # Check if cluster hosting controller
 
-mig_controller_check=$( ${OC_BINARY} -n ${MIG_NS} get pods | grep controller-manager )
+mig_controller_check=$( ${OC_BINARY} -n ${MIG_NS} get pods | grep migration-controller )
 if [ $? -ne 0 ]; then
 	echo
 	echo "Controller pod not found, skipping mig CR extraction..."
@@ -121,13 +121,16 @@ fi
 # Collect logs
 echo "##### Process LOGS #####"
 echo
-mig_controller_pod=$( ${OC_BINARY} -n ${MIG_NS} get pods | grep controller-manager | cut -d " " -f1 )
+mig_controller_pod=$( ${OC_BINARY} -n ${MIG_NS} get pods | grep migration-controller | cut -d " " -f1 )
 operator_pod=$( ${OC_BINARY} -n ${MIG_NS} get pods | grep migration-operator | cut -d " " -f1 )
 velero_pod=$( ${OC_BINARY} -n ${MIG_NS} get pods | grep velero | cut -d " " -f1 )
 
 if [ ${WITH_CONTROLLER} == "true" ]; then
+        echo
 	echo "=== Mig controller logs ==="
+        echo
 	${OC_BINARY} -n ${MIG_NS} logs ${mig_controller_pod}
+        echo
 fi
 
 if [ ${WITH_VELERO_LOGS} == "true" ]; then
@@ -136,6 +139,16 @@ if [ ${WITH_VELERO_LOGS} == "true" ]; then
 	echo
 	${OC_BINARY} -n ${MIG_NS} logs ${velero_pod}
 	echo
+# Restic DS spawns multiple pods , collect them first
+	declare -a restic_pods
+	readarray -t restic_pods <<< $(oc -n openshift-migration get pods | grep restic | cut -d " " -f1)
+
+	for pod in ${restic_pods[@]}; do
+        	echo
+        	echo "====== Restic logs ======"
+        	echo
+        	${OC_BINARY} -n ${MIG_NS} logs ${pod}
+	done
 fi
 
 if [ ${WITH_OPERATOR_LOGS} == "true" ]; then
@@ -146,17 +159,6 @@ if [ ${WITH_OPERATOR_LOGS} == "true" ]; then
 	${OC_BINARY} -n ${MIG_NS} logs ${operator_pod} -c operator
 	echo
 fi
-
-# Restic DS spawns multiple pods , collect them first
-declare -a restic_pods                                                                                                                                                                                             
-readarray -t restic_pods <<< $(oc -n openshift-migration get pods | grep restic | cut -d " " -f1)
-
-for pod in ${restic_pods[@]}; do
-	echo
-	echo "====== Restic logs ======"
-	echo
-	${OC_BINARY} -n ${MIG_NS} logs ${pod}
-done
 
 # Scan openshift-migration for not running pods
 declare -a mig_bad_pods
@@ -188,8 +190,10 @@ for ns in ${E2E_NS}; do
 	echo
 	echo "====== $ns check pods not in running state ======"
 	echo
-	readarray -t e2e_bad_pods <<< $(${OC_BINARY} -n ${ns} get pods --no-headers --field-selector=status.phase!=Running,status.phase!=Succeeded | cut -d " " -f1)
-	if [ ${#e2e_bad_pods[@]} -ne 0 ]; then
+        get_e2e_bad_pods=$(oc -n ${ns} get pods --no-headers --field-selector=status.phase!=Running,status.phase!=Succeeded | cut -d " " -f1)
+        if [ ! -z "${get_e2e_bad_pods}" ]; then
+          echo "${get_e2e_bad_pods}"
+	  readarray -t e2e_bad_pods <<< $(${OC_BINARY} -n ${ns} get pods --no-headers --field-selector=status.phase!=Running,status.phase!=Succeeded | cut -d " " -f1)
 		echo
 		echo "====== $ns extract logs for not running pods ======"
 		echo
@@ -197,6 +201,16 @@ for ns in ${E2E_NS}; do
 			echo "Processing pod : ${pod}"
 			${OC_BINARY} -n $ns logs ${pod}
 		done
+        echo
+        echo "====== print events on $ns ======"
+        echo
+        ${OC_BINARY} -n ${ns} get events
+        echo
+        echo
+        echo "====== describe pods on $ns ======"
+        echo
+        ${OC_BINARY} -n ${ns} describe pods
+        echo
 	fi
-	unset e2e_bad_pods
+	unset e2e_bad_pods get_e2e_bad_pods
 done

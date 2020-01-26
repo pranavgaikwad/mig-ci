@@ -1,9 +1,13 @@
 ---
+- name: "Define mig operator label"
+  set_fact:
+    mig_operator_label: "{{ 'migration-operator' if mig_operator_release is version_compare('v1.1', '<') and mig_operator_release != 'latest' else 'migration' }}"
+
 - name: "Check status of mig operator"
   k8s_facts:
     kind: Pod
     namespace: "{{ mig_migration_namespace }}"
-    label_selectors: "app={{ mig_operator_label_selector[mig_operator_release] }}"
+    label_selectors: "app={{ mig_operator_label }}"
   register: pod
   until: pod.get("resources", []) | length > 0 and true in (pod | json_query('resources[].status.containerStatuses[].ready'))
   retries: 60

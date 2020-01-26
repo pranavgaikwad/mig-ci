@@ -26,4 +26,4 @@
     - name: "Create operator subscription"
       k8s:
         state: present
-        definition: "{{ lookup('template', 'mig-operator-subscription-downstream.yml.j2' ) }}"
+        definition: "{{ lookup('template', 'mig-operator-subscription.yml.j2' ) }}"

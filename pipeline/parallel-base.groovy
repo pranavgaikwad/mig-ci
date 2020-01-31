@@ -119,7 +119,7 @@ node {
                   common_stages.deploy_ceph(DEST_CLUSTER_VERSION).call()
                     }
             },
-            failFast: true
+            failFast: false
         }
 
        common_stages.deploy_mig_controller_on_both(SOURCE_KUBECONFIG, TARGET_KUBECONFIG, false, true).call()

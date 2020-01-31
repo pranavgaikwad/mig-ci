@@ -74,7 +74,7 @@ echo
 echo
 echo "##### Print OCP rook-ceph ns #####"
 echo
-${OC_BINARY} -n rook-ceph get all
+${OC_BINARY} -n openshift-storage get all
 echo
 
 echo

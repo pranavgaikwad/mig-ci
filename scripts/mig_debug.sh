@@ -129,7 +129,11 @@ if [ ${WITH_CONTROLLER} == "true" ]; then
         echo
 	echo "=== Mig controller logs ==="
         echo
-	${OC_BINARY} -n ${MIG_NS} logs ${mig_controller_pod}
+	${OC_BINARY} -n ${MIG_NS} logs ${mig_controller_pod} 2>/dev/null
+	if [ $? -ne 0 ]; then
+		${OC_BINARY} -n ${MIG_NS} logs ${mig_controller_pod} -c cam
+		${OC_BINARY} -n ${MIG_NS} logs ${mig_controller_pod} -c discovery
+	fi
         echo
 fi
 

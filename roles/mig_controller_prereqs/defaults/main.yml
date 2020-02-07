@@ -17,3 +17,4 @@ mig_controller_remote_cluster_online: true
 mig_migration_namespace: openshift-migration
 rh_sub_user: "{{ lookup('env', 'SUB_USER') }}"
 rh_sub_pass: "{{ lookup('env', 'SUB_PASS') }}"
+rh_downstream_registry: "registry.redhat.io"

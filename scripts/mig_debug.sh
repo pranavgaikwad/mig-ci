@@ -72,21 +72,28 @@ ${OC_BINARY} describe sc
 echo
 
 echo
-echo "##### Print OCP ceph ns #####"
+echo "##### Print openshift-storage ns and OLM sub #####"
 echo
 ${OC_BINARY} -n openshift-storage get all
+${OC_BINARY} -n openshift-storage describe subscription
 echo
 
 echo
 echo "##### Print all resources on ${MIG_NS} namespace #####"
 echo
-oc -n ${MIG_NS} get all
+${OC_BINARY} -n ${MIG_NS} get all
+echo
+
+echo
+echo "##### Print OLM sub on ${MIG_NS} namespace #####"
+echo
+${OC_BINARY} -n ${MIG_NS} describe subscription
 echo
 
 echo
 echo "##### Dump all images on ${MIG_NS} namespace #####"
 echo
-oc -n ${MIG_NS} describe pods | grep -B3 "Image ID:"
+${OC_BINARY} -n ${MIG_NS} describe pods | grep -B3 "Image ID:"
 echo
 
 # Check if cluster hosting controller

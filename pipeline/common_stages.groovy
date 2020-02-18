@@ -8,6 +8,7 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
   def releases = [
     '4.1': "4.1.13",
     '4.2': "4.2.0",
+    '4.3': "4.3.0",
     'latest-4.1': "4.1.0",
     'latest-4.2': "4.1.0",
     'latest': "4.1.0",

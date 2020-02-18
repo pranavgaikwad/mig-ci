@@ -1,7 +1,7 @@
 // ocp4-base.groovy
 properties([
 parameters([
-choice(choices: ['4.1', '4.2', 'nightly'], description: 'OCP4 version to deploy', name: 'SRC_CLUSTER_VERSION'),
+choice(choices: ['4.1', '4.2', '4.3', 'nightly'], description: 'OCP4 version to deploy', name: 'SRC_CLUSTER_VERSION'),
 string(defaultValue: 'jenkins-ci-ocp4-base', description: 'Cluster name to deploy', name: 'CLUSTER_NAME', trim: false),
 string(defaultValue: 'mig-ci@redhat.com', description: 'Email to register the deployment', name: 'EMAIL', trim: false),
 string(defaultValue: '1', description: 'OCP4 master instance count', name: 'OCP4_MASTER_INSTANCE_COUNT', trim: false),

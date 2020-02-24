@@ -43,7 +43,7 @@ def clone_mig_e2e() {
 
 def prepare_cpma(repo = '', branch = '') {
   if (repo == '') {
-    repo = "https://github.com/fusor/cpma.git"
+    repo = "https://github.com/konveyor/cpma.git"
   }
   if (branch == '') {
     branch = "master"
@@ -198,7 +198,7 @@ def teardown_mig_controller(kubeconfig) {
 
 def teardown_container_image() {
   // Check if is not upstream
-  if (env.QUAYIO_CI_REPO && "${MIG_CONTROLLER_REPO}" != "https://github.com/fusor/mig-controller.git") {
+  if (env.QUAYIO_CI_REPO && "${MIG_CONTROLLER_REPO}" != "https://github.com/konveyor/mig-controller.git") {
     ansiColor('xterm') {
       ansiblePlaybook(
         playbook: 'container_image_destroy.yml',

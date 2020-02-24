@@ -3,7 +3,7 @@ parameters([
 string(defaultValue: 'ec2-user', description: 'SSH login', name: 'CPMA_SSHLOGIN', trim: false),
 string(defaultValue: '22', description: 'SSH port', name: 'CPMA_SSHPORT', trim: false),
 string(defaultValue: 'master', description: 'CPMA branch to checkout', name: 'CPMA_BRANCH', trim: false),
-string(defaultValue: 'https://github.com/fusor/cpma.git', description: 'CPMA repo to clone', name: 'CPMA_REPO', trim: false),
+string(defaultValue: 'https://github.com/konveyor/cpma.git', description: 'CPMA repo to clone', name: 'CPMA_REPO', trim: false),
 string(defaultValue: 'v3.11', description: 'OCP3 version to deploy', name: 'OCP3_VERSION', trim: false),
 string(defaultValue: 'v4.1', description: 'OCP4 version to deploy', name: 'OCP4_VERSION', trim: false),
 string(defaultValue: 'e2e-cpma-manifests', description: 'Cluster name to deploy', name: 'CLUSTER_NAME', trim: false),

@@ -5,9 +5,9 @@ choice(choices: ['4.3', '3.11', '3.10', '3.9', '3.7', '4.1', '4.2', 'nightly'], 
 string(defaultValue: '', description: 'Source cluster API endpoint', name: 'SRC_CLUSTER_URL', trim: false, required: true),
 string(defaultValue: '', description: 'Destination cluster API endpoint', name: 'DEST_CLUSTER_URL', trim: false, required: true),
 string(defaultValue: '', description: 'AWS region where clusters are deployed', name: 'AWS_REGION', trim: false, required: true),
-string(defaultValue: 'https://github.com/fusor/mig-operator.git', description: 'Mig operator repo to clone', name: 'MIG_OPERATOR_REPO', trim: false),
+string(defaultValue: 'https://github.com/konveyor/mig-operator.git', description: 'Mig operator repo to clone', name: 'MIG_OPERATOR_REPO', trim: false),
 string(defaultValue: 'master', description: 'Mig operator branch to test', name: 'MIG_OPERATOR_BRANCH', trim: false),
-string(defaultValue: 'https://github.com/fusor/mig-controller.git', description: 'Mig controller repo to test, only used by GHPRB', name: 'MIG_CONTROLLER_REPO', trim: false),
+string(defaultValue: 'https://github.com/konveyor/mig-controller.git', description: 'Mig controller repo to test, only used by GHPRB', name: 'MIG_CONTROLLER_REPO', trim: false),
 string(defaultValue: 'master', description: 'Mig controller repo branch to test', name: 'MIG_CONTROLLER_BRANCH', trim: false),
 string(defaultValue: 'https://github.com/fusor/mig-e2e.git', description: 'Mig e2e repo to test', name: 'MIG_E2E_REPO', trim: false),
 string(defaultValue: 'master', description: 'Mig e2e repo branch to test', name: 'MIG_E2E_BRANCH', trim: false),
@@ -60,7 +60,7 @@ node {
 
             utils.prepare_workspace(SRC_CLUSTER_VERSION, DEST_CLUSTER_VERSION)
             utils.clone_mig_e2e()
-            if (env.MIG_CONTROLLER_REPO != 'https://github.com/fusor/mig-controller.git') {
+            if (env.MIG_CONTROLLER_REPO != 'https://github.com/konveyor/mig-controller.git') {
               utils.clone_mig_controller()
             }
         }

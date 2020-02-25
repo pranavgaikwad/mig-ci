@@ -7,7 +7,7 @@ This repo contains ansible and CI related assets used for the OCP 3 to 4 migrati
 
 ## Pipelines 
 
-Jenkins _pipelines_ are used to provide the logic necessary to orchestrate the build and execution of CI workflows. Each pipeline job can be parameterized to customize the behavior for the intended workflow, they are also responsible of providing notifications for each build, below are the supplied  [mig CI pipelines](https://github.com/fusor/mig-ci/tree/master/pipeline) with a brief description:
+Jenkins _pipelines_ are used to provide the logic necessary to orchestrate the build and execution of CI workflows. Each pipeline job can be parameterized to customize the behavior for the intended workflow, they are also responsible of providing notifications for each build, below are the supplied  [mig CI pipelines](https://github.com/konveyor/mig-ci/tree/master/pipeline) with a brief description:
 
 | Pipeline | Purpose |
 | --- | --- |
@@ -19,7 +19,7 @@ Jenkins _pipelines_ are used to provide the logic necessary to orchestrate the b
 
 ### CI job logic
 
-The use of _**trigger jobs**_ which are parameterized is key to the structure of the CI workflows, trigger jobs can for instance watch repositories for activity and execute _**base pipelines**_ to run a CI workflow. A good example are trigger jobs watching the [mig-controller repo](https://github.com/konveyor/mig-controller) for changes and executing the [parallel base pipeline](https://github.com/fusor/mig-ci/blob/master/pipeline/parallel-base.groovy) with [e2e tests](https://github.com/fusor/mig-e2e)
+The use of _**trigger jobs**_ which are parameterized is key to the structure of the CI workflows, trigger jobs can for instance watch repositories for activity and execute _**base pipelines**_ to run a CI workflow. A good example are trigger jobs watching the [mig-controller repo](https://github.com/konveyor/mig-controller) for changes and executing the [parallel base pipeline](https://github.com/konveyor/mig-ci/blob/master/pipeline/parallel-base.groovy) with [e2e tests](https://github.com/konveyor/mig-e2e)
 
 ### CI job parameters
 
@@ -64,7 +64,7 @@ _**Note:**_ **For a full list of all possible parameters please inspect each pip
 
 ### Migration controller e2e tests
 
-The migration controller e2e tests are supplied in the [mig-e2e repo](https://github.com/fusor/mig-e2e), the tests are based on [mig controller sample scenarios](https://github.com/konveyor/mig-controller/tree/master/docs/scenarios) and are executed during the last stage of CI jobs.
+The migration controller e2e tests are supplied in the [mig-e2e repo](https://github.com/konveyor/mig-e2e), the tests are based on [mig controller sample scenarios](https://github.com/konveyor/mig-controller/tree/master/docs/scenarios) and are executed during the last stage of CI jobs.
 
 ### Debugging CI jobs
 
@@ -90,5 +90,5 @@ When you are finished, just run the playbook to destroy NFS AWS instance:
 
 ## OCP3 agnosticd multinode in AWS
 
-This type of deployment is used in [parallel-base](https://github.com/fusor/mig-ci/blob/master/pipeline/parallel-base.groovy) pipeline, and is used for creation of multinode cluster. To setup a similar environment outside of CI, please refer to the [official](https://github.com/redhat-cop/agnosticd) doc.
+This type of deployment is used in [parallel-base](https://github.com/konveyor/mig-ci/blob/master/pipeline/parallel-base.groovy) pipeline, and is used for creation of multinode cluster. To setup a similar environment outside of CI, please refer to the [official](https://github.com/redhat-cop/agnosticd) doc.
 - - - -

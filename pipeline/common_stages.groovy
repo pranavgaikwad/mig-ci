@@ -429,7 +429,7 @@ def deploy_mig_controller_on_both(
     stage('Build mig-controller image and deploy on both clusters') {
       steps_finished << 'Build mig-controller image and deploy on both clusters'
       // Create custom mig-controller docker image if building a different mig-controller repo/branch
-      if ("${MIG_CONTROLLER_REPO}" != "https://github.com/fusor/mig-controller.git") {
+      if ("${MIG_CONTROLLER_REPO}" != "https://github.com/konveyor/mig-controller.git") {
         withEnv(["IMG=${QUAYIO_CI_REPO}:${MIG_CONTROLLER_BRANCH}"]) {
           dir('mig-controller') {
             sh 'make docker-build'

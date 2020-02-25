@@ -43,7 +43,7 @@ def clone_mig_e2e() {
 
 def prepare_cpma(repo = '', branch = '') {
   if (repo == '') {
-    repo = "https://github.com/fusor/cpma.git"
+    repo = "https://github.com/konveyor/cpma.git"
   }
   if (branch == '') {
     branch = "master"
@@ -63,7 +63,7 @@ def prepare_agnosticd() {
 // Fix checkout to commit before boto removal on agnosticd development branch , see https://github.com/fusor/mig-agnosticd/issues/95
   checkout([$class: 'GitSCM', branches: [[name: 'development']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'agnosticd']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/redhat-cop/agnosticd.git']]])
 
-  checkout([$class: 'GitSCM', branches: [[name: 'master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'mig-agnosticd']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/fusor/mig-agnosticd.git']]])
+  checkout([$class: 'GitSCM', branches: [[name: 'master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'mig-agnosticd']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/konveyor/mig-agnosticd.git']]])
   // Set agnosticd HOME and add to destroy script
   AGNOSTICD_HOME = "${env.WORKSPACE}/agnosticd"
   sh "echo 'export AGNOSTICD_HOME=${AGNOSTICD_HOME}' >> destroy_env.sh"
@@ -198,7 +198,7 @@ def teardown_mig_controller(kubeconfig) {
 
 def teardown_container_image() {
   // Check if is not upstream
-  if (env.QUAYIO_CI_REPO && "${MIG_CONTROLLER_REPO}" != "https://github.com/fusor/mig-controller.git") {
+  if (env.QUAYIO_CI_REPO && "${MIG_CONTROLLER_REPO}" != "https://github.com/konveyor/mig-controller.git") {
     ansiColor('xterm') {
       ansiblePlaybook(
         playbook: 'container_image_destroy.yml',

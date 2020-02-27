@@ -1,0 +1,5 @@
+- hosts: localhost
+  roles:
+    - cam_disconnected
+  vars_files:
+    - "{{ playbook_dir }}/config/defaults.yml"

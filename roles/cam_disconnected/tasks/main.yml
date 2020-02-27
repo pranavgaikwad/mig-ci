@@ -1,0 +1,49 @@
+- assert:
+    that:
+      - rh_sub_user != ''
+      - rh_sub_pass != ''
+      - rh_stage_user != ''
+      - rh_stage_pass != ''
+      - quay_token != ''
+      - cam_disconnected_repo != ''
+      - cam_disconnected_config != ''
+    fail_msg: "rh_sub_user, rh_sub_pass, rh_stage_user, rh_stage_pass, cam_disconnected_repo, cam_disconnected_config and quay_token variables must be set for disconnected CAM deployments"
+
+- name: "Check if cam disconnected repo exists"
+  stat:
+    path: "{{ cam_disconnected_location }}"
+  register: cam_repo
+
+- name: "Clone the cam disconnected repo"
+  git:
+    dest: "{{ cam_disconnected_location }}"
+    repo: "{{ cam_disconnected_repo }}"
+    version: "{{ cam_disconnected_branch }}"
+  ignore_errors: true
+  when: not cam_repo.stat.exists
+
+- name: "Login to RH registry at {{ rh_registry }}"
+  shell: "docker login {{ rh_registry }} -u {{ rh_sub_user }} -p {{ rh_sub_pass }}"
+  register: rh_registry_login
+  until:  rh_registry_login is success
+  retries: 6
+  delay: 10
+
+- name: "Login to RH stage registry at {{ rh_stage_registry }}"
+  shell: "docker login {{ rh_stage_registry }} -u {{ rh_stage_user }} -p {{ rh_stage_pass }}"
+  register: stage_registry_login
+  until:  stage_registry_login is success
+  retries: 6
+  delay: 10
+
+- name: "Check for cam disconnected config at {{ cam_disconnected_config_path}}/{{ cam_disconnected_config }}"
+  stat:
+    path: "{{ cam_disconnected_config_path}}/{{ cam_disconnected_config }}"
+  register: cam_config
+
+- fail:
+    msg: "{{ cam_disconnected_config_path}}/{{ cam_disconnected_config }} config does not exist, failing.."
+  when: not cam_config.stat.exists
+
+- name: "Copy cam disconnected config to {{ cam_disconnected_location }}/config.yml"
+  shell: "cp {{ cam_disconnected_config_path}}/{{ cam_disconnected_config }} {{ cam_disconnected_location }}/config.yml"

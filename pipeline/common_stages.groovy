@@ -417,8 +417,6 @@ def cam_disconnected(
         string(credentialsId: "${CAM_DISCONNECTED_REPO}", variable: 'CAM_DISCONNECTED_REPO')]) {
           withEnv([
             "KUBECONFIG=${kubeconfig}",
-            "SUB_USER=${SUB_USER}",
-            "SUB_PASS=${SUB_PASS}",
             "CAM_DISCONNECTED_CONFIG=${cam_disconnected_config}"]) {
              sh 'env'
              ansiColor('xterm') {

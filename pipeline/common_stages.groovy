@@ -7,8 +7,8 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
   // Even for nightly releases, osrelease must map to a valid 4.x value on agnosticd repos (clientvm/bastion req)
   def releases = [
     '4.1': "4.1.13",
-    '4.2': "4.2.0",
-    '4.3': "4.3.0",
+    '4.2': "4.2.20",
+    '4.3': "4.3.1",
     'latest-4.1': "4.1.0",
     'latest-4.2': "4.1.0",
     'latest': "4.1.0",

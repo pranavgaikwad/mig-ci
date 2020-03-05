@@ -1,13 +1,13 @@
 ---
 
-- assert:
-    that:
-      - rh_sub_user != ''
-      - rh_sub_pass != ''
-    fail_msg: "rh_sub_user and rh_sub_pass variables must be set for podman based CAM deployments"
-
 - name: "Deploy CAM downstream operator using podman"
   block:
+    - assert:
+        that:
+          - rh_sub_user != ''
+          - rh_sub_pass != ''
+        fail_msg: "rh_sub_user and rh_sub_pass variables must be set for podman based CAM deployments"
+
     - name: "Login to RH registry"
       shell: "podman login {{ rh_downstream_registry }} -u {{ rh_sub_user }} -p {{ rh_sub_pass }}"
       register: podman_login
@@ -42,6 +42,17 @@
       shell: "podman rmi -af"
 
   become: true
+  when: not mig_operator_use_disconnected
+
+- name: "Deploy CAM downstream operator using disconnected"
+  block:
+    - name: "Include disconnected vars"
+      include_vars:
+        file: "{{ playbook_dir }}/roles/cam_disconnected/defaults/main.yml"
+
+    - name: "Copy operator.yml from disconnected CAM location"
+      shell: "cp {{ cam_disconnected_location }}/operator.yml {{ playbook_dir }}"
+  when: mig_operator_use_disconnected
 
 - name: "Create CAM downstream operator"
   k8s:

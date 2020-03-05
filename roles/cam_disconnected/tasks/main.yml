@@ -1,6 +1,3 @@
-- debug:
-    msg: "rh_sub_user: {{ rh_sub_user }} rh_sub_pass: {{ rh_sub_pass }} cam_disconnected_repo: {{ cam_disconnected_repo }} rh_stage_user: {{ rh_stage_user }} rh_stage_pass: {{ rh_stage_pass }} quay_token: {{ quay_token }}"
-
 - assert:
     that:
       - rh_sub_user != ''
@@ -39,7 +36,7 @@
   retries: 6
   delay: 10
 
-- name: "Check for cam disconnected config at {{ cam_disconnected_config_path}}/{{ cam_disconnected_config }}"
+- name: "Check if cam disconnected config present"
   stat:
     path: "{{ cam_disconnected_config_path}}/{{ cam_disconnected_config }}"
   register: cam_config

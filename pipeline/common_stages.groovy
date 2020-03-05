@@ -408,7 +408,7 @@ def cam_disconnected(
   cluster_version) {
   return {
     stage('Deploy CAM disconnected ' + cluster_version) {
-      steps_finished << 'Deploy CAM disconnected ' + cluster_version
+      steps_finished << 'Deploy CAM disconnected on OCP ' + cluster_version
       withCredentials([
         [$class: 'UsernamePasswordMultiBinding', credentialsId: "${STAGE_REGISTRY_CREDENTIALS}", usernameVariable: 'SUB_STAGE_USER', passwordVariable: 'SUB_STAGE_PASS'],
         string(credentialsId: "${EC2_SUB_USER}", variable: 'SUB_USER'),
@@ -418,7 +418,6 @@ def cam_disconnected(
           withEnv([
             "KUBECONFIG=${kubeconfig}",
             "CAM_DISCONNECTED_CONFIG=${cam_disconnected_config}"]) {
-             sh 'env'
              ansiColor('xterm') {
                ansiblePlaybook(
                  playbook: 'cam_disconnected_prepare.yml',

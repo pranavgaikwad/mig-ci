@@ -133,9 +133,11 @@ node {
        if (USE_DISCONNECTED) {
           common_stages.cam_disconnected(SOURCE_KUBECONFIG, SRC_DISCONNECTED_CONFIG, SRC_CLUSTER_VERSION).call()
           common_stages.cam_disconnected(TARGET_KUBECONFIG, DEST_DISCONNECTED_CONFIG, DEST_CLUSTER_VERSION).call()
+          // Fix me: Wait for nodes to settle new config
+          sh 'sleep 1200'
        }
 
-//       common_stages.deploy_mig_controller_on_both(SOURCE_KUBECONFIG, TARGET_KUBECONFIG, false, true).call()
+       common_stages.deploy_mig_controller_on_both(SOURCE_KUBECONFIG, TARGET_KUBECONFIG, false, true).call()
 
         if (E2E_RUN) {
           common_stages.execute_migration(E2E_TESTS, SOURCE_KUBECONFIG, TARGET_KUBECONFIG).call()

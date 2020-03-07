@@ -4,7 +4,7 @@ metadata:
 {% if mig_operator_use_downstream|bool is sameas true %}
   name: cam-operator
 {% else %}
-  name: mig-operator
+  name: konveyor-operator
 {% endif %}
   namespace: {{ mig_migration_namespace }}
 spec:
@@ -22,8 +22,8 @@ spec:
   sourceNamespace: openshift-marketplace
   startingCSV: cam-operator.{{ mig_operator_release }}
 {% else %}
-  name: mig-operator
-  source: installed-custom-openshift-migration
-  sourceNamespace: {{ mig_migration_namespace }}
-  startingCSV: mig-operator.{{ mig_operator_release }}
+  name: konveyor-operator
+  source: migration-operator
+  sourceNamespace: openshift-marketplace
+  startingCSV: konveyor-operator.{{ mig_operator_release }}
 {% endif %}

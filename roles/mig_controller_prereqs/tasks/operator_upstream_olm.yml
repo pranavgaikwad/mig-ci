@@ -11,7 +11,6 @@
     - debug:
         msg:
           - "OLM cluster version: {{ olm_cluster_version }}"
-          - "Using mig operator selector: {{ mig_operator_selector[olm_cluster_version] }}"
 
     - name: "Create OperatorSource"
       k8s:
@@ -22,22 +21,25 @@
       retries: 30
       delay: 30
 
+    - name: "Define OperatorSource pod label"
+      set_fact:
+        mig_operator_label: "{{ 'marketplace.catalogSourceConfig=migration-operator' if olm_cluster_version is version('4.1', '<=') else 'marketplace.operatorSource=migration-operator' }}"
+
     - name: "Wait for OLM to reconcile OperatorSource creation"
       k8s_facts:
         kind: Pod
         namespace: openshift-marketplace
-        label_selectors: "{{ mig_operator_selector[olm_cluster_version] }}"
+        label_selectors: "{{ mig_operator_label }}"
       register: pod
       until: pod.get("resources", []) | length > 0 and true in (pod | json_query('resources[].status.containerStatuses[].ready'))
       retries: 18
       delay: 10
 
-    - name: "Confirm service availability"
+    - name: "Confirm OperatorSource service availability"
       k8s_facts:
         kind: Service
         namespace: openshift-marketplace
-        name: ocpmigrate-operators
-        label_selectors: "marketplace.catalogSourceConfig=ocpmigrate-operators"
+        name: migration-operator
       register: service
       until: "'grpc' in (service | json_query('resources[].spec.ports[].name'))"
       retries: 18
@@ -48,15 +50,16 @@
         name: "{{ mig_migration_namespace }}"
         kind: Namespace
         state: present
+        wait: yes
 
-    - name: "Get grpc_endpoint IP:port of ocpmigrate-operators service"
-      set_fact:
-        grpc_endpoint: "{{ service | json_query('resources[0].spec.clusterIP') }}:{{ service | json_query('resources[0].spec.ports[0].port') }}"
+#    - name: "Extract grpc_endpoint IP:port of migration-operator service"
+#      set_fact:
+#        grpc_endpoint: "{{ service | json_query('resources[0].spec.clusterIP') }}:{{ service | json_query('resources[0].spec.ports[0].port') }}"
 
-    - name: "Create CatalogSource"
-      k8s:
-        state: present
-        definition: "{{ lookup('template', 'mig-operator-catalogsource.yml.j2' ) }}"
+#    - name: "Create CatalogSource"
+#      k8s:
+#        state: present
+#        definition: "{{ lookup('template', 'mig-operator-catalogsource.yml.j2' ) }}"
 
     - name: "Create OperatorGroup"
       k8s:

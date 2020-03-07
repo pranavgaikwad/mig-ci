@@ -2,12 +2,12 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: CatalogSource
 metadata:
   labels:
-    csc-owner-name: installed-custom-openshift-migration
-    csc-owner-namespace: openshift-marketplace
-  name: installed-custom-openshift-migration
-  namespace: {{ mig_migration_namespace }}
+    opsrc-owner-name: migration-operator
+    opsrc-owner-namespace: openshift-marketplace
+  name: migration-operator
+  namespace: openshift-marketplace
 spec:
   sourceType: grpc
   address: {{ grpc_endpoint }}
-  displayName: Custom Operators
-  publisher: Custom
+  displayName: Migration Operator
+  publisher: ocp-migrate-team@redhat.com

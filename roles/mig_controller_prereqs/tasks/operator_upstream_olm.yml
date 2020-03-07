@@ -52,15 +52,6 @@
         state: present
         wait: yes
 
-#    - name: "Extract grpc_endpoint IP:port of migration-operator service"
-#      set_fact:
-#        grpc_endpoint: "{{ service | json_query('resources[0].spec.clusterIP') }}:{{ service | json_query('resources[0].spec.ports[0].port') }}"
-
-#    - name: "Create CatalogSource"
-#      k8s:
-#        state: present
-#        definition: "{{ lookup('template', 'mig-operator-catalogsource.yml.j2' ) }}"
-
     - name: "Create OperatorGroup"
       k8s:
         state: present

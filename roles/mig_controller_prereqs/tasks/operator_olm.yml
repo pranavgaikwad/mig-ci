@@ -1,5 +1,13 @@
 ---
 
+- name: "Get OLM channel"
+  import_tasks: operator_olm_get_channel.yml
+
+- debug:
+    msg:
+      - "OLM operator will subscribe using release : {{ mig_operator_release }}"
+      - "OLM operator will use subscription channel : {{ mig_operator_channel }}"
+
 - name: "Deploy using OLM upstream operator"
   import_tasks: operator_upstream_olm.yml
   when: not mig_operator_use_downstream|bool

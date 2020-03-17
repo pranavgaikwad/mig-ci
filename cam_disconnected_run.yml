@@ -3,4 +3,3 @@
 - import_playbook: "{{ cam_disconnected_location }}/mirror.yml"
   vars:
     cam_disconnected_location: "{{ playbook_dir }}/restricted-network-operator-mirror"
-    workaround: true

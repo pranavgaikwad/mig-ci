@@ -9,6 +9,55 @@
       - cam_disconnected_config != ''
     fail_msg: "rh_sub_user, rh_sub_pass, rh_stage_user, rh_stage_pass, cam_disconnected_repo, cam_disconnected_config and quay_token variables must be set for disconnected CAM deployments"
 
+- include_role:
+    name: get_ocp_version
+
+- stat:
+    path: "/etc/docker/daemon.json"
+  register: insecure_regs_file
+
+- name: Add insecure registry to /etc/docker/daemon.json
+  block:
+
+    - name: Get insecure registry route
+      k8s_facts:
+        kind: Route
+        namespace: "default"
+        name: "docker-registry"
+      register: app_route
+      until: app_route.resources | length > 0
+      delay: 5
+      retries: 12
+       
+    - name: Extract insecure registry route
+      set_fact:
+        target_registry: "{{ app_route.resources[0].spec.host }}"
+        
+    - name: Get current insecure registries
+      set_fact:
+        json_conf: "{{ lookup('file','/etc/docker/daemon.json') | from_json }}"
+
+    - name: Set default values if there are no registries defined
+      set_fact:
+        json_conf_insecure_registries: "{{ [] if json_conf['insecure-registries'] is not defined else json_conf['insecure-registries'] }}"
+
+    - name: Add insecure registries (if insecure_registries had to be converted)
+      set_fact:
+        json_conf: "{{ json_conf | combine({'insecure-registries': (json_conf_insecure_registries + [ target_registry ] ) | unique }, recursive=True) }}"  
+
+    - name: Load variable back to file
+      copy:
+        content: "{{ json_conf | to_json }}"
+        dest: /etc/docker/daemon.json
+      become: yes
+
+    - name: Restart Docker server
+      service:
+        name: docker
+        state: restarted
+      become: yes
+  when: insecure_regs_file.stat.exists and cluster_version is version_compare('3.11', '<=')
+
 - name: "Check if cam disconnected repo exists"
   stat:
     path: "{{ cam_disconnected_location }}"

@@ -405,7 +405,8 @@ def login_cluster(
 def cam_disconnected(
   kubeconfig,
   cam_disconnected_config,
-  cluster_version) {
+  cluster_version,
+  validate_node_config) {
   return {
     stage('Deploy CAM disconnected ' + cluster_version) {
       steps_finished << 'Deploy CAM disconnected on OCP ' + cluster_version
@@ -429,7 +430,7 @@ def cam_disconnected(
              ansiColor('xterm') {
                ansiblePlaybook(
                  playbook: 'cam_disconnected_run.yml',
-                 extras: "-e cam_disconnected_repo=https://gitlab.cee.redhat.com/fbladilo/restricted-network-operator-mirror.git -e cam_disconnected_branch=minor_fixes",
+                 extras: "-e validate_node_config=${validate_node_config}",
                  hostKeyChecking: false,
                  unbuffered: true,
                  colorized: true)

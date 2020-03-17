@@ -133,8 +133,6 @@ node {
        if (USE_DISCONNECTED) {
           common_stages.cam_disconnected(SOURCE_KUBECONFIG, SRC_DISCONNECTED_CONFIG, SRC_CLUSTER_VERSION, false).call()
           common_stages.cam_disconnected(TARGET_KUBECONFIG, DEST_DISCONNECTED_CONFIG, DEST_CLUSTER_VERSION, true).call()
-          // Fix me: Wait for nodes to settle new config
-          sh 'sleep 1200'
        }
 
        common_stages.deploy_mig_controller_on_both(SOURCE_KUBECONFIG, TARGET_KUBECONFIG, false, true).call()

@@ -12,8 +12,13 @@ spec:
   installPlanApproval: Automatic
 {% if mig_operator_use_downstream|bool is sameas true %}
   name: cam-operator
+{% if mig_operator_use_disconnected|bool is sameas true %}
+  source: catalog
+  sourceNamespace: openshift-migration
+{% else %}
   source: redhat-operators
   sourceNamespace: openshift-marketplace
+{% endif %}
   startingCSV: cam-operator.{{ mig_operator_release }}
 {% else %}
   name: konveyor-operator

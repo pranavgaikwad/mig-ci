@@ -8,7 +8,6 @@ mig_operator_use_downstream: "{{ lookup('env', 'MIG_OPERATOR_USE_DOWNSTREAM') or
 mig_controller_location: "{{ workspace }}/mig-controller"
 mig_controller_repo: "{{ lookup('env', 'MIG_CONTROLLER_REPO') or 'https://github.com/konveyor/mig-controller.git' }}"
 mig_controller_branch: "{{ lookup('env', 'MIG_CONTROLLER_BRANCH') or 'master' }}"
-mig_controller_sa_name: mig
 mig_controller_host_cluster: true
 mig_controller_velero: true
 mig_controller_ui: true

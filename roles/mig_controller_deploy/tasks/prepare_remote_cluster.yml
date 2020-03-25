@@ -1,8 +1,12 @@
 ---
-- name: Start remote cluster tasks
+- name: "Start remote cluster tasks"
   block:
 
-    - name: Extract remote cluster SA token
+    - name: "Define controller SA name"
+      set_fact:
+        mig_controller_sa_name: "{{ 'mig' if mig_operator_release is version_compare('v1.2', '<') and mig_operator_release != 'latest' else 'migration-controller' }}"
+
+    - name: "Extract remote cluster SA token"
       shell: "{{ oc_binary }} sa get-token -n {{ mig_migration_namespace }} {{ mig_controller_sa_name }} | base64 -w 0"
       register: oc_sa_output
 
@@ -12,7 +16,7 @@
      # Fix me: need to find a better way to obtain the master API url from k8s_facts
      # Current context always returns only one entry 
 
-    - name: Extract remote cluster URL from current context
+    - name: "Extract remote cluster URL from current context"
       shell: "{{ oc_binary }} whoami --show-server"
       register: oc_config_output
 

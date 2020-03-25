@@ -1,7 +1,6 @@
 - hosts: localhost
   tasks:
     - include_role:
-        name: ocp4_cluster_deploy
-        tasks_from: dump_ocp4.yml
+        name: ocp4_dump_release
   vars_files:
     - "{{ playbook_dir }}/config/defaults.yml"

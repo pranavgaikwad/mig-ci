@@ -46,7 +46,7 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
           colorized: true)
       }
     }
-    # Reset osrelease to 4.1.0 for ocp-preview releases, it will be ignored by agnosticd
+    // Reset osrelease to 4.1.0 for ocp-preview releases, it will be ignored by agnosticd
     osrelease = '4.1.0'
   }
 

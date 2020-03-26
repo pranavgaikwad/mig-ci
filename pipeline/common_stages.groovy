@@ -422,7 +422,7 @@ def cam_disconnected(
              ansiColor('xterm') {
                ansiblePlaybook(
                  playbook: 'cam_disconnected_prepare.yml',
-                 extras: "-e cam_disconnected_repo=https://gitlab.cee.redhat.com/fbladilo/restricted-network-operator-mirror.git -e cam_disconnected_branch=minor_fixes",
+                 extras: "",
                  hostKeyChecking: false,
                  unbuffered: true,
                  colorized: true)

@@ -4,13 +4,14 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
   def repo_version = "4.1.0" // Must map to a valid version in `own_repo_path:`
   def short_version = cluster_version.replace(".", "")
 
-  // GA releases, osrelease must map to a valid 4.x value on agnosticd repos (clientvm/bastion req)
+  // GA OCP releases
+  // ocp4_installer_version instructs agnosticd the directory containing the installer/client on https://mirror.openshift.com/pub/openshift-v4/clients/ocp/
   def releases = [
     '4.1': "4.1.38",
     '4.2': "4.2.23",
     '4.3': "4.3.5",
   ]
-  def osrelease = releases["${cluster_version}"]
+  def ocp4_installer_version = releases["${cluster_version}"]
   def full_cluster_name = ''
   def cluster_adm_user = ''
   def cluster_adm_passwd = ''
@@ -33,10 +34,10 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
     cluster_adm_passwd = "${OCP4_ADMIN_PASSWD}"
   }
 
-  // Nightlies and other special releases
+  // Non-GA (nightlies and other special releases)
   if (!cluster_version.startsWith("4.")) {
     echo "Cluster is a ${cluster_version} build"
-    // Fetch and dump OCP4 release
+    // Fetch and dump target OCP4 release
     withEnv(["OCP4_RELEASE=${cluster_version}"]){
       ansiColor('xterm') {
         ansiblePlaybook(
@@ -46,8 +47,8 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
           colorized: true)
       }
     }
-    // Reset osrelease to 4.1.0 for ocp-preview releases, it will be ignored by agnosticd
-    osrelease = '4.1.0'
+    // Reset ocp4_installer_version to 4.1.0 for ocp-preview releases, it will be ignored by agnosticd
+    ocp4_installer_version = '4.1.0'
   }
 
   def OLM_TEXT = ' using non-OLM'
@@ -92,9 +93,7 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
             'cloudformation_retries': "0",
             'env_type': "ocp4-workshop",
             'software_to_deploy': "none",
-            'ocp4_installer_version': "${osrelease}",
-            'osrelease': "${repo_version}",
-            'repo_version': "${repo_version}",
+            'ocp4_installer_version': "${ocp4_installer_version}",
             'install_ocp4': "true",
             'install_opentlc_integration': "false",
             'install_idm': "htpasswd",

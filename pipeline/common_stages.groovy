@@ -94,6 +94,7 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
             'env_type': "ocp4-workshop",
             'software_to_deploy': "none",
             'ocp4_installer_version': "${ocp4_installer_version}",
+            'osrelease': "${repo_version}",
             'install_ocp4': "true",
             'install_opentlc_integration': "false",
             'install_idm': "htpasswd",

@@ -1,6 +1,0 @@
-- name: Login to cluster
-  include_role:
-    name: login_ocp
-  vars:
-    kubeconfig: "{{ playbook_dir }}/auth/kubeconfig"
-    copy_location: "{{ target_kubeconfig }}"

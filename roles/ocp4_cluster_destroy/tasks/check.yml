@@ -1,4 +1,0 @@
-- name: check for OCP installation
-  stat:
-    path: "{{ playbook_dir }}/.openshift_install_state.json"
-  register: ocp_install

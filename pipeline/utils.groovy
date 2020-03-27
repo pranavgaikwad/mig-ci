@@ -41,21 +41,10 @@ def clone_mig_e2e() {
   checkout([$class: 'GitSCM', branches: [[name: "${MIG_E2E_BRANCH}"]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'mig-e2e']], submoduleCfg: [], userRemoteConfigs: [[url: "${MIG_E2E_REPO}"]]])
 }
 
-def prepare_cpma(repo = '', branch = '') {
-  if (repo == '') {
-    repo = "https://github.com/konveyor/cpma.git"
-  }
-  if (branch == '') {
-    branch = "master"
-  }
-  checkout([$class: 'GitSCM', branches: [[name: branch]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'cpma']], submoduleCfg: [], userRemoteConfigs: [[url: repo]]])
-}
-
 def clone_mig_controller() {
   echo 'Cloning mig-controller repo'
   checkout([$class: 'GitSCM', branches: [[name: "${MIG_CONTROLLER_BRANCH}"]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'mig-controller']], submoduleCfg: [], userRemoteConfigs: [[url: "${MIG_CONTROLLER_REPO}"]]])
 }
-
 
 def prepare_agnosticd() {
   sh 'test -e ~/.local/bin/aws || pip install awscli --upgrade --user'
@@ -127,7 +116,6 @@ def prepare_workspace(src_version = '', dest_version = '') {
   sh 'touch destroy_env.sh && chmod +x destroy_env.sh'
 }
 
-
 def copy_private_keys() {
   PRIVATE_KEY = "${KEYS_DIR}/${env.EC2_KEY}.pem"
   withCredentials([file(credentialsId: "${env.EC2_PRIV_KEY}", variable: "SSH_PRIV_KEY")]) {
@@ -135,7 +123,6 @@ def copy_private_keys() {
     sh "chmod 600 ${PRIVATE_KEY}"
   }
 }
-
 
 def copy_public_keys() {
   // Prepare pull secret
@@ -163,23 +150,6 @@ def teardown_ocp_agnosticd(cluster_version) {
              sh './delete_ocp4_workshop.sh'
            }
          }
-    }
-  }
-}
-
-def teardown_ocp4() {
-  if (EC2_TERMINATE_INSTANCES) {
-    withCredentials([
-      string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-      string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY')
-      ]) {
-      ansiColor('xterm') {
-        ansiblePlaybook(
-          playbook: 'destroy_ocp4_cluster.yml',
-          hostKeyChecking: false,
-          unbuffered: true,
-          colorized: true)
-      }
     }
   }
 }

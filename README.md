@@ -11,11 +11,10 @@ Jenkins _pipelines_ are used to provide the logic necessary to orchestrate the b
 
 | Pipeline | Purpose |
 | --- | --- |
-| `ocp3-base` | Deploys OCP3 using [agnosticd](https://github.com/fbladilo/testing#ocp3-agnosticd-multinode-in-aws) |
-| `ocp4-base` | Deploys OCP4 using [agnosticd](https://github.com/fbladilo/testing#ocp3-agnosticd-multinode-in-aws) |
+| `ocp3-base` | Deploys OCP3 using [mig-agnosticd](https://github.com/konveyor/mig-agnosticd/tree/master/3.x) |
+| `ocp4-base` | Deploys OCP4 using [mig-agnosticd](https://github.com/konveyor/mig-agnosticd/tree/master/4.x) |
 | `parallel-base` | Deploys OCP3, OCP4 in parallel, installs cluster application migration tools and executes e2e migration tests |
-| `cpma-e2e-base` | Works similar to `parallel-base`, deploys OCP3, OCP4, builds CPMA. After that extracts manifests from source cluster (OCP3) and applies them to the target cluster (OCP4). Arguments used in this pipeline are documented in https://github.com/konveyor/cpma#e2e-tests |
-| `cpma-base` | Same as above, but expects only preprovisioned stable cluster to compare generated reports. Does not check the manifests extraction. Documented in https://github.com/konveyor/cpma#e2e-tests |
+| `mig-e2e-base` | Installs cluster application migration toolkit and executes e2e migration tests |
 
 ### CI job logic
 
@@ -29,36 +28,25 @@ Below are some of the most commonly used parameters allowing the customization o
 | --- | --- | --- |
 | `AWS_REGION` | AWS region for resources to deploy | Default varies based on pipeline |
 | `SRC_CLUSTER_VERSION`| OCP source cluster version to deploy | Default is v3.7 |
-| `DEST_CLUSTER_VERSION`| OCP destination cluster version to deploy | Default is v4.1 |
+| `DEST_CLUSTER_VERSION`| OCP destination cluster version to deploy | Default is v4.3 |
 | `OCP3_WORKER_INSTANCE_COUNT` | Number of OCP3 compute nodes to create |
 | `OCP3_MASTER_INSTANCE_COUNT` | Number of OCP3 master nodes to create |
 | `OCP4_WORKER_INSTANCE_COUNT` | Number of OCP4 compute nodes to create |
 | `OCP4_MASTER_INSTANCE_COUNT` | Number of OCP4 master nodes to create |
 | `CLUSTER_NAME` | Name of the cluster to deploy | The final deployment will use the following convention: `${CLUSTER_NAME}-<version>-${BUILD_NUMBER}`. In AWS you can use this value on instance tags GUID label|
-| `EC2_KEY` | Name of SSH public and private key | Default is `ci`, outside CI `libra` is recommended. Will be used to allow SSH access to instances |
-| `MIG_OPERATOR_REPO` | source repository for mig-operator to test | Default is konveyor |
-| `MIG_OPERATOR_BRANCH` | source branch for mig-operator to test | Default is master |
+| `EC2_KEY` | Name of SSH public and private key | Default is `ci`. Will be used to allow SSH access to instances |
+| `MIG_OPERATOR_REPO` | Repository for mig-operator to test | Default is konveyor |
+| `MIG_OPERATOR_BRANCH` | Branch for mig-operator to test | Default is master |
+| `MIG_E2E_REPO` | Repository for e2e tests| Default is [mig-e2e](https://github.com/konveyor/mig-e2e) |
+| `MIG_E2E_REPO_BRANCH` | Repository for e2e tests | Default is master |
 | `SUB_USER` | RH subscription username | Only used in OA deployments to access OCP bits |
 | `SUB_PASS` | RH subscription password | Only used in OA deployments to access OCP bits |
 | `CLEAN_WORKSPACE` | Clean Jenkins workspace after build | Default is true |
 | `E2E_RUN` | Run end-to-end tests after deployment | Default is true |
 | `EC2_TERMINATE_INSTANCES` | Terminate all instances on EC2 after build | Default is true |
+| `EC2_TERMINATE_INSTANCES` | Terminate all instances on EC2 after build | Default is true |
+| `DEBUG` | Enable debugging at the end of the job | Default is false |
 
-
-#### CPMA CI job parameters
-
-| Parameter | Purpose | Notes |
-| --- | --- | --- |
-| `EC2_PRIV_KEY`  | Private key for accessing instances, from Jenkins credentials store | Should be one of credentials in Jenkins |
-| `EC2_KEY` | EC2 SSH key name for remote access | `ci` by default |
-| `CPMA_BRANCH` | CPMA branch to checkout | `master` by default |
-| `CPMA_REPO` | CPMA repo to clone | `https://github.com/konveyor/cpma.git` points to upstream by default |
-| `CPMA_HOSTNAME` | Hostname of the stable cluster for ssh access | Required to be specified |
-| `CPMA_CLUSTERNAME`  | Cluster master name to generate report from. | Should be equal to `current-context`  |
-| `CPMA_LOGIN`  | Login for the cluster | required |
-| `CPMA_PASSWD` | Password for the cluster | required |
-| `CPMA_SSHLOGIN` | SSH login for master node | `root` |
-| `CPMA_SSHPORT`  | SSH port for master node | `22` |
 
 _**Note:**_ **For a full list of all possible parameters please inspect each pipeline script**
 
@@ -71,7 +59,7 @@ The migration controller e2e tests are supplied in the [mig-e2e repo](https://gi
 The `EC2_TERMINATE_INSTANCES` and `CLEAN_WORKSPACE` boolean parameters can be used to **avoid** the termination of clusters and the cleanup of Jenkins workspace in case you want to debug a migration job after the run: 
 
 1) SSH to jenkins host
-2) Go to `/var/lib/jenkins/workspace`, and enter the `parallel-mig-ci-${BUILD_NUMBER}` dir. The `kubeconfigs` directory will contain `KUBECONFIG` files with active sessions for both source and target clusters. You can utilize them by `export KUBECONFIG=$(pwd)/kubeconfigs/ocp-v3.11-kubeconfig`.
+2) Go to `/var/lib/jenkins/workspace`, and enter the `<job-id>-${BUILD_NUMBER}` dir. The `kubeconfigs` directory will contain `KUBECONFIG` files with active sessions for both source and target clusters. You can utilize them by `export KUBECONFIG=$(pwd)/kubeconfigs/ocp-<version>-kubeconfig`.
 3) Once done debugging, you can clean up resources manually by executing `./destroy_env.sh`.
 
 ## External NFS server setup on AWS
@@ -88,7 +76,4 @@ This task could be executed on every cluster that will need access to the NFS se
 When you are finished, just run the playbook to destroy NFS AWS instance:
 - `ansible-playbook nfs_server_destroy.yml`
 
-## OCP3 agnosticd multinode in AWS
-
-This type of deployment is used in [parallel-base](https://github.com/konveyor/mig-ci/blob/master/pipeline/parallel-base.groovy) pipeline, and is used for creation of multinode cluster. To setup a similar environment outside of CI, please refer to the [official](https://github.com/redhat-cop/agnosticd) doc.
 - - - -

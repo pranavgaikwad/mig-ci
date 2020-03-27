@@ -296,62 +296,6 @@ def deploy_ceph(cluster_version) {
   }
 }
 
-def deploy_ocp4(kubeconfig, cluster_version) {
-  def osrelease = ""
-  switch(cluster_version) {
-    case ['v4.1', '4.1', 'latest-4.1']:
-      osrelease = "latest-4.1"
-      break
-    case ['v4.2', '4.2', 'latest-4.2', 'latest']:
-      osrelease = "latest-4.2"
-      break
-    case [ 'v4.3', '4.3', 'nightly']:
-      osrelease = "nightly"
-      break
-    default:
-      osrelease = "${cluster_version}"
-      break
-  }
-
-  def short_version = cluster_version.replace(".", "")
-  def full_cluster_name = ''
-
-  if (PERSISTENT) {
-    echo "Cluster is a persistent build"
-    full_cluster_name = "${CLUSTER_NAME}-${short_version}"
-  } else {
-    echo "Cluster is not a persistent build"
-    full_cluster_name = "${CLUSTER_NAME}-${short_version}-${BUILD_NUMBER}"
-  }
-
-  echo "Cluster name is : ${full_cluster_name}"
-
-  sh "echo './openshift-install destroy cluster &' >> destroy_env.sh"
-  return {
-    stage('Deploy OCP cluster ' + cluster_version) {
-      steps_finished << 'Deploy OCP cluster ' + cluster_version + " (" + osrelease + ")"
-      withCredentials([
-          string(credentialsId: "$EC2_ACCESS_KEY_ID", variable: 'AWS_ACCESS_KEY_ID'),
-          string(credentialsId: "$EC2_SECRET_ACCESS_KEY", variable: 'AWS_SECRET_ACCESS_KEY'),
-          [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP4_CREDENTIALS}", usernameVariable: 'OCP4_ADMIN_USER', passwordVariable: 'OCP4_ADMIN_PASSWD']
-          ])
-      {
-        echo "OCP4 kubeconfig set to : ${kubeconfig}"
-        // Ensure DEST_CLUSTER_VERSION is set for single cluster deployments
-        withEnv(["KUBECONFIG=${kubeconfig}", "CLUSTER_NAME=${full_cluster_name}", "OCP4_RELEASE=${osrelease}", "DEST_CLUSTER_VERSION=${cluster_version}"]){
-          ansiColor('xterm') {
-            ansiblePlaybook(
-              playbook: 'deploy_ocp4_cluster.yml',
-              hostKeyChecking: false,
-              unbuffered: true,
-              colorized: true)
-          }
-        }
-      }
-    }
-  }
-}
-
 def sanity_checks(kubeconfig) {
   return {
     stage('Run OCP3 Sanity Checks') {

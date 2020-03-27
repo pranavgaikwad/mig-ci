@@ -1,3 +1,0 @@
----
-- name: launch cluster
-  shell: "{{ playbook_dir }}/openshift-install create cluster"

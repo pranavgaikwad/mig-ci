@@ -1,3 +1,0 @@
-- name: destroy cluster
-  shell: "{{ playbook_dir }}/openshift-install destroy cluster"
-  ignore_errors: true

@@ -21,6 +21,7 @@
     msg: 
       - "Operator will deploy using OLM : {{ mig_operator_use_olm }}"
       - "Operator use downstream release : {{ mig_operator_use_downstream }}"
+      - "Operator use disconnected : {{ mig_operator_use_disconnected }}"
       - "Operator will deploy using release : {{ mig_operator_release }}"
 
 - name: "Deploy using OLM operator"

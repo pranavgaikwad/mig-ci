@@ -402,6 +402,45 @@ def login_cluster(
   }
 }
 
+def cam_disconnected(
+  kubeconfig,
+  cam_disconnected_config,
+  cluster_version,
+  validate_node_config) {
+  return {
+    stage('Deploy CAM disconnected ' + cluster_version) {
+      steps_finished << 'Deploy CAM disconnected on OCP ' + cluster_version
+      withCredentials([
+        [$class: 'UsernamePasswordMultiBinding', credentialsId: "${STAGE_REGISTRY_CREDENTIALS}", usernameVariable: 'SUB_STAGE_USER', passwordVariable: 'SUB_STAGE_PASS'],
+        string(credentialsId: "${EC2_SUB_USER}", variable: 'SUB_USER'),
+        string(credentialsId: "${EC2_SUB_PASS}", variable: 'SUB_PASS'),
+        string(credentialsId: "${QUAY_TOKEN}", variable: 'QUAY_TOKEN'),
+        string(credentialsId: "${CAM_DISCONNECTED_REPO}", variable: 'CAM_DISCONNECTED_REPO')]) {
+          withEnv([
+            "KUBECONFIG=${kubeconfig}",
+            "CAM_DISCONNECTED_CONFIG=${cam_disconnected_config}"]) {
+             ansiColor('xterm') {
+               ansiblePlaybook(
+                 playbook: 'cam_disconnected_prepare.yml',
+                 extras: "",
+                 hostKeyChecking: false,
+                 unbuffered: true,
+                 colorized: true)
+             }
+             ansiColor('xterm') {
+               ansiblePlaybook(
+                 playbook: 'cam_disconnected_run.yml',
+                 extras: "-e validate_node_config=${validate_node_config}",
+                 hostKeyChecking: false,
+                 unbuffered: true,
+                 colorized: true)
+             }
+          }
+      }
+    }
+  }
+}
+
 def deploy_mig_controller_on_both(
   source_kubeconfig,
   target_kubeconfig,
@@ -453,6 +492,7 @@ def deploy_mig_controller_on_both(
           "KUBECONFIG=${source_kubeconfig}",
           "MIG_OPERATOR_USE_OLM=${SRC_USE_OLM}",
           "MIG_OPERATOR_USE_DOWNSTREAM=${USE_DOWNSTREAM}",
+          "MIG_OPERATOR_USE_DISCONNECTED=${USE_DISCONNECTED}",
           "SUB_USER=${SUB_USER}",
           "SUB_PASS=${SUB_PASS}",
           "PATH+EXTRA=~/bin"]) {
@@ -470,6 +510,7 @@ def deploy_mig_controller_on_both(
           "KUBECONFIG=${target_kubeconfig}",
           "MIG_OPERATOR_USE_OLM=${DEST_USE_OLM}",
           "MIG_OPERATOR_USE_DOWNSTREAM=${USE_DOWNSTREAM}",
+          "MIG_OPERATOR_USE_DISCONNECTED=${USE_DISCONNECTED}",
           "SUB_USER=${SUB_USER}",
           "SUB_PASS=${SUB_PASS}",
           "PATH+EXTRA=~/bin"]) {

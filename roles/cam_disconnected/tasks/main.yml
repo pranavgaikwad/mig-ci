@@ -1,0 +1,98 @@
+- assert:
+    that:
+      - rh_sub_user != ''
+      - rh_sub_pass != ''
+      - rh_stage_user != ''
+      - rh_stage_pass != ''
+      - quay_token != ''
+      - cam_disconnected_repo != ''
+      - cam_disconnected_config != ''
+    fail_msg: "rh_sub_user, rh_sub_pass, rh_stage_user, rh_stage_pass, cam_disconnected_repo, cam_disconnected_config and quay_token variables must be set for disconnected CAM deployments"
+
+- include_role:
+    name: get_ocp_version
+
+- stat:
+    path: "/etc/docker/daemon.json"
+  register: insecure_regs_file
+
+- name: Add insecure registry to /etc/docker/daemon.json
+  block:
+
+    - name: Get insecure registry route
+      k8s_facts:
+        kind: Route
+        namespace: "default"
+        name: "docker-registry"
+      register: app_route
+      until: app_route.resources | length > 0
+      delay: 5
+      retries: 12
+       
+    - name: Extract insecure registry route
+      set_fact:
+        target_registry: "{{ app_route.resources[0].spec.host }}"
+        
+    - name: Get current insecure registries
+      set_fact:
+        json_conf: "{{ lookup('file','/etc/docker/daemon.json') | from_json }}"
+
+    - name: Set default values if there are no registries defined
+      set_fact:
+        json_conf_insecure_registries: "{{ [] if json_conf['insecure-registries'] is not defined else json_conf['insecure-registries'] }}"
+
+    - name: Add insecure registries (if insecure_registries had to be converted)
+      set_fact:
+        json_conf: "{{ json_conf | combine({'insecure-registries': (json_conf_insecure_registries + [ target_registry ] ) | unique }, recursive=True) }}"  
+
+    - name: Load variable back to file
+      copy:
+        content: "{{ json_conf | to_json }}"
+        dest: /etc/docker/daemon.json
+      become: yes
+
+    - name: Restart Docker server
+      service:
+        name: docker
+        state: restarted
+      become: yes
+  when: insecure_regs_file.stat.exists and cluster_version is version_compare('3.11', '<=')
+
+- name: "Check if cam disconnected repo exists"
+  stat:
+    path: "{{ cam_disconnected_location }}"
+  register: cam_repo
+
+- name: "Clone the cam disconnected repo"
+  git:
+    dest: "{{ cam_disconnected_location }}"
+    repo: "{{ cam_disconnected_repo }}"
+    version: "{{ cam_disconnected_branch }}"
+  ignore_errors: true
+  when: not cam_repo.stat.exists
+
+- name: "Login to RH registry at {{ rh_registry }}"
+  shell: "docker login {{ rh_registry }} -u {{ rh_sub_user }} -p {{ rh_sub_pass }}"
+  register: rh_registry_login
+  until:  rh_registry_login is success
+  retries: 6
+  delay: 10
+
+- name: "Login to RH stage registry at {{ rh_stage_registry }}"
+  shell: "docker login {{ rh_stage_registry }} -u {{ rh_stage_user }} -p {{ rh_stage_pass }}"
+  register: stage_registry_login
+  until:  stage_registry_login is success
+  retries: 6
+  delay: 10
+
+- name: "Check if cam disconnected config present"
+  stat:
+    path: "{{ cam_disconnected_config_path}}/{{ cam_disconnected_config }}"
+  register: cam_config
+
+- fail:
+    msg: "{{ cam_disconnected_config_path}}/{{ cam_disconnected_config }} config does not exist, failing.."
+  when: not cam_config.stat.exists
+
+- name: "Copy cam disconnected config to {{ cam_disconnected_location }}/config.yml"
+  shell: "cp {{ cam_disconnected_config_path}}/{{ cam_disconnected_config }} {{ cam_disconnected_location }}/config.yml"

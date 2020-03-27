@@ -1,0 +1,13 @@
+---
+cam_disconnected_location: "{{ workspace }}/restricted-network-operator-mirror"
+cam_disconnected_repo: "{{ lookup('env', 'CAM_DISCONNECTED_REPO') or '' }}"
+cam_disconnected_branch: "master"
+cam_disconnected_config_path: "{{ lookup('env', 'CAM_DISCONNECTED_CONFIG_PATH') | d(cam_disconnected_location + '/example-configs',true) }}"
+cam_disconnected_config: "{{ lookup('env', 'CAM_DISCONNECTED_CONFIG') or '' }}"
+rh_sub_user: "{{ lookup('env', 'SUB_USER') or '' }}"
+rh_sub_pass: "{{ lookup('env', 'SUB_PASS') or '' }}"
+rh_stage_user: "{{ lookup('env', 'SUB_STAGE_USER') or '' }}"
+rh_stage_pass: "{{ lookup('env', 'SUB_STAGE_PASS') or '' }}"
+rh_registry: "registry.redhat.io"
+rh_stage_registry: "registry.stage.redhat.io"
+quay_token: "{{ lookup('env', 'QUAY_TOKEN') or '' }}"

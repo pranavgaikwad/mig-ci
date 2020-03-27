@@ -19,6 +19,8 @@ string(defaultValue: '.mg.dog8code.com', description: 'Zone suffix for instance 
 string(defaultValue: 'Z2GE8CSGW2ZA8W', description: 'Zone id', name: 'HOSTZONEID', trim: false),
 string(defaultValue: 'ci', description: 'EC2 SSH key name to deploy on instances for remote access ', name: 'EC2_KEY', trim: false),
 string(defaultValue: 'us-west-1', description: 'AWS region to deploy instances', name: 'AWS_REGION', trim: false),
+string(defaultValue: '', description: 'Disconnected config file for source cluster, only used for disconnected deployments', name: 'SRC_DISCONNECTED_CONFIG', trim: false),
+string(defaultValue: '', description: 'Disconnected config file for destination cluster, only used for disconnected deployments', name: 'DEST_DISCONNECTED_CONFIG', trim: false),
 string(defaultValue: 'https://github.com/konveyor/mig-operator.git', description: 'Mig operator repo to clone', name: 'MIG_OPERATOR_REPO', trim: false),
 string(defaultValue: 'master', description: 'Mig operator branch to test', name: 'MIG_OPERATOR_BRANCH', trim: false),
 string(defaultValue: 'https://github.com/konveyor/mig-controller.git', description: 'Mig controller repo to test, only used by GHPRB', name: 'MIG_CONTROLLER_REPO', trim: false),
@@ -39,15 +41,19 @@ credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCre
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl', defaultValue: 'ci_pub_key', description: 'EC2 public key needed for agnosticd instances', name: 'EC2_PUB_KEY', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_rhel_sub_user', description: 'RHEL Openshift subscription account username', name: 'EC2_SUB_USER', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_rhel_sub_pass', description: 'RHEL Openshift subscription account password', name: 'EC2_SUB_PASS', required: true),
+credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_quay_token', description: 'QUAY token needed for disconnected deployments', name: 'QUAY_TOKEN', required: true),
+credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'cam_disconnected_repo', description: 'Private repo for disconnected deployments', name: 'CAM_DISCONNECTED_REPO', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl', defaultValue: 'ci_pull_secret', description: 'Pull secret needed for OCP4 deployments', name: 'OCP4_PULL_SECRET', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_ocp4_admin_credentials', description: 'Cluster admin credentials used in OCP4 deployments', name: 'OCP4_CREDENTIALS', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_ocp3_admin_credentials', description: 'Cluster admin credentials used in OCP3 deployments', name: 'OCP3_CREDENTIALS', required: true),
+credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_stage_registry_credentials', description: 'Stage registry credentials used in disconnected deployments', name: 'STAGE_REGISTRY_CREDENTIALS', required: true),
 booleanParam(defaultValue: true, description: 'Run e2e tests', name: 'E2E_RUN'),
 booleanParam(defaultValue: true, description: 'Update OCP3 cluster packages to latest', name: 'OCP3_UPDATE'),
 booleanParam(defaultValue: true, description: 'Provision glusterfs workload on OCP3', name: 'OCP3_GLUSTERFS'),
 booleanParam(defaultValue: true, description: 'Provision CEPH workload on destination cluster', name: 'CEPH'),
 booleanParam(defaultValue: true, description: 'Deploy mig operator using OLM on OCP4', name: 'USE_OLM'),
 booleanParam(defaultValue: false, description: 'Deploy using downstream images', name: 'USE_DOWNSTREAM'),
+booleanParam(defaultValue: false, description: 'Deploy CAM disconnected', name: 'USE_DISCONNECTED'),
 booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE'),
 booleanParam(defaultValue: false, description: 'Persistent cluster builds with fixed hostname', name: 'PERSISTENT'),
 booleanParam(defaultValue: false, description: 'Enable debugging', name: 'DEBUG'),
@@ -71,6 +77,9 @@ PERSISTENT = params.PERSISTENT
 OCP3_GLUSTERFS = params.OCP3_GLUSTERFS
 // true/false provision ceph
 CEPH = params.CEPH
+// true/false deploy CAM disconnected 
+USE_DISCONNECTED = params.USE_DISCONNECTED
+
 
 def common_stages
 def utils
@@ -121,6 +130,10 @@ node {
             },
             failFast: false
         }
+       if (USE_DISCONNECTED) {
+          common_stages.cam_disconnected(SOURCE_KUBECONFIG, SRC_DISCONNECTED_CONFIG, SRC_CLUSTER_VERSION, false).call()
+          common_stages.cam_disconnected(TARGET_KUBECONFIG, DEST_DISCONNECTED_CONFIG, DEST_CLUSTER_VERSION, true).call()
+       }
 
        common_stages.deploy_mig_controller_on_both(SOURCE_KUBECONFIG, TARGET_KUBECONFIG, false, true).call()
 

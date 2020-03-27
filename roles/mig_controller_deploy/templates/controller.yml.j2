@@ -4,6 +4,7 @@ metadata:
   name: migration-controller
   namespace: {{ mig_migration_namespace }}
 spec:
+  azure_resource_group: ''
   cluster_name: host
   migration_velero: {{ mig_controller_velero }}
   migration_controller: {{ mig_controller_host_cluster }}

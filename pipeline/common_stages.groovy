@@ -4,17 +4,14 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
   def repo_version = "4.1.0" // Must map to a valid version in `own_repo_path:`
   def short_version = cluster_version.replace(".", "")
 
-  // Even for nightly releases, osrelease must map to a valid 4.x value on agnosticd repos (clientvm/bastion req)
+  // GA OCP releases
+  // ocp4_installer_version instructs agnosticd the directory containing the installer/client on https://mirror.openshift.com/pub/openshift-v4/clients/ocp/
   def releases = [
-    '4.1': "4.1.13",
-    '4.2': "4.2.20",
-    '4.3': "4.3.1",
-    'latest-4.1': "4.1.0",
-    'latest-4.2': "4.1.0",
-    'latest': "4.1.0",
-    'nightly': "4.1.0",
+    '4.1': "4.1.38",
+    '4.2': "4.2.23",
+    '4.3': "4.3.5",
   ]
-  def osrelease = releases["${cluster_version}"]
+  def ocp4_installer_version = releases["${cluster_version}"]
   def full_cluster_name = ''
   def cluster_adm_user = ''
   def cluster_adm_passwd = ''
@@ -37,19 +34,11 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
     cluster_adm_passwd = "${OCP4_ADMIN_PASSWD}"
   }
 
-  def CORRECT_OCP4_RELEASE = "${osrelease}"
+  // Non-GA (nightlies and other special releases)
   if (!cluster_version.startsWith("4.")) {
-     CORRECT_OCP4_RELEASE = "${cluster_version}"
-  }
-
-  if ("${cluster_version}" == "nightly" 
-     || "${cluster_version}" == "latest" 
-     || "${cluster_version}" == "latest-4.1" 
-     || "${cluster_version}" == "latest-4.2"
-     ) {
     echo "Cluster is a ${cluster_version} build"
-    // Fetch and dump OCP4 nightly release data
-    withEnv(["OCP4_RELEASE=${CORRECT_OCP4_RELEASE}"]){
+    // Fetch and dump target OCP4 release
+    withEnv(["OCP4_RELEASE=${cluster_version}"]){
       ansiColor('xterm') {
         ansiblePlaybook(
           playbook: 'ocp4_dump_release.yml',
@@ -58,6 +47,8 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
           colorized: true)
       }
     }
+    // Reset ocp4_installer_version to 4.1.0 for ocp-preview releases, it will be ignored by agnosticd
+    ocp4_installer_version = '4.1.0'
   }
 
   def OLM_TEXT = ' using non-OLM'
@@ -102,9 +93,8 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
             'cloudformation_retries': "0",
             'env_type': "ocp4-workshop",
             'software_to_deploy': "none",
-            'ocp4_installer_version': "${osrelease}",
+            'ocp4_installer_version': "${ocp4_installer_version}",
             'osrelease': "${repo_version}",
-            'repo_version': "${repo_version}",
             'install_ocp4': "true",
             'install_opentlc_integration': "false",
             'install_idm': "htpasswd",
@@ -124,11 +114,7 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
           writeYaml file: 'ocp4_vars.yml', data: ocp4_vars
 
           // Add extra vars for nightly builds
-          if ("${cluster_version}" == "nightly"
-             || "${cluster_version}" == "latest" 
-             || "${cluster_version}" == "latest-4.1" 
-             || "${cluster_version}" == "latest-4.2"
-             ) {
+          if (!cluster_version.startsWith("4.")) {
             def ocp4_data = readYaml file: 'ocp4_vars.yml'
             def ocp4_dumped_data = readYaml file: "${WORKSPACE}/ocp4_release.yml"
             ocp4_data.ocp4_installer_use_dev_preview = "true"
@@ -141,7 +127,6 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
           withEnv([
           'PATH+EXTRA=~/.local/bin',
           "AGNOSTICD_HOME=${AGNOSTICD_HOME}",
-          "OCP4_RELEASE=${CORRECT_OCP4_RELEASE}",
           'ANSIBLE_FORCE_COLOR=true'])
           {
             ansiColor('xterm') {

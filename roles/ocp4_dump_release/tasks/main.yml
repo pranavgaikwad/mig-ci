@@ -1,0 +1,26 @@
+- name: "Set variables to OCP4 {{ openshift_installer_release }} release"
+  set_fact:
+    openshift_installer_release_url: "{{ openshift_installer_release_prefix_url }}/{{ openshift_parent_dir_choices[openshift_installer_release] }}/{{ openshift_parent_subdir_choices[openshift_installer_release] }}/openshift-install-linux.tar.gz"
+    openshift_client_release_url: "{{ openshift_installer_release_prefix_url }}/{{ openshift_parent_dir_choices[openshift_installer_release] }}/{{ openshift_parent_subdir_choices[openshift_installer_release] }}/openshift-client-linux.tar.gz"
+
+- debug:
+    msg: 
+    - "OCP4 {{ openshift_installer_release }} installer release : {{ openshift_installer_release_url }}"
+    - "OCP4 {{ openshift_installer_release }} client release : {{ openshift_client_release_url }}"
+
+- name: "Verify {{ openshift_installer_release }} release URLs"
+  uri:
+    url: "{{ item }}"
+    method: HEAD
+  register: uri
+  until: uri.status == 200
+  retries: 6
+  delay: 10
+  loop:
+    - "{{ openshift_installer_release_url }}"
+    - "{{ openshift_client_release_url }}"
+
+- name: "Write {{ openshift_installer_release }} release to ocp4_release.yml"
+  template:
+    src: ocp4_release.yml.j2
+    dest: "{{ playbook_dir }}/ocp4_release.yml"

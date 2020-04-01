@@ -57,7 +57,10 @@ booleanParam(defaultValue: false, description: 'Deploy CAM disconnected', name: 
 booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE'),
 booleanParam(defaultValue: false, description: 'Persistent cluster builds with fixed hostname', name: 'PERSISTENT'),
 booleanParam(defaultValue: false, description: 'Enable debugging', name: 'DEBUG'),
-booleanParam(defaultValue: true, description: 'EC2 terminate instances after build', name: 'EC2_TERMINATE_INSTANCES')])])
+booleanParam(defaultValue: true, description: 'EC2 terminate instances after build', name: 'EC2_TERMINATE_INSTANCES'),
+booleanParam(defaultValue: false, description: 'Execute applications migration', name: 'MIGRATE'),
+booleanParam(defaultValue: false, description: 'Deploy demo applications', name: 'DEPLOY'),
+booleanParam(defaultValue: false, description: 'Install mig controller UI', name: 'MIG_CONTROLLER_UI')])])
 
 // true/false build parameter that defines if we use OLM to deploy mig operator on OCP4
 USE_OLM = params.USE_OLM

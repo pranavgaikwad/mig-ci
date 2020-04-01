@@ -57,7 +57,7 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
   }
   sh "mkdir olm"
   sh "cp -R mig-agnosticd/4.x mig-agnosticd/${cluster_version}"
-  sh "echo 'cd mig-agnosticd/${cluster_version} && ./delete_ocp4_workshop.sh &' >> destroy_env.sh"
+  sh "echo 'cd ${WORKSPACE}/mig-agnosticd/${cluster_version} && ${WORKSPACE}/mig-agnosticd/${cluster_version}/delete_ocp4_workshop.sh &' >> destroy_env.sh"
   return {
     stage('Deploy agnosticd OCP workshop ' + cluster_version + OLM_TEXT) {
       steps_finished << 'Deploy agnosticd OCP workshop ' + cluster_version + OLM_TEXT
@@ -189,7 +189,7 @@ def deploy_ocp3_agnosticd(kubeconfig, cluster_version) {
   }
 
   sh "cp -R mig-agnosticd/3.x mig-agnosticd/${cluster_version}"
-  sh "echo 'cd mig-agnosticd/${cluster_version} && ./delete_ocp3_workshop.sh &' >> destroy_env.sh"
+  sh "echo 'cd ${WORKSPACE}/mig-agnosticd/${cluster_version} && ${WORKSPACE}/mig-agnosticd/${cluster_version}/delete_ocp3_workshop.sh &' >> destroy_env.sh"
   return {
     stage('Deploy agnosticd OCP workshop ' + cluster_version) {
       steps_finished << 'Deploy agnosticd OCP workshop ' + cluster_version
@@ -443,7 +443,7 @@ def deploy_mig_controller_on_both(
         ansiColor('xterm') {
           ansiblePlaybook(
             playbook: 'mig_controller_deploy.yml',
-            extras: "-e mig_controller_host_cluster=${mig_controller_src} -e mig_controller_ui=false",
+            extras: "-e mig_controller_host_cluster=${mig_controller_src} -e mig_controller_ui=${MIG_CONTROLLER_UI}",
             hostKeyChecking: false,
             unbuffered: true,
             colorized: true)
@@ -461,7 +461,7 @@ def deploy_mig_controller_on_both(
         ansiColor('xterm') {
           ansiblePlaybook(
             playbook: 'mig_controller_deploy.yml',
-            extras: "-e mig_controller_host_cluster=${mig_controller_dst} -e mig_controller_ui=false",
+            extras: "-e mig_controller_host_cluster=${mig_controller_dst} -e mig_controller_ui=${MIG_CONTROLLER_UI}",
             hostKeyChecking: false,
             unbuffered: true,
             colorized: true)
@@ -489,7 +489,7 @@ def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig) {
               ansiblePlaybook(
                 playbook: "${env.E2E_PLAY}",
                 hostKeyChecking: false,
-                extras: "-e 'with_migrate=false'",
+                extras: "-e 'with_migrate=${MIGRATE}'",
                 tags: "${e2e_tests[i]}",
                 unbuffered: true,
                 colorized: true)
@@ -502,7 +502,7 @@ def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig) {
               ansiblePlaybook(
                 playbook: "${env.E2E_PLAY}",
                 hostKeyChecking: false,
-                extras: "-e 'with_deploy=false'",
+                extras: "-e 'with_deploy=${DEPLOY}'",
                 tags: "${e2e_tests[i]}",
                 unbuffered: true,
                 colorized: true)

@@ -443,7 +443,7 @@ def deploy_mig_controller_on_both(
         ansiColor('xterm') {
           ansiblePlaybook(
             playbook: 'mig_controller_deploy.yml',
-            extras: "-e mig_controller_host_cluster=${mig_controller_src} -e mig_controller_ui=${MIG_CONTROLLER_UI}",
+            extras: "-e mig_controller_host_cluster=${mig_controller_src} -e mig_controller_ui=false",
             hostKeyChecking: false,
             unbuffered: true,
             colorized: true)

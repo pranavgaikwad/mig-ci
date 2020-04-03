@@ -8,7 +8,13 @@ metadata:
 {% endif %}
   namespace: {{ mig_migration_namespace }}
 spec:
-  channel: {{ mig_operator_channel }}
+{% if mig_operator_release == 'latest' %}
+  channel: latest
+{% elif mig_operator_release == 'v1.0' %}
+  channel: release-v1
+{% else %}
+  channel: release-{{ mig_operator_release }}
+{% endif %}
   installPlanApproval: Automatic
 {% if mig_operator_use_downstream|bool is sameas true %}
   name: cam-operator
@@ -19,14 +25,8 @@ spec:
   source: redhat-operators
   sourceNamespace: openshift-marketplace
 {% endif %}
-  startingCSV: cam-operator.{{ mig_operator_release }}
 {% else %}
   name: konveyor-operator
   source: migration-operator
   sourceNamespace: openshift-marketplace
-{% if mig_operator_latest_release is defined %}
-  startingCSV: {{ mig_operator_latest_release }}
-{% else %}
-  startingCSV: konveyor-operator.{{ mig_operator_release }}
-{% endif %}
 {% endif %}

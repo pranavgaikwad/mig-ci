@@ -42,7 +42,7 @@
       shell: "podman rmi -af"
 
   become: true
-  when: not mig_operator_use_disconnected
+  when: not mig_operator_use_disconnected|bool
 
 - name: "Deploy CAM downstream operator using disconnected"
   block:
@@ -52,7 +52,7 @@
 
     - name: "Copy operator.yml from disconnected CAM location"
       shell: "cp {{ cam_disconnected_location }}/operator.yml {{ playbook_dir }}"
-  when: mig_operator_use_disconnected
+  when: mig_operator_use_disconnected|bool
 
 - name: "Create CAM downstream operator"
   k8s:

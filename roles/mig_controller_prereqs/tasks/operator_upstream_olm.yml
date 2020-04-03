@@ -57,20 +57,6 @@
         state: present
         definition: "{{ lookup('template', 'mig-operator-operatorgroup.yml.j2' ) }}"
 
-    - name: "Load konveyor operator package file if using latest release"
-      set_fact:
-        konveyor_pkg_file: "{{ lookup('file', '{{ mig_operator_location }}/deploy/olm-catalog/konveyor-operator/konveyor-operator.package.yaml') | from_yaml }}"
-      when: mig_operator_release == "latest"
-
-    - name: "Set operator release from currentCSV from latest channel"
-      set_fact:
-        mig_operator_latest_release: "{{ konveyor_pkg_file.channels | selectattr( 'name', 'equalto', 'latest') | map(attribute='currentCSV') | first }}"
-      when: mig_operator_release == "latest"
-
-    - debug:
-        msg: "OLM operator latest release set to : {{ mig_operator_latest_release }}"
-      when: mig_operator_release == "latest"
-
     - name: "Create Subscription"
       k8s:
         state: present

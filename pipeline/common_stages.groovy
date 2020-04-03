@@ -489,23 +489,25 @@ def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig) {
               ansiblePlaybook(
                 playbook: "${env.E2E_PLAY}",
                 hostKeyChecking: false,
-                extras: "-e 'with_migrate=${MIGRATE}'",
+                extras: "-e 'with_migrate=false'",
                 tags: "${e2e_tests[i]}",
                 unbuffered: true,
                 colorized: true)
             }
           }
-          withEnv([
-            "KUBECONFIG=${target_kubeconfig}",
-            "PATH+EXTRA=~/bin"]) {
-            ansiColor('xterm') {
-              ansiblePlaybook(
-                playbook: "${env.E2E_PLAY}",
-                hostKeyChecking: false,
-                extras: "-e 'with_deploy=${DEPLOY}'",
-                tags: "${e2e_tests[i]}",
-                unbuffered: true,
-                colorized: true)
+          if (!E2E_DEPLOY_ONLY) {
+            withEnv([
+              "KUBECONFIG=${target_kubeconfig}",
+              "PATH+EXTRA=~/bin"]) {
+              ansiColor('xterm') {
+                ansiblePlaybook(
+                  playbook: "${env.E2E_PLAY}",
+                  hostKeyChecking: false,
+                  extras: "-e 'with_deploy=false'",
+                  tags: "${e2e_tests[i]}",
+                  unbuffered: true,
+                  colorized: true)
+              }
             }
           }
         }

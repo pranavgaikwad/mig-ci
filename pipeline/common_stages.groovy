@@ -495,6 +495,23 @@ def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig) {
                 colorized: true)
             }
           }
+
+          // Prepare clusters
+          if (E2E_DEPLOY_ONLY) {
+            withEnv([
+              "KUBECONFIG=${target_kubeconfig}",
+              "PATH+EXTRA=~/bin"]) {
+              ansiColor('xterm') {
+                ansiblePlaybook(
+                  playbook: "e2e_prepare_clusters.yml",
+                  hostKeyChecking: false,
+                  extras: "",
+                  unbuffered: true,
+                  colorized: true)
+              }
+            }
+          }
+
           if (!E2E_DEPLOY_ONLY) {
             withEnv([
               "KUBECONFIG=${target_kubeconfig}",

@@ -48,7 +48,7 @@ credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.Usernam
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_ocp3_admin_credentials', description: 'Cluster admin credentials used in OCP3 deployments', name: 'OCP3_CREDENTIALS', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_stage_registry_credentials', description: 'Stage registry credentials used in disconnected deployments', name: 'STAGE_REGISTRY_CREDENTIALS', required: true),
 booleanParam(defaultValue: true, description: 'Run e2e tests', name: 'E2E_RUN'),
-booleanParam(defaultValue: false, description: 'Deploy e2e applications only, do not migrate', name: 'E2E_DEPLOY_ONLY'),
+booleanParam(defaultValue: false, description: 'Deploy e2e applications and prepare clusters only, do not migrate', name: 'E2E_DEPLOY_ONLY'),
 booleanParam(defaultValue: true, description: 'Update OCP3 cluster packages to latest', name: 'OCP3_UPDATE'),
 booleanParam(defaultValue: true, description: 'Provision glusterfs workload on OCP3', name: 'OCP3_GLUSTERFS'),
 booleanParam(defaultValue: true, description: 'Provision CEPH workload on destination cluster', name: 'CEPH'),

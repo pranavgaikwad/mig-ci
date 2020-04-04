@@ -57,7 +57,7 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
   }
   sh "mkdir olm"
   sh "cp -R mig-agnosticd/4.x mig-agnosticd/${cluster_version}"
-  sh "echo 'cd ${WORKSPACE}/mig-agnosticd/${cluster_version} && ${WORKSPACE}/mig-agnosticd/${cluster_version}/delete_ocp4_workshop.sh &' >> destroy_env.sh"
+  sh "echo 'cd ${WORKSPACE}/mig-agnosticd/${cluster_version} && ./delete_ocp4_workshop.sh &' >> destroy_env.sh"
   return {
     stage('Deploy agnosticd OCP workshop ' + cluster_version + OLM_TEXT) {
       steps_finished << 'Deploy agnosticd OCP workshop ' + cluster_version + OLM_TEXT
@@ -189,7 +189,7 @@ def deploy_ocp3_agnosticd(kubeconfig, cluster_version) {
   }
 
   sh "cp -R mig-agnosticd/3.x mig-agnosticd/${cluster_version}"
-  sh "echo 'cd ${WORKSPACE}/mig-agnosticd/${cluster_version} && ${WORKSPACE}/mig-agnosticd/${cluster_version}/delete_ocp3_workshop.sh &' >> destroy_env.sh"
+  sh "echo 'cd ${WORKSPACE}/mig-agnosticd/${cluster_version} && ./delete_ocp3_workshop.sh &' >> destroy_env.sh"
   return {
     stage('Deploy agnosticd OCP workshop ' + cluster_version) {
       steps_finished << 'Deploy agnosticd OCP workshop ' + cluster_version
@@ -392,7 +392,7 @@ def deploy_mig_controller_on_both(
   mig_controller_dst) {
   // mig_controller_src boolean defines if the source cluster will host mig controller
   // mig_controller_dst boolean defines if the destination cluster will host mig controller
-  sh "echo 'cd ${WORKSPACE} && ansible-playbook s3_bucket_destroy.yml &' >> destroy_env.sh"
+  sh "echo 'ansible-playbook ${WORKSPACE}/s3_bucket_destroy.yml &' >> destroy_env.sh"
   return {
     stage('Build mig-controller image and deploy on both clusters') {
       steps_finished << 'Build mig-controller image and deploy on both clusters'

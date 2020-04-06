@@ -52,6 +52,7 @@ booleanParam(defaultValue: false, description: 'Deploy e2e applications and prep
 booleanParam(defaultValue: true, description: 'Update OCP3 cluster packages to latest', name: 'OCP3_UPDATE'),
 booleanParam(defaultValue: true, description: 'Provision glusterfs workload on OCP3', name: 'OCP3_GLUSTERFS'),
 booleanParam(defaultValue: true, description: 'Provision CEPH workload on destination cluster', name: 'CEPH'),
+booleanParam(defaultValue: true, description: 'Deploy CAM', name: 'DEPLOY_CAM'),
 booleanParam(defaultValue: true, description: 'Deploy mig operator using OLM on OCP4', name: 'USE_OLM'),
 booleanParam(defaultValue: false, description: 'Deploy using downstream images', name: 'USE_DOWNSTREAM'),
 booleanParam(defaultValue: false, description: 'Deploy CAM disconnected', name: 'USE_DISCONNECTED'),
@@ -61,8 +62,8 @@ booleanParam(defaultValue: false, description: 'Enable debugging', name: 'DEBUG'
 booleanParam(defaultValue: true, description: 'EC2 terminate instances after build', name: 'EC2_TERMINATE_INSTANCES'),
 booleanParam(defaultValue: true, description: 'Deploy mig controller UI on destination cluster', name: 'MIG_CONTROLLER_UI')])])
 
-// true/false build parameter that defines if we use OLM to deploy mig operator on OCP4
-USE_OLM = params.USE_OLM
+// true/false build parameter that defines if CAM is deployed
+def DEPLOY_CAM = params.DEPLOY_CAM
 // true/false build parameter that defines if we terminate instances once build is done
 def EC2_TERMINATE_INSTANCES = params.EC2_TERMINATE_INSTANCES
 // true/false build parameter that defines if we cleanup workspace once build is done
@@ -73,6 +74,8 @@ def E2E_RUN = params.E2E_RUN
 def E2E_TESTS = params.E2E_TESTS.split(' ')
 // true/false enable debugging
 def DEBUG = params.DEBUG
+// true/false build parameter that defines if we use OLM to deploy mig operator on OCP4
+USE_OLM = params.USE_OLM
 // true/false persistent clusters
 PERSISTENT = params.PERSISTENT
 // true/false provision glusterfs
@@ -133,15 +136,15 @@ node {
             },
             failFast: false
         }
-       if (USE_DISCONNECTED) {
-          common_stages.cam_disconnected(SOURCE_KUBECONFIG, SRC_DISCONNECTED_CONFIG, SRC_CLUSTER_VERSION, false).call()
-          common_stages.cam_disconnected(TARGET_KUBECONFIG, DEST_DISCONNECTED_CONFIG, DEST_CLUSTER_VERSION, true).call()
-       }
-
-       common_stages.deploy_mig_controller_on_both(SOURCE_KUBECONFIG, TARGET_KUBECONFIG, false, true).call()
-
+        if (USE_DISCONNECTED) {
+            common_stages.cam_disconnected(SOURCE_KUBECONFIG, SRC_DISCONNECTED_CONFIG, SRC_CLUSTER_VERSION, false).call()
+            common_stages.cam_disconnected(TARGET_KUBECONFIG, DEST_DISCONNECTED_CONFIG, DEST_CLUSTER_VERSION, true).call()
+        }
+        if (DEPLOY_CAM) {
+            common_stages.deploy_mig_controller_on_both(SOURCE_KUBECONFIG, TARGET_KUBECONFIG, false, true).call()
+        }
         if (E2E_RUN) {
-          common_stages.execute_migration(E2E_TESTS, SOURCE_KUBECONFIG, TARGET_KUBECONFIG).call()
+            common_stages.execute_migration(E2E_TESTS, SOURCE_KUBECONFIG, TARGET_KUBECONFIG).call()
         }
 
     } catch (Exception ex) {

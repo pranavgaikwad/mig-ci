@@ -53,7 +53,9 @@ node {
         common_stages = load "${WORKSPACE}/pipeline/common_stages.groovy"
         utils = load "${WORKSPACE}/pipeline/utils.groovy"
 
-        utils.notifyBuild('STARTED')
+        // utils.notifyBuild('STARTED')
+
+        echo "Branch ${MIG_CONTROLLER_BRANCH}"
 
         stage('Setup e2e environment') {
             steps_finished << 'Setup e2e environment'
@@ -65,37 +67,39 @@ node {
             }
         }
 
-        withCredentials([
-          [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP3_CREDENTIALS}", usernameVariable: 'OCP3_ADMIN_USER', passwordVariable: 'OCP3_ADMIN_PASSWD'],
-          [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP4_CREDENTIALS}", usernameVariable: 'OCP4_ADMIN_USER', passwordVariable: 'OCP4_ADMIN_PASSWD']
-          ]) {
-              common_stages.login_cluster("${SRC_CLUSTER_URL}", "${OCP3_ADMIN_USER}", "${OCP3_ADMIN_PASSWD}", "${SRC_CLUSTER_VERSION}", SOURCE_KUBECONFIG).call()
-              common_stages.login_cluster("${DEST_CLUSTER_URL}", "${OCP4_ADMIN_USER}", "${OCP4_ADMIN_PASSWD}", "${DEST_CLUSTER_VERSION}", TARGET_KUBECONFIG).call()
-             }
+        // withCredentials([
+        //   [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP3_CREDENTIALS}", usernameVariable: 'OCP3_ADMIN_USER', passwordVariable: 'OCP3_ADMIN_PASSWD'],
+        //   [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP4_CREDENTIALS}", usernameVariable: 'OCP4_ADMIN_USER', passwordVariable: 'OCP4_ADMIN_PASSWD']
+        //   ]) {
+        //       common_stages.login_cluster("${SRC_CLUSTER_URL}", "${OCP3_ADMIN_USER}", "${OCP3_ADMIN_PASSWD}", "${SRC_CLUSTER_VERSION}", SOURCE_KUBECONFIG).call()
+        //       common_stages.login_cluster("${DEST_CLUSTER_URL}", "${OCP4_ADMIN_USER}", "${OCP4_ADMIN_PASSWD}", "${DEST_CLUSTER_VERSION}", TARGET_KUBECONFIG).call()
+        //      }
         // Always ensure mig controller environment is clean before deployment
-        utils.teardown_mig_controller(SOURCE_KUBECONFIG)
-        utils.teardown_mig_controller(TARGET_KUBECONFIG)
+        // utils.teardown_mig_controller(SOURCE_KUBECONFIG)
+        // utils.teardown_mig_controller(TARGET_KUBECONFIG)
 
         // Deploy mig controller and begin tests
-        common_stages.deploy_mig_controller_on_both(SOURCE_KUBECONFIG, TARGET_KUBECONFIG, false, true).call()
-        common_stages.execute_migration(E2E_TESTS, SOURCE_KUBECONFIG, TARGET_KUBECONFIG).call()
+        // common_stages.deploy_mig_controller_on_both(SOURCE_KUBECONFIG, TARGET_KUBECONFIG, false, true).call()
+        // common_stages.execute_migration(E2E_TESTS, SOURCE_KUBECONFIG, TARGET_KUBECONFIG).call()
 
     } catch (Exception ex) {
         currentBuild.result = "FAILED"
         println(ex.toString())
     } finally {
         // Success or failure, always send notifications
-        utils.notifyBuild(currentBuild.result)
-	if (DEBUG) {
+        // utils.notifyBuild(currentBuild.result)
+
+	      if (DEBUG) {
           utils.run_debug(SOURCE_KUBECONFIG)
           utils.run_debug(TARGET_KUBECONFIG)
-	}
+	      }
+
         stage('Clean Up Environment') {
           // Always attempt to remove s3 buckets
-          utils.teardown_s3_bucket()
-          if (CLEAN_WORKSPACE) {
-              cleanWs notFailBuild: true
-          }
+          // utils.teardown_s3_bucket()
+          // if (CLEAN_WORKSPACE) {
+          //     cleanWs notFailBuild: true
+          // }
         }
       }
     }

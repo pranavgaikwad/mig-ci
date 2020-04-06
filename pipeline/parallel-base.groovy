@@ -109,6 +109,7 @@ node {
         stage('Setup for source and destination cluster') {
             steps_finished << 'Setup for source and destination cluster'
             utils.prepare_workspace(SRC_CLUSTER_VERSION, DEST_CLUSTER_VERSION)
+            utils.prepare_persistent()
             utils.copy_private_keys()
             utils.copy_public_keys()
             utils.clone_mig_e2e()

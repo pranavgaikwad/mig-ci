@@ -35,6 +35,8 @@ booleanParam(defaultValue: true, description: 'Clean up workspace after build', 
 
 // true/false build parameter that defines if we use OLM to deploy mig operator on OCP4
 USE_OLM = params.USE_OLM
+// true/false deploy e2e apps only
+E2E_DEPLOY_ONLY = params.E2E_DEPLOY_ONLY
 // true/false build parameter that defines if we cleanup workspace once build is done
 def CLEAN_WORKSPACE = params.CLEAN_WORKSPACE
 // Split e2e tests from string param

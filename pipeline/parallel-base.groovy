@@ -55,7 +55,7 @@ booleanParam(defaultValue: true, description: 'Provision CEPH workload on destin
 booleanParam(defaultValue: true, description: 'Deploy CAM', name: 'DEPLOY_CAM'),
 booleanParam(defaultValue: true, description: 'Deploy mig operator using OLM on OCP4', name: 'USE_OLM'),
 booleanParam(defaultValue: false, description: 'Deploy using downstream images', name: 'USE_DOWNSTREAM'),
-booleanParam(defaultValue: false, description: 'Deploy CAM disconnected', name: 'USE_DISCONNECTED'),
+booleanParam(defaultValue: false, description: 'Deploy CAM disconnected, not used on non-deployment pipelines', name: 'USE_DISCONNECTED'),
 booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE'),
 booleanParam(defaultValue: false, description: 'Persistent cluster builds with fixed hostname', name: 'PERSISTENT'),
 booleanParam(defaultValue: false, description: 'Enable debugging', name: 'DEBUG'),

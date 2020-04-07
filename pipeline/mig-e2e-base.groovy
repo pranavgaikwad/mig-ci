@@ -52,7 +52,7 @@ node {
         checkout scm
         common_stages = load "${WORKSPACE}/pipeline/common_stages.groovy"
         utils = load "${WORKSPACE}/pipeline/utils.groovy"
-
+        sh "printenv"
         utils.parse_comment_message("${env.ghprbCommentBody}")
 
         // utils.notifyBuild('STARTED')

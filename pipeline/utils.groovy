@@ -33,7 +33,7 @@ def notifyBuild(String buildStatus = 'STARTED') {
   }
 
   // Send notifications
-  slackSend (color: colorCode, message: summary)
+  // slackSend (color: colorCode, message: summary)
 }
 
 def clone_mig_e2e() {
@@ -86,6 +86,7 @@ def prepare_agnosticd() {
 def prepare_workspace(src_version = '', dest_version = '') {
   // Prepare EC2 key for ansible consumption
   KEYS_DIR = "${env.WORKSPACE}" + '/keys'
+  PERSISTENT = true
   sh "mkdir -p ${KEYS_DIR}"
   sh "mkdir -p ${env.WORKSPACE}/kubeconfigs"
   
@@ -141,6 +142,58 @@ def copy_public_keys() {
   withCredentials([file(credentialsId: "${env.EC2_PUB_KEY}", variable: "SSH_PUB_KEY")]) {
     sh "cat ${SSH_PUB_KEY} > ${KEYS_DIR}/${env.EC2_KEY}.pub"
   }
+}
+
+/*
+  parses the comment message and sets
+  environment variables required for 
+  the build based on comment text
+ 
+  Supported comment patterns :
+    \test                     : Use latest operator with current controller
+    \test-with-operator #PR   : Use operator #PR with current controller
+    \test-with-controller #PR : Use controller #PR with current operator
+*/
+def parse_comment_message(message) {
+  suffix_operator = '-with-operator'
+  suffix_controller = '-with-controller'
+  BUILD_CUSTOM_MIG_OPERATOR = message.contains(suffix_operator) ? true : false;
+  BUILD_CUSTOM_MIG_CONTROLLER = message.contains(suffix_controller) ? true : false;
+  echo "Needs custom operator? ${BUILD_MIG_OPERATOR}"
+  echo "Needs custom controller? ${BUILD_MIG_CONTROLLER}"
+  
+  if (BUILD_CUSTOM_MIG_OPERATOR) {
+    MIG_OPERATOR_PR = message.replaceAll(' ', '').replaceAll('\\test-with-operator', '');
+  }
+
+  if (BUILD_CUSTOM_MIG_CONTROLLER) {
+    MIG_CONTROLLER_PR = message.replaceAll(' ', '').replaceAll('\\test-with-controller', '');;
+  }
+
+  echo "Operator PR #${MIG_OPERATOR_PR}"
+}
+
+/*
+  Chekout PRs from given repo
+
+  repo [string]      : name of repo
+  pr_number [string] : pr to checkout
+  directory [string] : target directory 
+*/
+def checkout_pr(repo, pr_number, directory) {
+  checkout([$class: 'GitSCM', branches: [[name: 'FETCH_HEAD']], 
+    doGenerateSubmoduleConfigurations: false, 
+    extensions: [
+      [$class: 'RelativeTargetDirectory', relativeTargetDir: directory]
+    ], 
+    submoduleCfg: [], 
+    userRemoteConfigs: [
+      [
+        refspec: "+refs/pull/${pr_number}/head:refs/remotes/origin/PR-${pr_number}",
+        url: "${repo}"
+      ]
+    ]
+  ])
 }
 
 def teardown_ocp_agnosticd(cluster_version) {

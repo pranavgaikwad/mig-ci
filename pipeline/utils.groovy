@@ -201,6 +201,20 @@ def teardown_s3_bucket() {
   }
 }
 
+def teardown_e2e(kubeconfig) {
+  dir('mig-e2e') {
+    withEnv([ "KUBECONFIG=${kubeconfig}" ]) {
+      ansiColor('xterm') {
+        ansiblePlaybook(
+          playbook: 'e2e_destroy_all.yml',
+          hostKeyChecking: false,
+          unbuffered: true,
+          colorized: true)
+      }
+    }
+  }
+}
+
 def run_debug(kubeconfig) {
   withEnv([ "KUBECONFIG=${kubeconfig}" ]) {
     sh "${DEBUG_SCRIPT} ${DEBUG_SCRIPT_ARGS} || true"

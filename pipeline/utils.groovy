@@ -111,10 +111,10 @@ def prepare_workspace(src_version = '', dest_version = '') {
       DEST_IS_OCP3 = "false"
     }
   }
-  if (PERSISTENT) {
-    sh "mkdir -p ${JENKINS_HOME}/persistent"
-    sh "echo ${WORKSPACE} > ${JENKINS_HOME}/persistent/${CLUSTER_NAME}"
-  }
+  // if (PERSISTENT) {
+  //   sh "mkdir -p ${JENKINS_HOME}/persistent"
+  //   sh "echo ${WORKSPACE} > ${JENKINS_HOME}/persistent/${CLUSTER_NAME}"
+  // }
   OC_BINARY = "${env.WORKSPACE}/bin/oc"
   sh 'touch destroy_env.sh && chmod +x destroy_env.sh'
 }

@@ -46,14 +46,14 @@ echo "Build URL ${env.BUILD_URL}"
 echo "Job URL ${env.JOB_URL}"
 
 node {
-    utils.parse_comment_message("${env.ghprbCommentBody}")
-
     sh "mkdir ${WORKSPACE}-${BUILD_NUMBER}"
     ws("${WORKSPACE}-${BUILD_NUMBER}") {
     try {
         checkout scm
         common_stages = load "${WORKSPACE}/pipeline/common_stages.groovy"
         utils = load "${WORKSPACE}/pipeline/utils.groovy"
+
+        utils.parse_comment_message("${env.ghprbCommentBody}")
 
         // utils.notifyBuild('STARTED')
 

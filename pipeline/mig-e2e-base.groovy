@@ -70,16 +70,17 @@ node {
             }
         }
 
-        // withCredentials([
-        //   [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP3_CREDENTIALS}", usernameVariable: 'OCP3_ADMIN_USER', passwordVariable: 'OCP3_ADMIN_PASSWD'],
-        //   [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP4_CREDENTIALS}", usernameVariable: 'OCP4_ADMIN_USER', passwordVariable: 'OCP4_ADMIN_PASSWD']
-        //   ]) {
-        //       common_stages.login_cluster("${SRC_CLUSTER_URL}", "${OCP3_ADMIN_USER}", "${OCP3_ADMIN_PASSWD}", "${SRC_CLUSTER_VERSION}", SOURCE_KUBECONFIG).call()
-        //       common_stages.login_cluster("${DEST_CLUSTER_URL}", "${OCP4_ADMIN_USER}", "${OCP4_ADMIN_PASSWD}", "${DEST_CLUSTER_VERSION}", TARGET_KUBECONFIG).call()
-        //      }
+        withCredentials([
+          [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP3_CREDENTIALS}", usernameVariable: 'OCP3_ADMIN_USER', passwordVariable: 'OCP3_ADMIN_PASSWD'],
+          [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP4_CREDENTIALS}", usernameVariable: 'OCP4_ADMIN_USER', passwordVariable: 'OCP4_ADMIN_PASSWD']
+          ]) {
+              common_stages.login_cluster("${SRC_CLUSTER_URL}", "${OCP3_ADMIN_USER}", "${OCP3_ADMIN_PASSWD}", "${SRC_CLUSTER_VERSION}", SOURCE_KUBECONFIG).call()
+              common_stages.login_cluster("${DEST_CLUSTER_URL}", "${OCP4_ADMIN_USER}", "${OCP4_ADMIN_PASSWD}", "${DEST_CLUSTER_VERSION}", TARGET_KUBECONFIG).call()
+             }
+
         // Always ensure mig controller environment is clean before deployment
-        // utils.teardown_mig_controller(SOURCE_KUBECONFIG)
-        // utils.teardown_mig_controller(TARGET_KUBECONFIG)
+        utils.teardown_mig_controller(SOURCE_KUBECONFIG)
+        utils.teardown_mig_controller(TARGET_KUBECONFIG)
 
         // Deploy mig controller and begin tests
         // common_stages.deploy_mig_controller_on_both(SOURCE_KUBECONFIG, TARGET_KUBECONFIG, false, true).call()

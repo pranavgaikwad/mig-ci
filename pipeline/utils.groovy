@@ -140,6 +140,14 @@ def copy_public_keys() {
   }
 }
 
+// parses the comment message and sets
+// environment variables required for 
+// the build based on comment text
+def parse_comment_message(message) {
+  BUILD_MIG_OPERATOR = message.contains('-with-operator') ? true : false;
+  echo "${BUILD_MIG_OPERATOR}"
+}
+
 def teardown_ocp_agnosticd(cluster_version) {
   dir("mig-agnosticd/${cluster_version}") {
     withEnv([

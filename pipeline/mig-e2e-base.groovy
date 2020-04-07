@@ -46,6 +46,8 @@ echo "Build URL ${env.BUILD_URL}"
 echo "Job URL ${env.JOB_URL}"
 
 node {
+    utils.parse_comment_message("${env.ghprbCommentBody}")
+
     sh "mkdir ${WORKSPACE}-${BUILD_NUMBER}"
     ws("${WORKSPACE}-${BUILD_NUMBER}") {
     try {

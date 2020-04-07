@@ -140,11 +140,18 @@ def copy_public_keys() {
   }
 }
 
-// parses the comment message and sets
-// environment variables required for 
-// the build based on comment text
+/*
+  parses the comment message and sets
+  environment variables required for 
+  the build based on comment text
+ 
+  Supported comment patterns :
+    \test                    : Use latest operator with current controller
+    \test-with-operator #PR  : Use operator #PR with current controller
+    \test-with-controller #PR : Use controller #PR with current operator
+*/
 def parse_comment_message(message) {
-  echo "${message}"
+  operator_suffix = '-with-operator'
   BUILD_MIG_OPERATOR = message.contains('-with-operator') ? true : false;
   echo "${BUILD_MIG_OPERATOR}"
 }

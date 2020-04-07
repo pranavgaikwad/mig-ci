@@ -100,6 +100,8 @@ node {
         stage('Clean Up Environment') {
           // Always attempt to remove s3 buckets
           utils.teardown_s3_bucket()
+          // Teardown e2e test namespaces
+          utils.teardown_e2e(TARGET_KUBECONFIG)
           if (CLEAN_WORKSPACE) {
               cleanWs notFailBuild: true
           }

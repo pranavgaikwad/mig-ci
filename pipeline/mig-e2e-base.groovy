@@ -17,6 +17,7 @@ string(defaultValue: 'latest', description: 'Mig Operator/CAM release to deploy'
 string(defaultValue: 'scripts/mig_debug.sh', description: 'Relative file path to debug script on MIG CI repo', name: 'DEBUG_SCRIPT', trim: false),
 string(defaultValue: '', description: 'Extra debug script arguments', name: 'DEBUG_SCRIPT_ARGS', trim: false),
 string(defaultValue: 'quay.io/fbladilo/mig-controller', description: 'Repo for quay io for custom mig-controller images, only used by GHPRB', name: 'QUAYIO_CI_REPO', trim: false),
+string(defaultValue: '', description: 'Comment text from GitHub PR', name: 'COMMENT_TEXT', trim: false, required: false),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_quay_credentials', description: 'Credentials for quay.io container storage, used by mig-controller to push and pull images', name: 'QUAYIO_CREDENTIALS', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_aws_access_key_id', description: 'EC2 access key ID for auth purposes', name: 'EC2_ACCESS_KEY_ID', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_aws_secret_access_key', description: 'EC2 private key needed to access instances, from Jenkins credentials store', name: 'EC2_SECRET_ACCESS_KEY', required: true),
@@ -52,8 +53,8 @@ node {
         checkout scm
         common_stages = load "${WORKSPACE}/pipeline/common_stages.groovy"
         utils = load "${WORKSPACE}/pipeline/utils.groovy"
-        sh "printenv"
-        utils.parse_comment_message("${env.ghprbCommentBody}")
+        
+        utils.parse_comment_message("${COMMENT_TEXT}")
 
         // utils.notifyBuild('STARTED')
 

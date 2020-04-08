@@ -14,6 +14,12 @@ spec:
   mig_pv_limit: {{ mig_controller_mig_pv_limit }}
   mig_pod_limit: {{ mig_controller_mig_pod_limit }}
   mig_namespace_limit: {{ mig_controller_mig_namespace_limit }}
+{% if mig_controller_image is defined %}
+  mig_controller_image: {{ mig_controller_image }}
+{% endif %}
+{% if mig_controller_version is defined %}
+  mig_controller_version: {{ mig_controller_version }}
+{% endif %}
 {% if olm_cluster_version is defined %}
 {% if '4.1' in olm_cluster_version|string %}
   deprecated_cors_configuration: true

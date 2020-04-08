@@ -154,33 +154,35 @@ def copy_public_keys() {
     \test-with-controller #PR : Use controller #PR with current operator
 */
 def parse_comment_message(message) {
-  suffix_operator = '-with-operator'
-  suffix_controller = '-with-controller'
-  BUILD_CUSTOM_MIG_OPERATOR = message.contains(suffix_operator) ? true : false;
-  BUILD_CUSTOM_MIG_CONTROLLER = message.contains(suffix_controller) ? true : false;
-  echo "Needs custom operator? ${BUILD_MIG_OPERATOR}"
-  echo "Needs custom controller? ${BUILD_MIG_CONTROLLER}"
-
+  def matched = message =~ /(.*)(test-with-(operator|controller) #(\d+)|test)(.*)*/
+  MIG_OPERATOR_BUILD_CUSTOM = false
+  MIG_CONTROLLER_BUILD_CUSTOM = false
+  
   // If comment pattern does not conform - 
   //     Fail the build
   //     Add comment to the PR mentioning the requester why build failed
-  // Check here if comment pattern conforms
-  conformed = true
-  pr_handle = null
-  message = ''
-  if (!conformed) {
-    comment_on_pr(pr_handle, message)  
+  if (!matched) {
+    def pr_handle = null
+    def comment = "@user Illegal bot command. Setting build status to failed..."
+    comment_on_pr(pr_handle, comment)
   }
-  
-  if (BUILD_CUSTOM_MIG_OPERATOR) {
-    MIG_OPERATOR_PR = message.replaceAll(' ', '').replaceAll('\\test${suffix_operator}', '');
-  }
+  else {
+    switch (message) {
+      case ~/(.*)-with-operator(.*)/:
+        MIG_OPERATOR_BUILD_CUSTOM = true
+        MIG_CONTROLLER_BUILD_CUSTOM = false
+        MIG_OPERATOR_PR_NO = matched[0][4]
+        break
 
-  if (BUILD_CUSTOM_MIG_CONTROLLER) {
-    MIG_CONTROLLER_PR = message.replaceAll(' ', '').replaceAll('\\test${suffix_controller}', '');;
+      case ~/(.*)-with-controller(.*)/:
+        MIG_OPERATOR_BUILD_CUSTOM = false
+        MIG_CONTROLLER_BUILD_CUSTOM = true
+        MIG_CONTROLLER_PR_NO = matched[0][4]
+        break
+    }
   }
-
-  echo "Operator PR #${MIG_OPERATOR_PR}"
+  echo "Building custom mig-operator? ${MIG_OPERATOR_BUILD_CUSTOM}"
+  echo "Building custom mig-controller? ${MIG_CONTROLLER_BUILD_CUSTOM}"
 }
 
 /*

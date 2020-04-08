@@ -23,7 +23,16 @@
 
     - name: "Define OperatorSource pod label"
       set_fact:
-        mig_operator_label: "{{ 'marketplace.catalogSourceConfig=migration-operator' if olm_cluster_version is version('4.1', '<=') else 'marketplace.operatorSource=migration-operator' }}"
+        mig_operator_label: "marketplace.catalogSourceConfig=migration-operator"
+      when: olm_cluster_version is version('4.1', '<=')
+
+    - name: "Define OperatorSource pod label"
+      set_fact:
+        mig_operator_label: "{{ 
+          'marketplace.operatorSource=konveyor-ci-operators' if mig_operator_build_custom|bool 
+          else 'marketplace.operatorSource=migration-operator' 
+        }}"
+      when: not olm_cluster_version is version('4.1', '<=')
 
     - name: "Wait for OLM to reconcile OperatorSource creation"
       k8s_facts:
@@ -39,7 +48,7 @@
       k8s_facts:
         kind: Service
         namespace: openshift-marketplace
-        name: migration-operator
+        name: "{{ 'konveyor-ci-operators' if mig_operator_build_custom|bool else 'migration-operator' }}"
       register: service
       until: "'grpc' in (service | json_query('resources[].spec.ports[].name'))"
       retries: 18

@@ -79,7 +79,9 @@ node {
               common_stages.login_cluster("${SRC_CLUSTER_URL}", "${OCP3_ADMIN_USER}", "${OCP3_ADMIN_PASSWD}", "${SRC_CLUSTER_VERSION}", SOURCE_KUBECONFIG).call()
               common_stages.login_cluster("${DEST_CLUSTER_URL}", "${OCP4_ADMIN_USER}", "${OCP4_ADMIN_PASSWD}", "${DEST_CLUSTER_VERSION}", TARGET_KUBECONFIG).call()
              }
-        // Always ensure mig controller environment is clean before deployment
+        // Ensure no namespaces are stuck terminating
+        utils.teardown_e2e_stuck_ns(TARGET_KUBECONFIG)
+        // Ensure mig controller environment is clean before deployment
         utils.teardown_mig_controller(SOURCE_KUBECONFIG)
         utils.teardown_mig_controller(TARGET_KUBECONFIG)
 
@@ -100,7 +102,7 @@ node {
         stage('Clean Up Environment') {
           // Always attempt to remove s3 buckets
           utils.teardown_s3_bucket()
-          // Teardown e2e test namespaces
+          // Ensure e2e test namespaces are removed on destination
           utils.teardown_e2e(TARGET_KUBECONFIG)
           if (CLEAN_WORKSPACE) {
               cleanWs notFailBuild: true

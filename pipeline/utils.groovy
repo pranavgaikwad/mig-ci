@@ -173,11 +173,11 @@ def parse_comment_message(message) {
   }
   
   if (BUILD_CUSTOM_MIG_OPERATOR) {
-    MIG_OPERATOR_PR = message.replaceAll(' ', '').replaceAll('\\test-with-operator', '');
+    MIG_OPERATOR_PR = message.replaceAll(' ', '').replaceAll('\\test${suffix_operator}', '');
   }
 
   if (BUILD_CUSTOM_MIG_CONTROLLER) {
-    MIG_CONTROLLER_PR = message.replaceAll(' ', '').replaceAll('\\test-with-controller', '');;
+    MIG_CONTROLLER_PR = message.replaceAll(' ', '').replaceAll('\\test${suffix_controller}', '');;
   }
 
   echo "Operator PR #${MIG_OPERATOR_PR}"
@@ -206,10 +206,12 @@ def checkout_pr(repo, pr_number, directory) {
   ])
 }
 
-// Comments given message on PR
-// 
-// pr_handle [string] : Unknown atm
-// message [string]   : Unknown atm
+/*
+  Comments given message on PR
+  
+  pr_handle [string] : Unknown atm
+  message [string]   : Unknown atm
+*/
 def comment_on_pr(pr_handle, message) {
   // TODO : low prio
 }

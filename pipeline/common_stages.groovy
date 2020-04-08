@@ -43,7 +43,6 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
         ansiblePlaybook(
           playbook: 'ocp4_dump_release.yml',
           hostKeyChecking: false,
-          unbuffered: true,
           colorized: true)
       }
     }
@@ -148,7 +147,6 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
             playbook: 'login.yml',
             extras: "${login_vars.join(' ')}",
             hostKeyChecking: false,
-            unbuffered: true,
             colorized: true)
         }
       }
@@ -264,7 +262,6 @@ def deploy_ocp3_agnosticd(kubeconfig, cluster_version) {
             playbook: 'login.yml',
             extras: "${login_vars.join(' ')}",
             hostKeyChecking: false,
-            unbuffered: true,
             colorized: true)
         }
     } 
@@ -306,7 +303,6 @@ def sanity_checks(kubeconfig) {
             playbook: 'ocp_sanity_check.yml',
             extras: "-e oc_binary=oc",
             hostKeyChecking: false,
-            unbuffered: true,
             colorized: true)
         }
       }
@@ -339,7 +335,6 @@ def login_cluster(
          playbook: 'login.yml',
          extras: "${ocp_login_vars.join(' ')}",
          hostKeyChecking: false,
-         unbuffered: true,
          colorized: true)
         }
     }
@@ -368,7 +363,6 @@ def cam_disconnected(
                  playbook: 'cam_disconnected_prepare.yml',
                  extras: "",
                  hostKeyChecking: false,
-                 unbuffered: true,
                  colorized: true)
              }
              ansiColor('xterm') {
@@ -376,7 +370,6 @@ def cam_disconnected(
                  playbook: 'cam_disconnected_run.yml',
                  extras: "-e validate_node_config=${validate_node_config}",
                  hostKeyChecking: false,
-                 unbuffered: true,
                  colorized: true)
              }
           }
@@ -445,7 +438,6 @@ def deploy_mig_controller_on_both(
             playbook: 'mig_controller_deploy.yml',
             extras: "-e mig_controller_host_cluster=${mig_controller_src} -e mig_controller_ui=false",
             hostKeyChecking: false,
-            unbuffered: true,
             colorized: true)
         }
       }
@@ -463,7 +455,6 @@ def deploy_mig_controller_on_both(
             playbook: 'mig_controller_deploy.yml',
             extras: "-e mig_controller_host_cluster=${mig_controller_dst} -e mig_controller_ui=${MIG_CONTROLLER_UI}",
             hostKeyChecking: false,
-            unbuffered: true,
             colorized: true)
         }
       }
@@ -491,7 +482,6 @@ def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig) {
                 hostKeyChecking: false,
                 extras: "-e 'with_migrate=false'",
                 tags: "${e2e_tests[i]}",
-                unbuffered: true,
                 colorized: true)
             }
           }
@@ -506,7 +496,6 @@ def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig) {
                   playbook: "e2e_prepare_clusters.yml",
                   hostKeyChecking: false,
                   extras: "",
-                  unbuffered: true,
                   colorized: true)
               }
             }
@@ -522,7 +511,6 @@ def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig) {
                   hostKeyChecking: false,
                   extras: "-e 'with_deploy=false'",
                   tags: "${e2e_tests[i]}",
-                  unbuffered: true,
                   colorized: true)
               }
             }

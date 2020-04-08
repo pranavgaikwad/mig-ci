@@ -215,6 +215,18 @@ def teardown_e2e(kubeconfig) {
   }
 }
 
+def teardown_e2e_stuck_ns(kubeconfig) {
+  withEnv([ "KUBECONFIG=${kubeconfig}" ]) {
+    ansiColor('xterm') {
+      ansiblePlaybook(
+        playbook: 'ocp_ns_destroy.yml',
+        hostKeyChecking: false,
+        unbuffered: true,
+        colorized: true)
+    }
+  }
+}
+
 def run_debug(kubeconfig) {
   withEnv([ "KUBECONFIG=${kubeconfig}" ]) {
     sh "${DEBUG_SCRIPT} ${DEBUG_SCRIPT_ARGS} || true"

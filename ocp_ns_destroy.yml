@@ -1,0 +1,26 @@
+- hosts: localhost
+  tasks:
+    - name: "Get stuck terminating namespaces"
+      k8s_facts:
+        kind: Namespace
+        field_selectors:
+          - status.phase=Terminating
+      register: stuck_ns
+
+    - block:
+        - name: "Extract stuck namespaces"
+          set_fact:
+            stuck_ns_names: "{{ stuck_ns_names | default([]) + [item.metadata.name] }}"
+          loop: "{{ stuck_ns.resources }}"
+
+        - set_fact:
+            oc_args: "{{ '-o json | tr -d \"\\n\" | sed \"s/\\\"finalizers\\\": \\[[^]]\\+\\]/\\\"finalizers\\\": []/\"' }}"
+
+        - name: "Force delete stuck namespaces"
+          shell: "{{ oc_binary }} get namespace {{ item }} {{ oc_args }} | {{ oc_binary }} replace --raw /api/v1/namespaces/{{ item }}/finalize -f -"
+          loop: "{{ stuck_ns_names }}"
+
+      when: stuck_ns.resources | length > 0
+
+  vars_files:
+    - "{{ playbook_dir }}/config/defaults.yml"

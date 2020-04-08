@@ -19,6 +19,7 @@
         - name: "Force delete stuck namespaces"
           shell: "{{ oc_binary }} get namespace {{ item }} {{ oc_args }} | {{ oc_binary }} replace --raw /api/v1/namespaces/{{ item }}/finalize -f -"
           loop: "{{ stuck_ns_names }}"
+          ignore_errors: true
 
       when: stuck_ns.resources | length > 0
 

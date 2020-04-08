@@ -86,7 +86,6 @@ def prepare_agnosticd() {
 def prepare_workspace(src_version = '', dest_version = '') {
   // Prepare EC2 key for ansible consumption
   KEYS_DIR = "${env.WORKSPACE}" + '/keys'
-  PERSISTENT = true
   sh "mkdir -p ${KEYS_DIR}"
   sh "mkdir -p ${env.WORKSPACE}/kubeconfigs"
   
@@ -161,6 +160,17 @@ def parse_comment_message(message) {
   BUILD_CUSTOM_MIG_CONTROLLER = message.contains(suffix_controller) ? true : false;
   echo "Needs custom operator? ${BUILD_MIG_OPERATOR}"
   echo "Needs custom controller? ${BUILD_MIG_CONTROLLER}"
+
+  // If comment pattern does not conform - 
+  //     Fail the build
+  //     Add comment to the PR mentioning the requester why build failed
+  // Check here if comment pattern conforms
+  conformed = true
+  pr_handle = null
+  message = ''
+  if (!conformed) {
+    comment_on_pr(pr_handle, message)  
+  }
   
   if (BUILD_CUSTOM_MIG_OPERATOR) {
     MIG_OPERATOR_PR = message.replaceAll(' ', '').replaceAll('\\test-with-operator', '');
@@ -194,6 +204,14 @@ def checkout_pr(repo, pr_number, directory) {
       ]
     ]
   ])
+}
+
+// Comments given message on PR
+// 
+// pr_handle [string] : Unknown atm
+// message [string]   : Unknown atm
+def comment_on_pr(pr_handle, message) {
+  // TODO : low prio
 }
 
 def teardown_ocp_agnosticd(cluster_version) {

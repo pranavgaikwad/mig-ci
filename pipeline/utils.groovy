@@ -208,7 +208,6 @@ def teardown_e2e(kubeconfig) {
         ansiblePlaybook(
           playbook: 'e2e_destroy_all.yml',
           hostKeyChecking: false,
-          unbuffered: true,
           colorized: true)
       }
     }
@@ -221,7 +220,6 @@ def teardown_e2e_stuck_ns(kubeconfig) {
       ansiblePlaybook(
         playbook: 'ocp_ns_destroy.yml',
         hostKeyChecking: false,
-        unbuffered: true,
         colorized: true)
     }
   }

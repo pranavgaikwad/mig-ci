@@ -166,7 +166,6 @@ def teardown_mig_controller(kubeconfig) {
       ansiblePlaybook(
         playbook: 'mig_controller_destroy.yml',
         hostKeyChecking: false,
-        unbuffered: true,
         colorized: true)
     }
   }
@@ -180,7 +179,6 @@ def teardown_container_image() {
         playbook: 'container_image_destroy.yml',
         hostKeyChecking: false,
         extras: "-e quayio_ci_repo=${QUAYIO_CI_REPO} -e quayio_ci_tag=${MIG_CONTROLLER_BRANCH}",
-        unbuffered: true,
         colorized: true)
     }
   }
@@ -195,7 +193,6 @@ def teardown_s3_bucket() {
       ansiblePlaybook(
         playbook: 's3_bucket_destroy.yml',
         hostKeyChecking: false,
-        unbuffered: true,
         colorized: true)
     }
   }

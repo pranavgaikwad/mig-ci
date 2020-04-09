@@ -268,15 +268,15 @@ def deploy_ocp3_agnosticd(kubeconfig, cluster_version) {
   }
 }
 
-def deploy_ceph(cluster_version) {
+def deploy_workload(workload,cluster_version,status) {
   def short_version = cluster_version.tokenize(".")[0]
   if (cluster_version == "nightly") {
     short_version = '4'
   }
   return {
-    if (CEPH) {
-      stage('Deploy CEPH workload on ' + cluster_version) {
-        steps_finished << 'Deploy CEPH workload on ' + cluster_version
+    if (status == 'true') {
+      stage('Deploy ${workload} workload on ' + cluster_version) {
+        steps_finished << 'Deploy ${workload} workload on ' + cluster_version
         sh 'sleep 180'
         dir("mig-agnosticd/workloads") {
           withEnv([
@@ -284,7 +284,7 @@ def deploy_ceph(cluster_version) {
             'ANSIBLE_FORCE_COLOR=true'])
           {
             ansiColor('xterm') {
-                sh "./deploy_workload.sh -a create -w ceph -v ${short_version} -m ${WORKSPACE}/mig-agnosticd/${cluster_version}"
+                sh "./deploy_workload.sh -a create -w ${workload} -v ${short_version} -m ${WORKSPACE}/mig-agnosticd/${cluster_version}"
             }
           }
         }

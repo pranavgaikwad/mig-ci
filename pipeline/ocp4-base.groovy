@@ -24,6 +24,7 @@ credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringC
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_ocp4_admin_credentials', description: 'Cluster admin credentials used in OCP4 deployments', name: 'OCP4_CREDENTIALS', required: true),
 booleanParam(defaultValue: false, description: 'Persistent cluster builds with fixed hostname', name: 'PERSISTENT'),
 booleanParam(defaultValue: false, description: 'Provision CEPH workload on destination cluster', name: 'CEPH'),
+booleanParam(defaultValue: false, description: 'Provision NooBaa workload on destination cluster', name: 'NOOBAA'),
 booleanParam(defaultValue: true, description: 'Deploy mig operator using OLM on OCP4', name: 'USE_OLM'),
 booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE'),
 booleanParam(defaultValue: true, description: 'EC2 terminate instances after build', name: 'EC2_TERMINATE_INSTANCES')])])
@@ -67,7 +68,8 @@ node {
           utils.prepare_agnosticd()
         }
           common_stages.deploy_ocp4_agnosticd(SOURCE_KUBECONFIG, SRC_CLUSTER_VERSION).call()
-          common_stages.deploy_ceph(SRC_CLUSTER_VERSION).call()
+          common_stages.deploy_workload('ceph',DEST_CLUSTER_VERSION,CEPH).call()
+          common_stages.deploy_workload('ocs-operator',DEST_CLUSTER_VERSION,NOOBAA).call()
 
     } catch (Exception ex) {
         currentBuild.result = "FAILED"

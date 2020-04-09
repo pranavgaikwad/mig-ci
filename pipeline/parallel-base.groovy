@@ -52,6 +52,7 @@ booleanParam(defaultValue: false, description: 'Deploy e2e applications and prep
 booleanParam(defaultValue: true, description: 'Update OCP3 cluster packages to latest', name: 'OCP3_UPDATE'),
 booleanParam(defaultValue: true, description: 'Provision glusterfs workload on OCP3', name: 'OCP3_GLUSTERFS'),
 booleanParam(defaultValue: true, description: 'Provision CEPH workload on destination cluster', name: 'CEPH'),
+booleanParam(defaultValue: false, description: 'Provision NooBaa workload on destination cluster', name: 'NOOBAA'),
 booleanParam(defaultValue: true, description: 'Deploy CAM', name: 'DEPLOY_CAM'),
 booleanParam(defaultValue: true, description: 'Deploy mig operator using OLM on OCP4', name: 'USE_OLM'),
 booleanParam(defaultValue: false, description: 'Deploy using downstream images', name: 'USE_DOWNSTREAM'),
@@ -84,8 +85,6 @@ USE_OLM = params.USE_OLM
 PERSISTENT = params.PERSISTENT
 // true/false provision glusterfs
 OCP3_GLUSTERFS = params.OCP3_GLUSTERFS
-// true/false provision ceph
-CEPH = params.CEPH
 // true/false deploy CAM disconnected 
 USE_DISCONNECTED = params.USE_DISCONNECTED
 // true/false deploy e2e apps only
@@ -136,7 +135,8 @@ node {
                  common_stages.deploy_ocp3_agnosticd(TARGET_KUBECONFIG, DEST_CLUSTER_VERSION).call()
               } else {
                   common_stages.deploy_ocp4_agnosticd(TARGET_KUBECONFIG, DEST_CLUSTER_VERSION).call()
-                  common_stages.deploy_ceph(DEST_CLUSTER_VERSION).call()
+                  common_stages.deploy_workload('ceph',DEST_CLUSTER_VERSION,CEPH).call()
+                  common_stages.deploy_workload('ocs-operator',DEST_CLUSTER_VERSION,NOOBAA).call()
                     }
             },
             failFast: false

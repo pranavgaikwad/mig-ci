@@ -226,7 +226,7 @@ def teardown_e2e_purge_pv(kubeconfig) {
   withEnv([ "KUBECONFIG=${kubeconfig}" ]) {
     ansiColor('xterm') {
       ansiblePlaybook(
-        playbook: 'ocp_purge_pv.yml',
+        playbook: 'ocp_pv_purge.yml',
         hostKeyChecking: false,
         colorized: true)
     }

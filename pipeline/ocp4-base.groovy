@@ -68,8 +68,8 @@ node {
           utils.prepare_agnosticd()
         }
           common_stages.deploy_ocp4_agnosticd(SOURCE_KUBECONFIG, SRC_CLUSTER_VERSION).call()
-          common_stages.deploy_workload('ceph',DEST_CLUSTER_VERSION,CEPH).call()
-          common_stages.deploy_workload('ocs-operator',DEST_CLUSTER_VERSION,NOOBAA).call()
+          common_stages.deploy_workload('ceph',SRC_CLUSTER_VERSION,CEPH).call()
+          common_stages.deploy_workload('ocs-operator',SRC_CLUSTER_VERSION,NOOBAA).call()
 
     } catch (Exception ex) {
         currentBuild.result = "FAILED"

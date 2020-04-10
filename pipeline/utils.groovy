@@ -222,6 +222,17 @@ def teardown_e2e_stuck_ns(kubeconfig) {
   }
 }
 
+def teardown_e2e_purge_pv(kubeconfig) {
+  withEnv([ "KUBECONFIG=${kubeconfig}" ]) {
+    ansiColor('xterm') {
+      ansiblePlaybook(
+        playbook: 'ocp_purge_pv.yml',
+        hostKeyChecking: false,
+        colorized: true)
+    }
+  }
+}
+
 def run_debug(kubeconfig) {
   withEnv([ "KUBECONFIG=${kubeconfig}" ]) {
     sh "${DEBUG_SCRIPT} ${DEBUG_SCRIPT_ARGS} || true"

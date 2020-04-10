@@ -1,0 +1,29 @@
+- hosts: localhost
+  tasks:
+
+    - name: "Obtain all PVs"
+      k8s_facts:
+        kind: PersistentVolume
+      register: pvs
+
+    - block:
+
+        - name: "Extract non-bound PVs"
+          set_fact:
+            pvs_remove: "{{ pvs_remove | default([]) + [item.metadata.name] }}"
+          when: item.status.phase != "Bound"
+          loop: "{{ pvs.resources }}"
+
+        - name: "Remove non-bound PVs"
+          k8s:
+            kind: PersistentVolume
+            state: absent
+            name: "{{ item }}"
+          loop: "{{ pvs_remove }}"
+          when: pvs_remove is defined
+          ignore_errors: true
+
+      when: pvs.resources | length > 0
+
+  vars_files:
+    - "{{ playbook_dir }}/config/defaults.yml"

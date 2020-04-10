@@ -81,6 +81,8 @@ node {
              }
         // Ensure no namespaces are stuck terminating
         utils.teardown_e2e_stuck_ns(TARGET_KUBECONFIG)
+        // Purge all non-bound pvs
+        utils.teardown_e2e_purge_pv(TARGET_KUBECONFIG)
         // Ensure mig controller environment is clean before deployment
         utils.teardown_mig_controller(SOURCE_KUBECONFIG)
         utils.teardown_mig_controller(TARGET_KUBECONFIG)

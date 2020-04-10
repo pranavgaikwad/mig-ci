@@ -10,7 +10,11 @@
     kind: Namespace
     name: "{{ mig_migration_namespace }}"
     wait: yes
-    wait_timeout: 3600
+    wait_timeout: 300
+    register: res
+    retries: 6
+    delay: 10
+    until: res is success
 
 - name: Destroy velero CRDs
   k8s:

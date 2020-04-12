@@ -39,6 +39,7 @@
     name: "{{ item }}"
     wait: yes
   with_items: "{{ mig_cluster_role_bindings }}"
+  ignore_errors: true
 
 - name: "Destroy CAM cluster roles"
   k8s:
@@ -48,6 +49,7 @@
     name: "{{ item }}" 
     wait: yes
   with_items: "{{ mig_cluster_roles }}"
+  ignore_errors: true
 
 - name: Destroy s3 bucket if present
   include: destroy_s3_bucket.yml

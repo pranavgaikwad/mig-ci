@@ -3,16 +3,25 @@
   include_vars:
     file: "{{ playbook_dir }}/roles/mig_controller_prereqs/defaults/main.yml"
 
-- name: Destroy migration namespace
+- include_role:
+    name: get_ocp_version
+  vars:
+    - show_cluster_api: true
+
+- name: "Destroy {{ mig_migration_namespace }} namespace"
   k8s:
     state: absent
     api_version: v1
     kind: Namespace
     name: "{{ mig_migration_namespace }}"
     wait: yes
-    wait_timeout: 3600
+    wait_timeout: 300
+  register: res
+  retries: 6
+  delay: 10
+  until: res is success
 
-- name: Destroy velero CRDs
+- name: "Destroy CAM CRDs"
   k8s:
     state: absent
     api_version: v1beta1
@@ -20,8 +29,9 @@
     name: "{{ item }}"
     wait: yes
   with_items: "{{ velero_crds }}"
+  ignore_errors: true
 
-- name: Destroy cluster role bindings
+- name: "Destroy CAM cluster role bindings"
   k8s:
     state: absent
     api_version: rbac.authorization.k8s.io/v1beta1
@@ -29,8 +39,9 @@
     name: "{{ item }}"
     wait: yes
   with_items: "{{ mig_cluster_role_bindings }}"
+  ignore_errors: true
 
-- name: Destroy manager cluster role
+- name: "Destroy CAM cluster roles"
   k8s:
     state: absent
     api_version: rbac.authorization.k8s.io/v1beta1
@@ -38,6 +49,7 @@
     name: "{{ item }}" 
     wait: yes
   with_items: "{{ mig_cluster_roles }}"
+  ignore_errors: true
 
 - name: Destroy s3 bucket if present
   include: destroy_s3_bucket.yml

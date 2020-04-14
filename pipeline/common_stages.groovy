@@ -490,6 +490,7 @@ def build_custom_operator() {
 
             // update metadata
             sh "find ./deploy/olm-catalog/konveyor-operator/ -name '*.clusterserviceversion.*' -exec sed -E -i -e 's,image: quay.io/(.*)/mig-operator-container:(.*),image: ${IMG},g' {} \\;"
+            sh "find ./deploy/non-olm/ -name '*operator.yml*' -exec sed -E -i -e 's,image: quay.io/(.*)/mig-operator-container:(.*),image: ${IMG},g' {} \\;"
             sh "sed -E -i -e 's,name: (.*),name: konveyor-ci-operators,g' mig-operator-source.yaml"
             sh "sed -E -i -e 's,registryNamespace: (.*),registryNamespace: konveyor_ci,g' mig-operator-source.yaml"
 

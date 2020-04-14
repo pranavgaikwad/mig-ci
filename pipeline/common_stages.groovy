@@ -383,9 +383,6 @@ def deploy_mig_controller_on_both(
   target_kubeconfig,
   mig_controller_src,
   mig_controller_dst) {
-  
-  if (!MIG_OPERATOR_BUILD_CUSTOM) MIG_OPERATOR_BUILD_CUSTOM = false
-
   // mig_controller_src boolean defines if the source cluster will host mig controller
   // mig_controller_dst boolean defines if the destination cluster will host mig controller
   sh "echo 'ansible-playbook ${WORKSPACE}/s3_bucket_destroy.yml &' >> destroy_env.sh"
@@ -410,6 +407,7 @@ def deploy_mig_controller_on_both(
         // Update mig-controller image and version to custom build or assume default
         mig_controller_img = "${QUAYIO_CI_REPO}"
         mig_controller_tag = "${MIG_CONTROLLER_BRANCH}"
+        MIG_CONTROLLER_BUILD_CUSTOM = true
       } else {
           mig_controller_img = "quay.io/ocpmigrate/mig-controller"
           mig_controller_tag = "${MIG_CONTROLLER_BRANCH}"
@@ -433,6 +431,7 @@ def deploy_mig_controller_on_both(
       withEnv([
           "KUBECONFIG=${source_kubeconfig}",
           "MIG_OPERATOR_BUILD_CUSTOM=${MIG_OPERATOR_BUILD_CUSTOM}",
+          "MIG_CONTROLLER_BUILD_CUSTOM=${MIG_CONTROLLER_BUILD_CUSTOM}",
           "MIG_OPERATOR_USE_OLM=${SRC_USE_OLM}",
           "MIG_OPERATOR_USE_DOWNSTREAM=${USE_DOWNSTREAM}",
           "MIG_OPERATOR_USE_DISCONNECTED=${USE_DISCONNECTED}",
@@ -451,6 +450,7 @@ def deploy_mig_controller_on_both(
       withEnv([
           "KUBECONFIG=${target_kubeconfig}",
           "MIG_OPERATOR_BUILD_CUSTOM=${MIG_OPERATOR_BUILD_CUSTOM}",
+          "MIG_CONTROLLER_BUILD_CUSTOM=${MIG_CONTROLLER_BUILD_CUSTOM}",
           "MIG_OPERATOR_USE_OLM=${DEST_USE_OLM}",
           "MIG_OPERATOR_USE_DOWNSTREAM=${USE_DOWNSTREAM}",
           "MIG_OPERATOR_USE_DISCONNECTED=${USE_DISCONNECTED}",

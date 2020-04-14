@@ -383,6 +383,9 @@ def deploy_mig_controller_on_both(
   target_kubeconfig,
   mig_controller_src,
   mig_controller_dst) {
+  
+  if (!MIG_OPERATOR_BUILD_CUSTOM) MIG_OPERATOR_BUILD_CUSTOM = false
+
   // mig_controller_src boolean defines if the source cluster will host mig controller
   // mig_controller_dst boolean defines if the destination cluster will host mig controller
   sh "echo 'ansible-playbook ${WORKSPACE}/s3_bucket_destroy.yml &' >> destroy_env.sh"

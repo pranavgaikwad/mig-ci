@@ -39,7 +39,6 @@ booleanParam(defaultValue: true, description: 'Clean up workspace after build', 
 USE_OLM = params.USE_OLM
 USE_DISCONNECTED = false
 E2E_DEPLOY_ONLY = params.E2E_DEPLOY_ONLY
-MIG_CONTROLLER_UI = false
 // true/false build parameter that defines if we cleanup workspace once build is done
 def CLEAN_WORKSPACE = params.CLEAN_WORKSPACE
 // Split e2e tests from string param

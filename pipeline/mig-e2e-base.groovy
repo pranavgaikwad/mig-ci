@@ -35,6 +35,10 @@ booleanParam(defaultValue: true, description: 'Clean up workspace after build', 
 
 // true/false build parameter that defines if we use OLM to deploy mig operator on OCP4
 USE_OLM = params.USE_OLM
+// do not build custom mig-operator image
+MIG_OPERATOR_BUILD_CUSTOM = false
+// do not build custom mig-controller image
+MIG_CONTROLLER_BUILD_CUSTOM = false
 // true/false deploy e2e apps only
 E2E_DEPLOY_ONLY = params.E2E_DEPLOY_ONLY
 // true/false build parameter that defines if we cleanup workspace once build is done

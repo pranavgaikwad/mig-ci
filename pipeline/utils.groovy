@@ -154,7 +154,7 @@ def copy_public_keys() {
     \test-with-controller #PR : Use controller #PR with current operator
 */
 def parse_comment_message(message) {
-  def matched = message =~ /(.*)(test-with-(operator|controller) #(\d+)|test)(.*)*/
+  def matched = message =~ /(.*)(test-with-(operator|controller) #?(\d+)|test)(.*)*/
   MIG_OPERATOR_BUILD_CUSTOM = false
   MIG_CONTROLLER_BUILD_CUSTOM = false
   

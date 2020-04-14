@@ -23,8 +23,7 @@ credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringC
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_rhel_sub_pass', description: 'RHEL Openshift subscription account password', name: 'EC2_SUB_PASS', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_ocp4_admin_credentials', description: 'Cluster admin credentials used in OCP4 deployments', name: 'OCP4_CREDENTIALS', required: true),
 booleanParam(defaultValue: false, description: 'Persistent cluster builds with fixed hostname', name: 'PERSISTENT'),
-booleanParam(defaultValue: false, description: 'Provision CEPH workload on destination cluster', name: 'CEPH'),
-booleanParam(defaultValue: false, description: 'Provision NooBaa workload on destination cluster', name: 'NOOBAA'),
+booleanParam(defaultValue: false, description: 'Provision OCS ceph/noobaa workload on destination cluster', name: 'OCS'),
 booleanParam(defaultValue: true, description: 'Deploy mig operator using OLM on OCP4', name: 'USE_OLM'),
 booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE'),
 booleanParam(defaultValue: true, description: 'EC2 terminate instances after build', name: 'EC2_TERMINATE_INSTANCES')])])
@@ -37,8 +36,6 @@ EC2_TERMINATE_INSTANCES = params.EC2_TERMINATE_INSTANCES
 CLEAN_WORKSPACE = params.CLEAN_WORKSPACE
 // true/false persistent clusters
 PERSISTENT = params.PERSISTENT
-// true/false provision ceph
-CEPH = params.CEPH
 
 
 def common_stages
@@ -68,8 +65,7 @@ node {
           utils.prepare_agnosticd()
         }
           common_stages.deploy_ocp4_agnosticd(SOURCE_KUBECONFIG, SRC_CLUSTER_VERSION).call()
-          common_stages.deploy_workload('ceph',SRC_CLUSTER_VERSION,CEPH).call()
-          common_stages.deploy_workload('ocs-operator',SRC_CLUSTER_VERSION,NOOBAA).call()
+          common_stages.deploy_workload('ocs-operator',SRC_CLUSTER_VERSION,OCS).call()
 
     } catch (Exception ex) {
         currentBuild.result = "FAILED"

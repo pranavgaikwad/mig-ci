@@ -33,7 +33,7 @@ def notifyBuild(String buildStatus = 'STARTED') {
   }
 
   // Send notifications
-  slackSend (color: colorCode, message: summary)
+  // slackSend (color: colorCode, message: summary)
 }
 
 def clone_mig_e2e() {
@@ -141,6 +141,81 @@ def copy_public_keys() {
   withCredentials([file(credentialsId: "${env.EC2_PUB_KEY}", variable: "SSH_PUB_KEY")]) {
     sh "cat ${SSH_PUB_KEY} > ${KEYS_DIR}/${env.EC2_KEY}.pub"
   }
+}
+
+/*
+  parses the comment message and sets
+  environment variables required for 
+  the build based on comment text
+ 
+  Supported comment patterns :
+    \test                     : Use latest operator with current controller
+    \test-with-operator #PR   : Use operator #PR with current controller
+    \test-with-controller #PR : Use controller #PR with current operator
+*/
+def parse_comment_message(message) {
+  def matched = message =~ /(.*)(test-with-(operator|controller) #?(\d+)|test)(.*)*/
+  MIG_OPERATOR_BUILD_CUSTOM = false
+  MIG_CONTROLLER_BUILD_CUSTOM = false
+  
+  // If comment pattern does not conform - 
+  //     Fail the build
+  //     Add comment to the PR mentioning the requester why build failed
+  if (!matched) {
+    def pr_handle = null
+    def comment = "@user Illegal bot command. Setting build status to failed..."
+    comment_on_pr(pr_handle, comment)
+  }
+  else {
+    switch (message) {
+      case ~/(.*)-with-operator(.*)/:
+        MIG_OPERATOR_BUILD_CUSTOM = true
+        MIG_CONTROLLER_BUILD_CUSTOM = false
+        MIG_OPERATOR_PR_NO = matched[0][4]
+        break
+
+      case ~/(.*)-with-controller(.*)/:
+        MIG_OPERATOR_BUILD_CUSTOM = false
+        MIG_CONTROLLER_BUILD_CUSTOM = true
+        MIG_CONTROLLER_PR_NO = matched[0][4]
+        break
+    }
+  }
+  echo "Building custom mig-operator? ${MIG_OPERATOR_BUILD_CUSTOM}"
+  echo "Building custom mig-controller? ${MIG_CONTROLLER_BUILD_CUSTOM}"
+}
+
+/*
+  Chekout PRs from given repo
+
+  repo [string]      : name of repo
+  pr_number [string] : pr to checkout
+  directory [string] : target directory 
+*/
+def checkout_pr(repo, pr_number, directory) {
+  checkout([$class: 'GitSCM', branches: [[name: 'FETCH_HEAD']], 
+    doGenerateSubmoduleConfigurations: false, 
+    extensions: [
+      [$class: 'RelativeTargetDirectory', relativeTargetDir: directory]
+    ], 
+    submoduleCfg: [], 
+    userRemoteConfigs: [
+      [
+        refspec: "+refs/pull/${pr_number}/head:refs/remotes/origin/PR-${pr_number}",
+        url: "${repo}"
+      ]
+    ]
+  ])
+}
+
+/*
+  Comments given message on PR
+  
+  pr_handle [string] : Unknown atm
+  message [string]   : Unknown atm
+*/
+def comment_on_pr(pr_handle, message) {
+  // TODO : low prio
 }
 
 def teardown_ocp_agnosticd(cluster_version) {

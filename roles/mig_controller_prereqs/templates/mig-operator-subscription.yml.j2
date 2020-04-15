@@ -27,6 +27,10 @@ spec:
 {% endif %}
 {% else %}
   name: konveyor-operator
+{% if mig_operator_build_custom|bool is sameas true %}
+  source: konveyor-ci-operators
+{% else %}
   source: migration-operator
+{% endif %}
   sourceNamespace: openshift-marketplace
 {% endif %}

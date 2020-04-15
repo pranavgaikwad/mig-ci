@@ -64,6 +64,10 @@ booleanParam(defaultValue: true, description: 'Deploy mig controller UI on desti
 
 // true/false build parameter that defines if CAM is deployed
 def DEPLOY_CAM = params.DEPLOY_CAM
+// do not build custom mig-operator image
+MIG_OPERATOR_BUILD_CUSTOM = false
+// do not build custom mig-controller image
+MIG_CONTROLLER_BUILD_CUSTOM = false
 // true/false build parameter that defines if we terminate instances once build is done
 def EC2_TERMINATE_INSTANCES = params.EC2_TERMINATE_INSTANCES
 // true/false build parameter that defines if we cleanup workspace once build is done

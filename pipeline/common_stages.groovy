@@ -390,7 +390,9 @@ def deploy_mig_controller_on_both(
     stage('Build mig-controller image and deploy on both clusters') {
       steps_finished << 'Build mig-controller image and deploy on both clusters'
       // Create custom mig-controller docker image if building a different mig-controller repo/branch
-      if ("${MIG_CONTROLLER_REPO}" != "https://github.com/konveyor/mig-controller.git") {
+      if ("${MIG_CONTROLLER_REPO}" != "https://github.com/konveyor/mig-controller.git" || 
+          "${MIG_CONTROLLER_BRANCH}" != "master"
+        ) {
         withEnv(["IMG=${QUAYIO_CI_REPO}:${MIG_CONTROLLER_BRANCH}"]) {
           dir('mig-controller') {
             sh 'make docker-build'
@@ -405,6 +407,7 @@ def deploy_mig_controller_on_both(
         // Update mig-controller image and version to custom build or assume default
         mig_controller_img = "${QUAYIO_CI_REPO}"
         mig_controller_tag = "${MIG_CONTROLLER_BRANCH}"
+        MIG_CONTROLLER_BUILD_CUSTOM = true
       } else {
           mig_controller_img = "quay.io/ocpmigrate/mig-controller"
           mig_controller_tag = "${MIG_CONTROLLER_BRANCH}"
@@ -427,6 +430,8 @@ def deploy_mig_controller_on_both(
       // Source
       withEnv([
           "KUBECONFIG=${source_kubeconfig}",
+          "MIG_OPERATOR_BUILD_CUSTOM=${MIG_OPERATOR_BUILD_CUSTOM}",
+          "MIG_CONTROLLER_BUILD_CUSTOM=${MIG_CONTROLLER_BUILD_CUSTOM}",
           "MIG_OPERATOR_USE_OLM=${SRC_USE_OLM}",
           "MIG_OPERATOR_USE_DOWNSTREAM=${USE_DOWNSTREAM}",
           "MIG_OPERATOR_USE_DISCONNECTED=${USE_DISCONNECTED}",
@@ -444,6 +449,8 @@ def deploy_mig_controller_on_both(
       // Target
       withEnv([
           "KUBECONFIG=${target_kubeconfig}",
+          "MIG_OPERATOR_BUILD_CUSTOM=${MIG_OPERATOR_BUILD_CUSTOM}",
+          "MIG_CONTROLLER_BUILD_CUSTOM=${MIG_CONTROLLER_BUILD_CUSTOM}",
           "MIG_OPERATOR_USE_OLM=${DEST_USE_OLM}",
           "MIG_OPERATOR_USE_DOWNSTREAM=${USE_DOWNSTREAM}",
           "MIG_OPERATOR_USE_DISCONNECTED=${USE_DISCONNECTED}",
@@ -453,7 +460,7 @@ def deploy_mig_controller_on_both(
         ansiColor('xterm') {
           ansiblePlaybook(
             playbook: 'mig_controller_deploy.yml',
-            extras: "-e mig_controller_host_cluster=${mig_controller_dst} -e mig_controller_ui=${MIG_CONTROLLER_UI}",
+            extras: "-e mig_controller_image=${mig_controller_img} -e mig_controller_version=${mig_controller_tag} -e mig_controller_host_cluster=${mig_controller_dst} -e mig_controller_ui=${MIG_CONTROLLER_UI}",
             hostKeyChecking: false,
             colorized: true)
         }
@@ -463,8 +470,48 @@ def deploy_mig_controller_on_both(
   }
 }
 
+/*
+  Builds operator images, creates Quay
+  application, pushes application
 
-def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig) {
+  directory [string] : Directory of operator repo to build
+*/
+def build_custom_operator() {    
+  return {
+    directory = 'mig-operator'
+    
+    stage('Building mig operator PR') {
+      withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "${QUAYIO_CREDENTIALS}", usernameVariable: 'QUAY_USERNAME', passwordVariable: 'QUAY_PASSWORD']]) {
+        withEnv(["IMG=${QUAYIO_CI_REPO_OPERATOR}:PR-${MIG_OPERATOR_PR_NO}"]) {
+          dir(directory) {
+            sh 'docker login quay.io -u $QUAY_USERNAME -p $QUAY_PASSWORD'
+            sh 'docker build -t $IMG -f build/Dockerfile .'
+            sh 'docker push $IMG'
+
+            // update metadata
+            sh "find ./deploy/olm-catalog/konveyor-operator/ -name '*.clusterserviceversion.*' -exec sed -E -i -e 's,image: quay.io/(.*)/mig-operator-container:(.*),image: ${IMG},g' {} \\;"
+            sh "find ./deploy/non-olm/ -name '*operator.yml*' -exec sed -E -i -e 's,image: quay.io/(.*)/mig-operator-container:(.*),image: ${IMG},g' {} \\;"
+            sh "sed -E -i -e 's,name: (.*),name: konveyor-ci-operators,g' mig-operator-source.yaml"
+            sh "sed -E -i -e 's,registryNamespace: (.*),registryNamespace: konveyor_ci,g' mig-operator-source.yaml"
+
+            // push application
+            sh """#!/bin/bash +x
+              last_version=\$(curl -s https://quay.io/cnr/api/v1/packages?namespace=konveyor_ci | jq '.[] | select(.name=\"konveyor_ci/konveyor-operator\") | .default')
+              last_patch=\$(echo \$last_version | sed -e 's/\"//g' | cut -d. -f3)
+              let current_ver=\$last_patch+1
+              AUTH_TOKEN=\$(curl -sH \"Content-Type: application/json\" -XPOST https://quay.io/cnr/api/v1/users/login -d \
+              '{\"user\": {\"username\": \"${QUAY_USERNAME}\", \"password\": \"${QUAY_PASSWORD}\"}}' | jq -r '.token')
+              ${MIG_CI_OPERATOR_COURIER_BINARY} --verbose push ./deploy/olm-catalog/konveyor-operator/ konveyor_ci konveyor-operator 0.0.\${current_ver} "\$AUTH_TOKEN"
+            """
+          }
+        }
+      }
+    }
+  }
+}
+
+
+def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig, extra_args=null) {
   return {
     stage('Execute migration') {
       steps_finished << 'Execute migration'

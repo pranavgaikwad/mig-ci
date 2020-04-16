@@ -161,7 +161,7 @@ def deploy_ocp3_agnosticd(kubeconfig, cluster_version) {
     '3.7': "3.7.119",
     '3.9': "3.9.99",
     '3.10': "3.10.34",
-    '3.11': "3.11.129"
+    '3.11': "3.11.161"
   ]
   def osrelease = releases["${repo_version}"]
   def full_cluster_name = ''

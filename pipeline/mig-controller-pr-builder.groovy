@@ -2,9 +2,9 @@
 properties([
 parameters([choice(choices: ['3.7', '3.9', '3.10', '3.11', '4.1', '4.2', '4.3', 'nightly'], description: 'Source cluster version to test', name: 'SRC_CLUSTER_VERSION'),
 choice(choices: ['4.3', '3.11', '3.10', '3.9', '3.7', '4.1', '4.2', 'nightly'], description: 'Destination cluster version to test', name: 'DEST_CLUSTER_VERSION'),
-string(defaultValue: '', description: 'Source cluster API endpoint', name: 'SRC_CLUSTER_URL', trim: false, required: true),
-string(defaultValue: '', description: 'Destination cluster API endpoint', name: 'DEST_CLUSTER_URL', trim: false, required: true),
-string(defaultValue: '', description: 'AWS region where clusters are deployed', name: 'AWS_REGION', trim: false, required: true),
+string(defaultValue: '', description: 'Source cluster API endpoint', name: 'SRC_CLUSTER_URL', trim: false),
+string(defaultValue: '', description: 'Destination cluster API endpoint', name: 'DEST_CLUSTER_URL', trim: false),
+string(defaultValue: '', description: 'AWS region where clusters are deployed', name: 'AWS_REGION', trim: false),
 string(defaultValue: 'https://github.com/konveyor/mig-operator.git', description: 'Mig operator repo to clone', name: 'MIG_OPERATOR_REPO', trim: false),
 string(defaultValue: 'master', description: 'Mig operator branch to test', name: 'MIG_OPERATOR_BRANCH', trim: false),
 string(defaultValue: 'https://github.com/konveyor/mig-controller.git', description: 'Mig controller repo to test, only used by GHPRB', name: 'MIG_CONTROLLER_REPO', trim: false),

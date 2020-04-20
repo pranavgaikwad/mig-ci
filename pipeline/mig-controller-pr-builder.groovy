@@ -72,30 +72,42 @@ node {
 
             utils.prepare_workspace(SRC_CLUSTER_VERSION, DEST_CLUSTER_VERSION)
             utils.clone_mig_e2e()
-            if (env.MIG_CONTROLLER_REPO != 'https://github.com/konveyor/mig-controller.git' || 
-                env.MIG_CONTROLLER_BRANCH != 'master') {
-              utils.clone_mig_controller()
-            }
         }
-          
+
+        // build mig-controller image when not using default latest image
+        if (env.MIG_CONTROLLER_REPO != 'https://github.com/konveyor/mig-controller.git' || 
+            env.MIG_CONTROLLER_BRANCH != 'master') {
+          utils.clone_mig_controller()
+          common_stages.build_mig_controller().call()
+        }
+
+        // build mig-operator image when not using default latest image
         if (MIG_OPERATOR_BUILD_CUSTOM) { 
           utils.checkout_pr(MIG_OPERATOR_REPO, MIG_OPERATOR_PR_NO, 'mig-operator')
-          common_stages.build_custom_operator().call()
+          common_stages.build_mig_operator().call()
+        }
+        
+        stage('Clean up old environment') {
+          withCredentials([
+            [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP3_CREDENTIALS}", usernameVariable: 'OCP3_ADMIN_USER', passwordVariable: 'OCP3_ADMIN_PASSWD'],
+            [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP4_CREDENTIALS}", usernameVariable: 'OCP4_ADMIN_USER', passwordVariable: 'OCP4_ADMIN_PASSWD']
+            ]) {
+                common_stages.login_cluster("${SRC_CLUSTER_URL}", "${OCP3_ADMIN_USER}", "${OCP3_ADMIN_PASSWD}", "${SRC_CLUSTER_VERSION}", SOURCE_KUBECONFIG).call()
+                common_stages.login_cluster("${DEST_CLUSTER_URL}", "${OCP4_ADMIN_USER}", "${OCP4_ADMIN_PASSWD}", "${DEST_CLUSTER_VERSION}", TARGET_KUBECONFIG).call()
+               }
+
+          // Always ensure mig controller environment is clean before deployment
+          utils.teardown_mig_controller(SOURCE_KUBECONFIG)
+          utils.teardown_mig_controller(TARGET_KUBECONFIG)
         }
 
-        withCredentials([
-          [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP3_CREDENTIALS}", usernameVariable: 'OCP3_ADMIN_USER', passwordVariable: 'OCP3_ADMIN_PASSWD'],
-          [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP4_CREDENTIALS}", usernameVariable: 'OCP4_ADMIN_USER', passwordVariable: 'OCP4_ADMIN_PASSWD']
-          ]) {
-              common_stages.login_cluster("${SRC_CLUSTER_URL}", "${OCP3_ADMIN_USER}", "${OCP3_ADMIN_PASSWD}", "${SRC_CLUSTER_VERSION}", SOURCE_KUBECONFIG).call()
-              common_stages.login_cluster("${DEST_CLUSTER_URL}", "${OCP4_ADMIN_USER}", "${OCP4_ADMIN_PASSWD}", "${DEST_CLUSTER_VERSION}", TARGET_KUBECONFIG).call()
-             }
-        // Always ensure mig controller environment is clean before deployment
-        utils.teardown_mig_controller(SOURCE_KUBECONFIG)
-        utils.teardown_mig_controller(TARGET_KUBECONFIG)
+        // deploy mig-operator and mig-controller on source
+        common_stages.deploy_mig_operator(SOURCE_KUBECONFIG, false).call()
+        common_stages.deploy_mig_controller(SOURCE_KUBECONFIG, false).call()
 
-        // Deploy mig controller and begin tests
-        common_stages.deploy_mig_controller_on_both(SOURCE_KUBECONFIG, TARGET_KUBECONFIG, false, true).call()
+        // deploy mig-operator and mig-controller on destination
+        common_stages.deploy_mig_operator(TARGET_KUBECONFIG, true).call()
+        common_stages.deploy_mig_controller(TARGET_KUBECONFIG, true).call()
 
         // Execute migration
         common_stages.execute_migration(E2E_TESTS, SOURCE_KUBECONFIG, TARGET_KUBECONFIG).call()

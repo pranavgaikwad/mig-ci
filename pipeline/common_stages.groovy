@@ -402,6 +402,7 @@ def build_mig_controller() {
       // Update mig-controller image and version to custom build or assume default
       MIG_CONTROLLER_IMAGE = "${QUAYIO_CI_REPO}"
       MIG_CONTROLLER_TAG = "${MIG_CONTROLLER_BRANCH}"
+    }
   }
 }
 

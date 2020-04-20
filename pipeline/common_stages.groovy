@@ -414,7 +414,7 @@ def build_mig_controller() {
 */
 def deploy_mig_controller(kubeconfig, is_host, cluster_version) {
   return {
-    def type = 'source' if ! is_host else 'destination'
+    def type = 'source' ? ! is_host : 'destination'
     stage("Deploy mig-controller on ${type} cluster") {
       steps_finished << "Deploy mig-controller on ${type} cluster"
       
@@ -422,7 +422,7 @@ def deploy_mig_controller(kubeconfig, is_host, cluster_version) {
 
       def mig_controller_image_args = 
         "-e mig_controller_image=${MIG_CONTROLLER_IMAGE} -e mig_controller_version=${MIG_CONTROLLER_TAG}" 
-        if MIG_CONTROLLER_BUILD_CUSTOM else ""  
+        ? MIG_CONTROLLER_BUILD_CUSTOM : ""  
 
       withCredentials([
         string(credentialsId: "$EC2_SUB_USER", variable: 'SUB_USER'),
@@ -457,7 +457,7 @@ def deploy_mig_controller(kubeconfig, is_host, cluster_version) {
 */
 def deploy_mig_operator(kubeconfig, is_host, cluster_version) {
   return {
-    def type = 'source' if ! is_host else 'destination'
+    def type = 'source' ? ! is_host : 'destination'
     stage("Deploy mig-operator on ${type} cluster") {
       steps_finished << "Deploy mig-operator on ${type} cluster"
       

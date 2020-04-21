@@ -67,6 +67,14 @@ node {
 
         utils.parse_comment_message(COMMENT_TEXT)
 
+        // prepare for tests
+        stage('Setup e2e environment') {
+            steps_finished << 'Setup e2e environment'
+
+            utils.prepare_workspace(SRC_CLUSTER_VERSION, DEST_CLUSTER_VERSION)
+            utils.clone_mig_e2e()
+        }
+
         // login to cluster
         withCredentials([
             [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP3_CREDENTIALS}", usernameVariable: 'OCP3_ADMIN_USER', passwordVariable: 'OCP3_ADMIN_PASSWD'],
@@ -76,12 +84,8 @@ node {
                 common_stages.login_cluster("${DEST_CLUSTER_URL}", "${OCP4_ADMIN_USER}", "${OCP4_ADMIN_PASSWD}", "${DEST_CLUSTER_VERSION}", TARGET_KUBECONFIG).call()
                }
 
-        // prepare for tests
-        stage('Setup e2e environment') {
-            steps_finished << 'Setup e2e environment'
-
-            utils.prepare_workspace(SRC_CLUSTER_VERSION, DEST_CLUSTER_VERSION)
-            utils.clone_mig_e2e()
+        // clean up old stuff
+        stage('Prepare for tests') {
             utils.teardown_mig_controller(SOURCE_KUBECONFIG)
             utils.teardown_mig_controller(TARGET_KUBECONFIG)
         }

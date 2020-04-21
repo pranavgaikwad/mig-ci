@@ -67,11 +67,23 @@ node {
 
         utils.parse_comment_message(COMMENT_TEXT)
 
+        // login to cluster
+        withCredentials([
+            [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP3_CREDENTIALS}", usernameVariable: 'OCP3_ADMIN_USER', passwordVariable: 'OCP3_ADMIN_PASSWD'],
+            [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP4_CREDENTIALS}", usernameVariable: 'OCP4_ADMIN_USER', passwordVariable: 'OCP4_ADMIN_PASSWD']
+            ]) {
+                common_stages.login_cluster("${SRC_CLUSTER_URL}", "${OCP3_ADMIN_USER}", "${OCP3_ADMIN_PASSWD}", "${SRC_CLUSTER_VERSION}", SOURCE_KUBECONFIG).call()
+                common_stages.login_cluster("${DEST_CLUSTER_URL}", "${OCP4_ADMIN_USER}", "${OCP4_ADMIN_PASSWD}", "${DEST_CLUSTER_VERSION}", TARGET_KUBECONFIG).call()
+               }
+
+        // prepare for tests
         stage('Setup e2e environment') {
             steps_finished << 'Setup e2e environment'
 
             utils.prepare_workspace(SRC_CLUSTER_VERSION, DEST_CLUSTER_VERSION)
             utils.clone_mig_e2e()
+            utils.teardown_mig_controller(SOURCE_KUBECONFIG)
+            utils.teardown_mig_controller(TARGET_KUBECONFIG)
         }
 
         // build mig-controller image when not using default latest image
@@ -86,29 +98,14 @@ node {
           utils.checkout_pr(MIG_OPERATOR_REPO, MIG_OPERATOR_PR_NO, 'mig-operator')
           common_stages.build_mig_operator().call()
         }
-        
-        withCredentials([
-            [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP3_CREDENTIALS}", usernameVariable: 'OCP3_ADMIN_USER', passwordVariable: 'OCP3_ADMIN_PASSWD'],
-            [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP4_CREDENTIALS}", usernameVariable: 'OCP4_ADMIN_USER', passwordVariable: 'OCP4_ADMIN_PASSWD']
-            ]) {
-                common_stages.login_cluster("${SRC_CLUSTER_URL}", "${OCP3_ADMIN_USER}", "${OCP3_ADMIN_PASSWD}", "${SRC_CLUSTER_VERSION}", SOURCE_KUBECONFIG).call()
-                common_stages.login_cluster("${DEST_CLUSTER_URL}", "${OCP4_ADMIN_USER}", "${OCP4_ADMIN_PASSWD}", "${DEST_CLUSTER_VERSION}", TARGET_KUBECONFIG).call()
-               }
-
-        stage('Clean up old environment') {
-          // Always ensure mig controller environment is clean before deployment
-          sh "which ansible-playbook"
-          utils.teardown_mig_controller(SOURCE_KUBECONFIG)
-          utils.teardown_mig_controller(TARGET_KUBECONFIG)
-        }
 
         // deploy mig-operator and mig-controller on source
-        common_stages.deploy_mig_operator(SOURCE_KUBECONFIG, false).call()
-        common_stages.deploy_mig_controller(SOURCE_KUBECONFIG, false).call()
+        common_stages.deploy_mig_operator(SOURCE_KUBECONFIG, false, SRC_CLUSTER_VERSION).call()
+        common_stages.deploy_mig_controller(SOURCE_KUBECONFIG, false, SRC_CLUSTER_VERSION).call()
 
         // deploy mig-operator and mig-controller on destination
-        common_stages.deploy_mig_operator(TARGET_KUBECONFIG, true).call()
-        common_stages.deploy_mig_controller(TARGET_KUBECONFIG, true).call()
+        common_stages.deploy_mig_operator(TARGET_KUBECONFIG, true, DEST_CLUSTER_VERSION).call()
+        common_stages.deploy_mig_controller(TARGET_KUBECONFIG, true, DEST_CLUSTER_VERSION).call()
 
         // Execute migration
         common_stages.execute_migration(E2E_TESTS, SOURCE_KUBECONFIG, TARGET_KUBECONFIG).call()

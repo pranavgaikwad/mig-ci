@@ -1,51 +1,48 @@
-// mig-e2e-base.groovy
-properties([
-parameters([choice(choices: ['3.7', '3.9', '3.10', '3.11', '4.1', '4.2', '4.3', 'nightly'], description: 'Source cluster version to test', name: 'SRC_CLUSTER_VERSION'),
-choice(choices: ['4.3', '3.11', '3.10', '3.9', '3.7', '4.1', '4.2', 'nightly'], description: 'Destination cluster version to test', name: 'DEST_CLUSTER_VERSION'),
-string(defaultValue: '', description: 'Source cluster API endpoint', name: 'SRC_CLUSTER_URL', trim: false),
-string(defaultValue: '', description: 'Destination cluster API endpoint', name: 'DEST_CLUSTER_URL', trim: false),
-string(defaultValue: '', description: 'AWS region where clusters are deployed', name: 'AWS_REGION', trim: false),
-string(defaultValue: 'https://github.com/konveyor/mig-operator.git', description: 'Mig operator repo to clone', name: 'MIG_OPERATOR_REPO', trim: false),
-string(defaultValue: 'master', description: 'Mig operator branch to test', name: 'MIG_OPERATOR_BRANCH', trim: false),
-string(defaultValue: 'https://github.com/konveyor/mig-controller.git', description: 'Mig controller repo to test, only used by GHPRB', name: 'MIG_CONTROLLER_REPO', trim: false),
-string(defaultValue: 'master', description: 'Mig controller repo branch to test', name: 'MIG_CONTROLLER_BRANCH', trim: false),
-string(defaultValue: 'https://github.com/konveyor/mig-e2e.git', description: 'Mig e2e repo to test', name: 'MIG_E2E_REPO', trim: false),
-string(defaultValue: 'master', description: 'Mig e2e repo branch to test', name: 'MIG_E2E_BRANCH', trim: false),
-string(defaultValue: 'e2e_smoke.yml', description: 'e2e test playbook to run, see https://github.com/konveyor/mig-e2e for details', name: 'E2E_PLAY', trim: false),
-string(defaultValue: 'all', description: 'e2e test tags to run, see https://github.com/konveyor/mig-e2e for details, space delimited', name: 'E2E_TESTS', trim: false),
-string(defaultValue: 'latest', description: 'Mig Operator/CAM release to deploy', name: 'MIG_OPERATOR_RELEASE', trim: false),
-string(defaultValue: 'scripts/mig_debug.sh', description: 'Relative file path to debug script on MIG CI repo', name: 'DEBUG_SCRIPT', trim: false),
-string(defaultValue: '', description: 'Extra debug script arguments', name: 'DEBUG_SCRIPT_ARGS', trim: false),
-string(defaultValue: '', description: 'PR comment string from GHPRB', name: 'COMMENT_TEXT', trim: false),
-string(defaultValue: 'quay.io/konveyor_ci/mig-controller', description: 'Repo for quay io for custom mig-controller images, only used by GHPRB', name: 'QUAYIO_CI_REPO', trim: false),
-string(defaultValue: 'quay.io/konveyor_ci/mig-operator-container', description: 'Repo for quay io for custom mig-controller images, only used by GHPRB', name: 'QUAYIO_CI_REPO_OPERATOR', trim: false),
-string(defaultValue: '/opt/virtualenvs/python3-operator/venv/bin/operator-courier', description: 'Operator courier binary', name: 'MIG_CI_OPERATOR_COURIER_BINARY', trim: false),
-credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_quay_credentials', description: 'Credentials for quay.io container storage, used by mig-controller to push and pull images', name: 'QUAYIO_CREDENTIALS', required: true),
-credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_aws_access_key_id', description: 'EC2 access key ID for auth purposes', name: 'EC2_ACCESS_KEY_ID', required: true),
-credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_aws_secret_access_key', description: 'EC2 private key needed to access instances, from Jenkins credentials store', name: 'EC2_SECRET_ACCESS_KEY', required: true),
-credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_ocp4_admin_credentials', description: 'Cluster admin credentials used in OCP4 deployments', name: 'OCP4_CREDENTIALS', required: true),
-credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_ocp3_admin_credentials', description: 'Cluster admin credentials used in OCP3 deployments', name: 'OCP3_CREDENTIALS', required: true),
-credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_rhel_sub_user', description: 'RHEL Openshift subscription account username', name: 'EC2_SUB_USER', required: true),
-credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_rhel_sub_pass', description: 'RHEL Openshift subscription account password', name: 'EC2_SUB_PASS', required: true),
-booleanParam(defaultValue: false, description: 'Deploy e2e applications and prepare clusters only, do not migrate', name: 'E2E_DEPLOY_ONLY'),
-booleanParam(defaultValue: true, description: 'Deploy mig controller UI on destination cluster', name: 'MIG_CONTROLLER_UI'),
-booleanParam(defaultValue: true, description: 'Deploy mig operator using OLM on OCP4', name: 'USE_OLM'),
-booleanParam(defaultValue: false, description: 'Deploy using downstream images', name: 'USE_DOWNSTREAM'),
-booleanParam(defaultValue: false, description: 'Enable debugging', name: 'DEBUG'),
-booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE')])])
+// PR Builder Pipeline
+// All variables required 
 
-
-// true/false build parameter that defines if we use OLM to deploy mig operator on OCP4
-USE_OLM = params.USE_OLM
-USE_DISCONNECTED = false
-E2E_DEPLOY_ONLY = params.E2E_DEPLOY_ONLY
-// true/false build parameter that defines if we cleanup workspace once build is done
-def CLEAN_WORKSPACE = params.CLEAN_WORKSPACE
+// string params 
+def SRC_CLUSTER_VERSION = params.SRC_CLUSTER_VERSION
+def DEST_CLUSTER_VERSION = params.DEST_CLUSTER_VERSION
+def SRC_CLUSTER_URL = params.SRC_CLUSTER_URL
+def DEST_CLUSTER_URL = params.DEST_CLUSTER_URL
+def AWS_REGION = params.AWS_REGION
+def MIG_OPERATOR_REPO = params.MIG_OPERATOR_REPO
+def MIG_OPERATOR_BRANCH = params.MIG_OPERATOR_BRANCH
+def MIG_CONTROLLER_REPO = params.MIG_CONTROLLER_REPO
+def MIG_CONTROLLER_BRANCH = params.MIG_CONTROLLER_BRANCH
+def MIG_E2E_REPO = params.MIG_E2E_REPO
+def MIG_E2E_BRANCH = params.MIG_E2E_BRANCH
+def E2E_PLAY = params.E2E_PLAY
 // Split e2e tests from string param
 def E2E_TESTS = params.E2E_TESTS.split(' ')
-// true/false enable debugging
+def MIG_OPERATOR_RELEASE = params.MIG_OPERATOR_RELEASE
+def DEBUG_SCRIPT = params.DEBUG_SCRIPT
+def DEBUG_SCRIPT_ARGS = params.DEBUG_SCRIPT_ARGS
+def COMMENT_TEXT = params.COMMENT_TEXT
+def QUAYIO_CI_REPO = params.QUAYIO_CI_REPO
+def QUAYIO_CI_REPO_OPERATOR = params.QUAYIO_CI_REPO_OPERATOR
+def MIG_CI_OPERATOR_COURIER_BINARY = params.MIG_CI_OPERATOR_COURIER_BINARY
+
+// credentials
+def QUAYIO_CREDENTIALS = params.QUAYIO_CREDENTIALS
+def EC2_ACCESS_KEY_ID = params.EC2_ACCESS_KEY_ID
+def EC2_SECRET_ACCESS_KEY = params.EC2_SECRET_ACCESS_KEY
+def OCP4_CREDENTIALS = params.OCP4_CREDENTIALS
+def OCP3_CREDENTIALS = params.OCP3_CREDENTIALS
+def EC2_SUB_USER = params.EC2_SUB_USER
+def EC2_SUB_PASS = params.EC2_SUB_PASS
+
+// boolean params
+def E2E_DEPLOY_ONLY = params.E2E_DEPLOY_ONLY
+def MIG_CONTROLLER_UI = params.MIG_CONTROLLER_UI
+def USE_OLM = params.USE_OLM
+def USE_DOWNSTREAM = params.USE_DOWNSTREAM
 def DEBUG = params.DEBUG
-def PERSISTENT = params.PERSISTENT
+def CLEAN_WORKSPACE = params.CLEAN_WORKSPACE
+def USE_OLM = params.USE_OLM
+def USE_DISCONNECTED = false
+
 def common_stages
 def utils
 

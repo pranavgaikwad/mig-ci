@@ -40,8 +40,8 @@ def notifyBuild(String buildStatus = 'STARTED') {
 }
 
 def update_build_status(body) {
-  def mention = PR_AUTHOR ? "${PR_AUTHOR}\n" : ""
-  comment = mention + body + "\nFind full log [here](${env.BUILD_URL})"
+  // def mention = PR_AUTHOR ? "${PR_AUTHOR}\n" : ""
+  comment = body + "\nFind full log [here](${env.BUILD_URL})"
   sh "echo '${comment}' >> ${JENKINS_HOME}/jobs/${JOB_NAME}/builds/${BUILD_NUMBER}/summary"
 }
 

@@ -39,7 +39,7 @@ def notifyBuild(String buildStatus = 'STARTED') {
 
 def update_build_status(summary) {
   def job_base_url = "https://jenkins-me.v2v.bos.redhat.com/blue/organizations/jenkins/mig-controller-pr-builder-base/detail/mig-controller-pr-builder-base/${BUILD_NUMBER}/pipeline"
-  summary = "@${ghprbActualCommitAuthor}\n" + summary + "\nFind full log [here](${job_base_url})"
+  summary = summary + "\nFind full log [here](${job_base_url})"
   sh "echo ${summary} >> ${JENKINS_HOME}/jobs/${JOB_NAME}/builds/${BUILD_NUMBER}/summary"
 }
 

@@ -8,6 +8,8 @@ def notifyBuild(String buildStatus = 'STARTED') {
   def colorCode = '#FF0000'
   def subject = "${buildStatus}: Job '${env.JOB_NAME}, build [${env.BUILD_NUMBER}]'"
   def summary = "${subject}\nLink: (${env.BUILD_URL})\n"
+  def body = ""
+  def message = "${summary}${body}"
   def results = []
 
   for (i = 0; i < steps_finished.size() - 1; i++) {
@@ -21,26 +23,26 @@ def notifyBuild(String buildStatus = 'STARTED') {
     colorCode = '#00FF00'
     results.add(':heavy_check_mark:')
     steps_finished.eachWithIndex { step, id ->
-      summary = summary + results[id] + '\t' + step + '\n'
+      body = body + results[id] + '\t' + step + '\n'
     }
   } else {
     colorCode = '#FF0000'
     results.add(':x:')
     steps_finished.eachWithIndex { step, id ->
-      summary = summary + results[id] + '\t' + step + '\n'
+      body = body + results[id] + '\t' + step + '\n'
     }
   }
 
-  update_build_status(summary)
+  update_build_status(body)
 
   // Send notifications
-  // slackSend (color: colorCode, message: summary)
+  // slackSend (color: colorCode, message: message)
 }
 
-def update_build_status(summary) {
-  def job_base_url = "https://jenkins-me.v2v.bos.redhat.com/blue/organizations/jenkins/mig-controller-pr-builder-base/detail/mig-controller-pr-builder-base/${BUILD_NUMBER}/pipeline"
-  summary = summary + "\nFind full log [here](${job_base_url})"
-  sh "echo '${summary}' >> ${JENKINS_HOME}/jobs/${JOB_NAME}/builds/${BUILD_NUMBER}/summary"
+def update_build_status(body) {
+  def mention = PR_AUTHOR != null ? "${PR_AUTHOR}\n" : ""
+  comment = mention + body + "\nFind full log [here](${${env.BUILD_URL}})"
+  sh "echo '${comment}' >> ${JENKINS_HOME}/jobs/${JOB_NAME}/builds/${BUILD_NUMBER}/summary"
 }
 
 def clone_mig_e2e() {

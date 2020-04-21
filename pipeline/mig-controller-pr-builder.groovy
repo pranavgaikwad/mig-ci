@@ -46,6 +46,8 @@ def E2E_TESTS = params.E2E_TESTS.split(' ')
 // true/false enable debugging
 def DEBUG = params.DEBUG
 def PERSISTENT = params.PERSISTENT
+// the original person who opened this PR 
+def PR_AUTHOR = params.PR_AUTHOR
 def common_stages
 def utils
 

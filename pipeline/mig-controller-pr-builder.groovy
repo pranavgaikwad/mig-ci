@@ -87,8 +87,7 @@ node {
           common_stages.build_mig_operator().call()
         }
         
-        stage('Clean up old environment') {
-          withCredentials([
+        withCredentials([
             [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP3_CREDENTIALS}", usernameVariable: 'OCP3_ADMIN_USER', passwordVariable: 'OCP3_ADMIN_PASSWD'],
             [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP4_CREDENTIALS}", usernameVariable: 'OCP4_ADMIN_USER', passwordVariable: 'OCP4_ADMIN_PASSWD']
             ]) {
@@ -96,7 +95,9 @@ node {
                 common_stages.login_cluster("${DEST_CLUSTER_URL}", "${OCP4_ADMIN_USER}", "${OCP4_ADMIN_PASSWD}", "${DEST_CLUSTER_VERSION}", TARGET_KUBECONFIG).call()
                }
 
+        stage('Clean up old environment') {
           // Always ensure mig controller environment is clean before deployment
+          sh "which ansible"
           utils.teardown_mig_controller(SOURCE_KUBECONFIG)
           utils.teardown_mig_controller(TARGET_KUBECONFIG)
         }

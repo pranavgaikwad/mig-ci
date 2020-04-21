@@ -1,5 +1,4 @@
 // utils.groovy
-
 def notifyBuild(String buildStatus = 'STARTED') {
   // build status of null means successful
   buildStatus =  buildStatus ?: 'SUCCESSFUL'
@@ -32,8 +31,16 @@ def notifyBuild(String buildStatus = 'STARTED') {
     }
   }
 
+  update_build_status(summary)
+
   // Send notifications
   // slackSend (color: colorCode, message: summary)
+}
+
+def update_build_status(summary) {
+  def job_base_url = "https://jenkins-me.v2v.bos.redhat.com/blue/organizations/jenkins/mig-controller-pr-builder-base/detail/mig-controller-pr-builder-base/${BUILD_NUMBER}/pipeline"
+  summary = "@${ghprbActualCommitAuthor}\n" + summary + "\nFind full log [here](${job_base_url})"
+  sh "echo ${summary} >> ${JENKINS_HOME}/jobs/${JOB_NAME}/builds/${BUILD_NUMBER}/summary"
 }
 
 def clone_mig_e2e() {

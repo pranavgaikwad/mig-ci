@@ -46,6 +46,7 @@ def CLEAN_WORKSPACE = params.CLEAN_WORKSPACE
 def E2E_TESTS = params.E2E_TESTS.split(' ')
 // true/false enable debugging
 def DEBUG = params.DEBUG
+def PR_AUTHOR = params.PR_AUTHOR
 def PERSISTENT = params.PERSISTENT
 def common_stages
 def utils

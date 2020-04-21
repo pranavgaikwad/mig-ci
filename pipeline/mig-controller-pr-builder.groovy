@@ -97,7 +97,7 @@ node {
 
         stage('Clean up old environment') {
           // Always ensure mig controller environment is clean before deployment
-          sh "which ansible"
+          sh "which ansible-playbook"
           utils.teardown_mig_controller(SOURCE_KUBECONFIG)
           utils.teardown_mig_controller(TARGET_KUBECONFIG)
         }

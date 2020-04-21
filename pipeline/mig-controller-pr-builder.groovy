@@ -17,7 +17,6 @@ string(defaultValue: 'latest', description: 'Mig Operator/CAM release to deploy'
 string(defaultValue: 'scripts/mig_debug.sh', description: 'Relative file path to debug script on MIG CI repo', name: 'DEBUG_SCRIPT', trim: false),
 string(defaultValue: '', description: 'Extra debug script arguments', name: 'DEBUG_SCRIPT_ARGS', trim: false),
 string(defaultValue: '', description: 'PR comment string from GHPRB', name: 'COMMENT_TEXT', trim: false),
-string(defaultValue: '', description: 'Author of PR', name: 'PR_AUTHOR', trim: false),
 string(defaultValue: 'quay.io/konveyor_ci/mig-controller', description: 'Repo for quay io for custom mig-controller images, only used by GHPRB', name: 'QUAYIO_CI_REPO', trim: false),
 string(defaultValue: 'quay.io/konveyor_ci/mig-operator-container', description: 'Repo for quay io for custom mig-controller images, only used by GHPRB', name: 'QUAYIO_CI_REPO_OPERATOR', trim: false),
 string(defaultValue: '/opt/virtualenvs/python3-operator/venv/bin/operator-courier', description: 'Operator courier binary', name: 'MIG_CI_OPERATOR_COURIER_BINARY', trim: false),

@@ -433,6 +433,7 @@ def deploy_mig_controller(kubeconfig, is_host, cluster_version) {
         withEnv([
             "KUBECONFIG=${kubeconfig}",
             "MIG_CONTROLLER_BUILD_CUSTOM=${MIG_CONTROLLER_BUILD_CUSTOM}",
+            "MIG_OPERATOR_USE_OLM=${SHOULD_USE_OLM}",
             "SUB_USER=${SUB_USER}",
             "SUB_PASS=${SUB_PASS}",
             "PATH+EXTRA=~/bin"]) {
@@ -498,8 +499,8 @@ def build_mig_operator() {
   return {
     directory = 'mig-operator'
     
-    stage('Building mig operator image from PR') {
-      steps_finished << 'Building operator image'
+    stage('Build mig-operator image') {
+      steps_finished << 'Buil mig-operator image'
       withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "${QUAYIO_CREDENTIALS}", usernameVariable: 'QUAY_USERNAME', passwordVariable: 'QUAY_PASSWORD']]) {
         withEnv(["IMG=${QUAYIO_CI_REPO_OPERATOR}:PR-${MIG_OPERATOR_PR_NO}"]) {
           dir(directory) {

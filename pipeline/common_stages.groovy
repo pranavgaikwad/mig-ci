@@ -415,21 +415,21 @@ def build_mig_controller() {
 */
 def deploy_mig_controller(kubeconfig, is_host, cluster_version) {
   return {
-    def type = 'source' ? ! is_host : 'destination'
+    def type = !is_host ? 'source' : 'destination'
     stage("Deploy mig-controller on ${type} cluster") {
       steps_finished << "Deploy mig-controller on ${type} cluster"
       
       SHOULD_USE_OLM = USE_OLM && !cluster_version.startsWith("3.")
 
-      def mig_controller_image_args = 
-        "-e mig_controller_image=${MIG_CONTROLLER_IMAGE} -e mig_controller_version=${MIG_CONTROLLER_TAG}" 
-        ? MIG_CONTROLLER_BUILD_CUSTOM : ""  
+      def mig_controller_image_args = MIG_CONTROLLER_BUILD_CUSTOM ?
+        "-e mig_controller_image=${MIG_CONTROLLER_IMAGE} -e mig_controller_version=${MIG_CONTROLLER_TAG}" : ""
+
+      def mig_controller_deployment_args = is_host ?
+        "-e mig_controller_host_cluster='true' -e mig_controller_ui=${MIG_CONTROLLER_UI}" : ""
 
       withCredentials([
         string(credentialsId: "$EC2_SUB_USER", variable: 'SUB_USER'),
-        string(credentialsId: "$EC2_SUB_PASS", variable: 'SUB_PASS')])
-      {
-        // Target
+        string(credentialsId: "$EC2_SUB_PASS", variable: 'SUB_PASS')]) {
         withEnv([
             "KUBECONFIG=${kubeconfig}",
             "MIG_CONTROLLER_BUILD_CUSTOM=${MIG_CONTROLLER_BUILD_CUSTOM}",
@@ -439,7 +439,7 @@ def deploy_mig_controller(kubeconfig, is_host, cluster_version) {
           ansiColor('xterm') {
             ansiblePlaybook(
               playbook: 'mig_controller_deploy.yml',
-              extras: "${mig_controller_image_args} -e mig_controller_host_cluster=${mig_controller_dst} -e mig_controller_ui=${MIG_CONTROLLER_UI}",
+              extras: "${mig_controller_image_args} ${mig_controller_deployment_args}",
               hostKeyChecking: false,
               colorized: true)
           }
@@ -458,7 +458,7 @@ def deploy_mig_controller(kubeconfig, is_host, cluster_version) {
 */
 def deploy_mig_operator(kubeconfig, is_host, cluster_version) {
   return {
-    def type = 'source' ? ! is_host : 'destination'
+    def type = !is_host ? 'source' : 'destination'
     stage("Deploy mig-operator on ${type} cluster") {
       steps_finished << "Deploy mig-operator on ${type} cluster"
       

@@ -534,11 +534,9 @@ def build_mig_operator() {
 def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig, extra_args=null) {
   return {
     stage('Execute migration') {
-      steps_finished << 'Execute migration'
       sh "cp -r config/mig_controller.yml mig-e2e/config"
-
       for (int i = 0; i < e2e_tests.size(); i++) {
-        steps_finished << 'Execute test ' + e2e_tests[i]
+        steps_finished << 'Execute migration with test cases : ' + e2e_tests[i]
         dir('mig-e2e') {
           withEnv([
             "KUBECONFIG=${source_kubeconfig}",

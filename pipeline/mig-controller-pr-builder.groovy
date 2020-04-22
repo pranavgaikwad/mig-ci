@@ -120,8 +120,8 @@ node {
         // Success or failure, always send notifications
         utils.notifyBuild(currentBuild.result)
 	if (DEBUG) {
-          utils.run_debug(SOURCE_KUBECONFIG)
-          utils.run_debug(TARGET_KUBECONFIG)
+          utils.run_debug(SOURCE_KUBECONFIG, 'Source')
+          utils.run_debug(TARGET_KUBECONFIG, 'Destination')
 	}
         stage('Clean Up Environment') {
           // Always attempt to remove s3 buckets

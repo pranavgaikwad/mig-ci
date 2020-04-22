@@ -100,7 +100,7 @@ node {
         // deploy mig-operator and mig-controller on destination
         common_stages.deploy_mig_operator(TARGET_KUBECONFIG, true, DEST_CLUSTER_VERSION).call()
         common_stages.deploy_mig_controller(TARGET_KUBECONFIG, true, DEST_CLUSTER_VERSION).call()
-        
+
         common_stages.execute_migration(E2E_TESTS, SOURCE_KUBECONFIG, TARGET_KUBECONFIG).call()
 
     } catch (Exception ex) {
@@ -110,8 +110,8 @@ node {
         // Success or failure, always send notifications
         utils.notifyBuild(currentBuild.result)
 	if (DEBUG) {
-          utils.run_debug(SOURCE_KUBECONFIG)
-          utils.run_debug(TARGET_KUBECONFIG)
+          utils.run_debug(SOURCE_KUBECONFIG, 'Source')
+          utils.run_debug(TARGET_KUBECONFIG, 'Destination')
 	}
         stage('Clean Up Environment') {
           // Always attempt to remove s3 buckets

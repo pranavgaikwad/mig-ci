@@ -166,7 +166,7 @@ node {
         utils.notifyBuild(currentBuild.result)
         if (DEBUG) {
           utils.run_debug(SOURCE_KUBECONFIG, 'Source')
-          utils.run_debug(TARGET_KUBECONFIG, 'Target')
+          utils.run_debug(TARGET_KUBECONFIG, 'Destination')
 	}
 
         stage('Clean Up Environment') {

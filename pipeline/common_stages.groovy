@@ -500,7 +500,7 @@ def build_mig_operator() {
     directory = 'mig-operator'
     
     stage('Build mig-operator image') {
-      steps_finished << 'Buil mig-operator image'
+      steps_finished << 'Build mig-operator image'
       withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "${QUAYIO_CREDENTIALS}", usernameVariable: 'QUAY_USERNAME', passwordVariable: 'QUAY_PASSWORD']]) {
         withEnv(["IMG=${QUAYIO_CI_REPO_OPERATOR}:PR-${MIG_OPERATOR_PR_NO}"]) {
           dir(directory) {

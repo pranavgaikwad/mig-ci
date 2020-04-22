@@ -41,7 +41,7 @@ def notifyBuild(String buildStatus = 'STARTED') {
 
 def update_build_status(body) {
   // def mention = PR_AUTHOR ? "${PR_AUTHOR}\n" : ""
-  comment = body + "\nFind full log [here](${env.JENKINS_URL}/blue/organizations/jenkins/${env.JOB_NAME}/detail/${env.JOB_NAME}/${env.BUILD_NUMBER}/pipeline)"
+  comment = body + "\nFind full log [here](https://jenkins-me.v2v.bos.redhat.com/blue/organizations/jenkins/${env.JOB_NAME}/detail/${env.JOB_NAME}/${env.BUILD_NUMBER}/pipeline)"
   sh "echo '${comment}' >> ${JENKINS_HOME}/jobs/${JOB_NAME}/builds/${BUILD_NUMBER}/summary"
 }
 

@@ -68,12 +68,14 @@ node {
 
         stage('Setup e2e environment') {
             steps_finished << 'Setup e2e environment'
-
             utils.prepare_workspace(SRC_CLUSTER_VERSION, DEST_CLUSTER_VERSION)
             utils.clone_mig_e2e()
-            if (env.MIG_CONTROLLER_REPO != 'https://github.com/konveyor/mig-controller.git') {
-              utils.clone_mig_controller()
-            }
+        }
+
+        if (env.MIG_CONTROLLER_REPO != 'https://github.com/konveyor/mig-controller.git' ||
+            env.MIG_CONTROLLER_BRANCH != 'master') {
+          utils.clone_mig_controller()
+          common_stages.build_mig_controller().call()
         }
 
         withCredentials([
@@ -91,8 +93,14 @@ node {
         utils.teardown_mig_controller(SOURCE_KUBECONFIG)
         utils.teardown_mig_controller(TARGET_KUBECONFIG)
 
-        // Deploy mig controller and begin tests
-        common_stages.deploy_mig_controller_on_both(SOURCE_KUBECONFIG, TARGET_KUBECONFIG, false, true).call()
+        // deploy mig-operator and mig-controller on source
+        common_stages.deploy_mig_operator(SOURCE_KUBECONFIG, false, SRC_CLUSTER_VERSION).call()
+        common_stages.deploy_mig_controller(SOURCE_KUBECONFIG, false, SRC_CLUSTER_VERSION).call()
+
+        // deploy mig-operator and mig-controller on destination
+        common_stages.deploy_mig_operator(TARGET_KUBECONFIG, true, DEST_CLUSTER_VERSION).call()
+        common_stages.deploy_mig_controller(TARGET_KUBECONFIG, true, DEST_CLUSTER_VERSION).call()
+        
         common_stages.execute_migration(E2E_TESTS, SOURCE_KUBECONFIG, TARGET_KUBECONFIG).call()
 
     } catch (Exception ex) {

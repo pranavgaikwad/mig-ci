@@ -116,9 +116,11 @@ node {
             utils.copy_public_keys()
             utils.clone_mig_e2e()
             utils.prepare_agnosticd()
-            if (env.MIG_CONTROLLER_REPO != 'https://github.com/konveyor/mig-controller.git') {
-            utils.clone_mig_controller()
-            }
+        }
+
+        if (env.MIG_CONTROLLER_REPO != 'https://github.com/konveyor/mig-controller.git') {
+          utils.clone_mig_controller()
+          common_stages.build_mig_controller().call()
         }
 
         stage('Deploy clusters') {
@@ -144,7 +146,13 @@ node {
             common_stages.cam_disconnected(TARGET_KUBECONFIG, DEST_DISCONNECTED_CONFIG, DEST_CLUSTER_VERSION, true).call()
         }
         if (DEPLOY_CAM) {
-            common_stages.deploy_mig_controller_on_both(SOURCE_KUBECONFIG, TARGET_KUBECONFIG, false, true).call()
+            // deploy mig-operator and mig-controller on source
+            common_stages.deploy_mig_operator(SOURCE_KUBECONFIG, false, SRC_CLUSTER_VERSION).call()
+            common_stages.deploy_mig_controller(SOURCE_KUBECONFIG, false, SRC_CLUSTER_VERSION).call()
+
+            // deploy mig-operator and mig-controller on destination
+            common_stages.deploy_mig_operator(TARGET_KUBECONFIG, true, DEST_CLUSTER_VERSION).call()
+            common_stages.deploy_mig_controller(TARGET_KUBECONFIG, true, DEST_CLUSTER_VERSION).call()
         }
         if (E2E_RUN) {
             common_stages.execute_migration(E2E_TESTS, SOURCE_KUBECONFIG, TARGET_KUBECONFIG).call()
@@ -157,8 +165,8 @@ node {
         // Success or failure, always send notifications
         utils.notifyBuild(currentBuild.result)
         if (DEBUG) {
-          utils.run_debug(SOURCE_KUBECONFIG)
-          utils.run_debug(TARGET_KUBECONFIG)
+          utils.run_debug(SOURCE_KUBECONFIG, 'Source')
+          utils.run_debug(TARGET_KUBECONFIG, 'Target')
 	}
 
         stage('Clean Up Environment') {

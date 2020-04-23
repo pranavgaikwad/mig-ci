@@ -43,7 +43,7 @@ def update_build_status(body) {
   // def mention = PR_AUTHOR ? "${PR_AUTHOR}\n" : ""
   comment = body +
     "\nFind full build log [here](https://jenkins-me.v2v.bos.redhat.com/blue/organizations/jenkins/${env.JOB_NAME}/detail/${env.JOB_NAME}/${env.BUILD_NUMBER}/pipeline)" +
-    "\nFind the build step titled 'Gather debug info...' in above log for complete debug information of the build environment"
+    "\nFind instructions to debug [here](https://gist.github.com/pranavgaikwad/bfef347f870159f6abac3dabe495fe16)"
   sh "echo '${comment}' > ${JENKINS_HOME}/jobs/${JOB_NAME}/builds/${BUILD_NUMBER}/summary"
 }
 

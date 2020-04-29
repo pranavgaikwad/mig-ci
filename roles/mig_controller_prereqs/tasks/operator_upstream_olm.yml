@@ -1,3 +1,16 @@
+- name: "Obtain latest konveyor channel"
+  block:
+
+    - name: "Load konveyor operator package file"
+      set_fact:
+        konveyor_pkg_file: "{{ lookup('file', '{{ playbook_dir }}/mig-operator/deploy/olm-catalog/konveyor-operator/konveyor-operator.package.yaml') | from_yaml }}"
+
+    - name: "Extract latest konveyor channel"
+      set_fact:
+        konveyor_latest_channel: "{{ konveyor_pkg_file.channels | sort(attribute='name') | map(attribute='name') | list | last }}"
+
+  when: mig_operator_release == 'latest'
+
 - name: "Deploy upstream mig operator using OLM"
   block:
 

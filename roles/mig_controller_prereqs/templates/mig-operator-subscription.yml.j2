@@ -8,8 +8,8 @@ metadata:
 {% endif %}
   namespace: {{ mig_migration_namespace }}
 spec:
-{% if mig_operator_release == 'latest' %}
-  channel: latest
+{% if konveyor_latest_channel is defined and mig_operator_release == 'latest' %}
+  channel: {{ konveyor_latest_channel }}
 {% elif mig_operator_release == 'v1.0' %}
   channel: release-v1
 {% else %}

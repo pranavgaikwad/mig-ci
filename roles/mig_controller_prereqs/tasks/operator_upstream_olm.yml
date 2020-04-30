@@ -3,7 +3,7 @@
 
     - name: "Load konveyor operator package file"
       set_fact:
-        konveyor_pkg_file: "{{ lookup('file', '{{ playbook_dir }}/mig-operator/deploy/olm-catalog/konveyor-operator/konveyor-operator.package.yaml') | from_yaml }}"
+        konveyor_pkg_file: "{{ lookup('file', '{{ mig_operator_location }}/deploy/olm-catalog/konveyor-operator/konveyor-operator.package.yaml') | from_yaml }}"
 
     - name: "Extract latest konveyor channel"
       set_fact:

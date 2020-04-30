@@ -4,7 +4,7 @@
 
     - name: "Fetch available non-olm konveyor releases"
       find: 
-        path: "{{ playbook_dir }}/mig-operator/deploy/non-olm" 
+        path: "{{ mig_operator_location }}/deploy/non-olm" 
         patterns: "v*" 
         file_type: "directory"
       register: releases

@@ -378,94 +378,116 @@ def cam_disconnected(
   }
 }
 
-def deploy_mig_controller_on_both(
-  source_kubeconfig,
-  target_kubeconfig,
-  mig_controller_src,
-  mig_controller_dst) {
-  // mig_controller_src boolean defines if the source cluster will host mig controller
-  // mig_controller_dst boolean defines if the destination cluster will host mig controller
-  sh "echo 'ansible-playbook ${WORKSPACE}/s3_bucket_destroy.yml &' >> destroy_env.sh"
+/*
+  Builds mig-controller image, pushes to Quay
+  Sets environment variables with build details
+*/
+def build_mig_controller() {
   return {
-    stage('Build mig-controller image and deploy on both clusters') {
-      steps_finished << 'Build mig-controller image and deploy on both clusters'
-      // Create custom mig-controller docker image if building a different mig-controller repo/branch
-      if ("${MIG_CONTROLLER_REPO}" != "https://github.com/konveyor/mig-controller.git" || 
-          "${MIG_CONTROLLER_BRANCH}" != "master"
-        ) {
-        withEnv(["IMG=${QUAYIO_CI_REPO}:${MIG_CONTROLLER_BRANCH}"]) {
-          dir('mig-controller') {
-            sh 'make docker-build'
+    stage('Build mig-controller image') {
+      steps_finished << 'Build mig-controller image'
+      MIG_CONTROLLER_BUILD_CUSTOM = true
+      
+      withEnv(["IMG=${QUAYIO_CI_REPO}:${MIG_CONTROLLER_BRANCH}"]) {
+        dir('mig-controller') {
+          sh 'make docker-build'
+        }
+      }
+      withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "${QUAYIO_CREDENTIALS}", usernameVariable: 'QUAY_USERNAME', passwordVariable: 'QUAY_PASSWORD']]) {
+        sh 'docker login quay.io -u $QUAY_USERNAME -p $QUAY_PASSWORD'
+      }
+      withEnv(["IMG=${QUAYIO_CI_REPO}:${MIG_CONTROLLER_BRANCH}"]) {
+        sh 'docker push $IMG'
+      }
+      // Update mig-controller image and version to custom build or assume default
+      MIG_CONTROLLER_IMAGE = "${QUAYIO_CI_REPO}"
+      MIG_CONTROLLER_TAG = "${MIG_CONTROLLER_BRANCH}"
+    }
+  }
+}
+
+/*
+  Deploys mig-controller on given cluster
+
+  kubeconfig [string]     : Kubeconfig location
+  is_host [string]        : Is this a host cluster?
+  cluster_version [string]: Current cluster version
+*/
+def deploy_mig_controller(kubeconfig, is_host, cluster_version) {
+  return {
+    def type = !is_host ? 'source' : 'destination'
+    stage("Deploy mig-controller on ${type} cluster") {
+      steps_finished << "Deploy mig-controller on ${type} cluster"
+      
+      SHOULD_USE_OLM = USE_OLM && !cluster_version.startsWith("3.")
+
+      def mig_controller_image_args = MIG_CONTROLLER_BUILD_CUSTOM ?
+        "-e mig_controller_image=${MIG_CONTROLLER_IMAGE} -e mig_controller_version=${MIG_CONTROLLER_TAG}" : ""
+
+      def mig_controller_deployment_args = is_host ?
+        "-e mig_controller_host_cluster='true' -e mig_controller_ui=${MIG_CONTROLLER_UI}" : 
+        "-e mig_controller_host_cluster='false' -e mig_controller_ui=${MIG_CONTROLLER_UI}"
+
+      withCredentials([
+        string(credentialsId: "$EC2_SUB_USER", variable: 'SUB_USER'),
+        string(credentialsId: "$EC2_SUB_PASS", variable: 'SUB_PASS')]) {
+        withEnv([
+            "KUBECONFIG=${kubeconfig}",
+            "MIG_CONTROLLER_BUILD_CUSTOM=${MIG_CONTROLLER_BUILD_CUSTOM}",
+            "MIG_OPERATOR_USE_OLM=${SHOULD_USE_OLM}",
+            "SUB_USER=${SUB_USER}",
+            "SUB_PASS=${SUB_PASS}",
+            "PATH+EXTRA=~/bin"]) {
+          ansiColor('xterm') {
+            ansiblePlaybook(
+              playbook: 'mig_controller_deploy.yml',
+              extras: "${mig_controller_image_args} ${mig_controller_deployment_args}",
+              hostKeyChecking: false,
+              colorized: true)
           }
         }
-        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "${QUAYIO_CREDENTIALS}", usernameVariable: 'QUAY_USERNAME', passwordVariable: 'QUAY_PASSWORD']]) {
-          sh 'docker login quay.io -u $QUAY_USERNAME -p $QUAY_PASSWORD'
-        }
-        withEnv(["IMG=${QUAYIO_CI_REPO}:${MIG_CONTROLLER_BRANCH}"]) {
-          sh 'docker push $IMG'
-        }
-        // Update mig-controller image and version to custom build or assume default
-        mig_controller_img = "${QUAYIO_CI_REPO}"
-        mig_controller_tag = "${MIG_CONTROLLER_BRANCH}"
-        MIG_CONTROLLER_BUILD_CUSTOM = true
-      } else {
-          mig_controller_img = "quay.io/ocpmigrate/mig-controller"
-          mig_controller_tag = "${MIG_CONTROLLER_BRANCH}"
       }
+    }
+  }
+}
 
-      def SRC_USE_OLM = false
-      def DEST_USE_OLM = false
-      if (USE_OLM) {
-        if (!SRC_CLUSTER_VERSION.startsWith("3.")) {
-          SRC_USE_OLM = true
-        }
-        if (!DEST_CLUSTER_VERSION.startsWith("3.")) {
-          DEST_USE_OLM = true
-        }
-      } 
+/*
+  Deploys mig-operator on given cluster
+
+  kubeconfig [string]     : Kubeconfig location
+  is_host [string]        : Is this a host cluster?
+  cluster_version [string]: Current cluster version
+*/
+def deploy_mig_operator(kubeconfig, is_host, cluster_version) {
+  return {
+    def type = !is_host ? 'source' : 'destination'
+    stage("Deploy mig-operator on ${type} cluster") {
+      steps_finished << "Deploy mig-operator on ${type} cluster"
+      
+      SHOULD_USE_OLM = USE_OLM && !cluster_version.startsWith("3.")
+
       withCredentials([
         string(credentialsId: "$EC2_SUB_USER", variable: 'SUB_USER'),
         string(credentialsId: "$EC2_SUB_PASS", variable: 'SUB_PASS')])
       {
-      // Source
-      withEnv([
-          "KUBECONFIG=${source_kubeconfig}",
-          "MIG_OPERATOR_BUILD_CUSTOM=${MIG_OPERATOR_BUILD_CUSTOM}",
-          "MIG_CONTROLLER_BUILD_CUSTOM=${MIG_CONTROLLER_BUILD_CUSTOM}",
-          "MIG_OPERATOR_USE_OLM=${SRC_USE_OLM}",
-          "MIG_OPERATOR_USE_DOWNSTREAM=${USE_DOWNSTREAM}",
-          "MIG_OPERATOR_USE_DISCONNECTED=${USE_DISCONNECTED}",
-          "SUB_USER=${SUB_USER}",
-          "SUB_PASS=${SUB_PASS}",
-          "PATH+EXTRA=~/bin"]) {
-        ansiColor('xterm') {
-          ansiblePlaybook(
-            playbook: 'mig_controller_deploy.yml',
-            extras: "-e mig_controller_host_cluster=${mig_controller_src} -e mig_controller_ui=false",
-            hostKeyChecking: false,
-            colorized: true)
+        // Target
+        withEnv([
+            "KUBECONFIG=${kubeconfig}",
+            "MIG_OPERATOR_BUILD_CUSTOM=${MIG_OPERATOR_BUILD_CUSTOM}",
+            "MIG_OPERATOR_USE_OLM=${SHOULD_USE_OLM}",
+            "MIG_OPERATOR_USE_DOWNSTREAM=${USE_DOWNSTREAM}",
+            "MIG_OPERATOR_USE_DISCONNECTED=${USE_DISCONNECTED}",
+            "SUB_USER=${SUB_USER}",
+            "SUB_PASS=${SUB_PASS}",
+            "PATH+EXTRA=~/bin"]) {
+          ansiColor('xterm') {
+            ansiblePlaybook(
+              playbook: 'mig_operator_deploy.yml',
+              hostKeyChecking: false,
+              colorized: true)
+          }
         }
       }
-      // Target
-      withEnv([
-          "KUBECONFIG=${target_kubeconfig}",
-          "MIG_OPERATOR_BUILD_CUSTOM=${MIG_OPERATOR_BUILD_CUSTOM}",
-          "MIG_CONTROLLER_BUILD_CUSTOM=${MIG_CONTROLLER_BUILD_CUSTOM}",
-          "MIG_OPERATOR_USE_OLM=${DEST_USE_OLM}",
-          "MIG_OPERATOR_USE_DOWNSTREAM=${USE_DOWNSTREAM}",
-          "MIG_OPERATOR_USE_DISCONNECTED=${USE_DISCONNECTED}",
-          "SUB_USER=${SUB_USER}",
-          "SUB_PASS=${SUB_PASS}",
-          "PATH+EXTRA=~/bin"]) {
-        ansiColor('xterm') {
-          ansiblePlaybook(
-            playbook: 'mig_controller_deploy.yml',
-            extras: "-e mig_controller_image=${mig_controller_img} -e mig_controller_version=${mig_controller_tag} -e mig_controller_host_cluster=${mig_controller_dst} -e mig_controller_ui=${MIG_CONTROLLER_UI}",
-            hostKeyChecking: false,
-            colorized: true)
-        }
-      }
-    }
     }
   }
 }
@@ -473,14 +495,13 @@ def deploy_mig_controller_on_both(
 /*
   Builds operator images, creates Quay
   application, pushes application
-
-  directory [string] : Directory of operator repo to build
 */
-def build_custom_operator() {    
+def build_mig_operator() {    
   return {
     directory = 'mig-operator'
     
-    stage('Building mig operator PR') {
+    stage('Build mig-operator image') {
+      steps_finished << 'Build mig-operator image'
       withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "${QUAYIO_CREDENTIALS}", usernameVariable: 'QUAY_USERNAME', passwordVariable: 'QUAY_PASSWORD']]) {
         withEnv(["IMG=${QUAYIO_CI_REPO_OPERATOR}:PR-${MIG_OPERATOR_PR_NO}"]) {
           dir(directory) {
@@ -514,11 +535,9 @@ def build_custom_operator() {
 def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig, extra_args=null) {
   return {
     stage('Execute migration') {
-      steps_finished << 'Execute migration'
       sh "cp -r config/mig_controller.yml mig-e2e/config"
-
       for (int i = 0; i < e2e_tests.size(); i++) {
-        steps_finished << 'Execute test ' + e2e_tests[i]
+        steps_finished << 'Execute migration with test cases : ' + e2e_tests[i]
         dir('mig-e2e') {
           withEnv([
             "KUBECONFIG=${source_kubeconfig}",

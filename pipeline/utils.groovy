@@ -1,5 +1,4 @@
 // utils.groovy
-
 def notifyBuild(String buildStatus = 'STARTED') {
   // build status of null means successful
   buildStatus =  buildStatus ?: 'SUCCESSFUL'
@@ -9,6 +8,8 @@ def notifyBuild(String buildStatus = 'STARTED') {
   def colorCode = '#FF0000'
   def subject = "${buildStatus}: Job '${env.JOB_NAME}, build [${env.BUILD_NUMBER}]'"
   def summary = "${subject}\nLink: (${env.BUILD_URL})\n"
+  def body = ""
+  def message = "${summary}${body}"
   def results = []
 
   for (i = 0; i < steps_finished.size() - 1; i++) {
@@ -22,18 +23,28 @@ def notifyBuild(String buildStatus = 'STARTED') {
     colorCode = '#00FF00'
     results.add(':heavy_check_mark:')
     steps_finished.eachWithIndex { step, id ->
-      summary = summary + results[id] + '\t' + step + '\n'
+      body = body + results[id] + '\t' + step + '\n'
     }
   } else {
     colorCode = '#FF0000'
     results.add(':x:')
     steps_finished.eachWithIndex { step, id ->
-      summary = summary + results[id] + '\t' + step + '\n'
+      body = body + results[id] + '\t' + step + '\n'
     }
   }
 
+  update_build_status(body)
+
   // Send notifications
-  // slackSend (color: colorCode, message: summary)
+  slackSend (color: colorCode, message: message)
+}
+
+def update_build_status(body) {
+  // def mention = PR_AUTHOR ? "${PR_AUTHOR}\n" : ""
+  comment = body +
+    "\nFind full build log [here](https://jenkins-me.v2v.bos.redhat.com/blue/organizations/jenkins/${env.JOB_NAME}/detail/${env.JOB_NAME}/${env.BUILD_NUMBER}/pipeline)" +
+    "\nFind instructions to debug [here](https://github.com/konveyor/mig-ci/blob/master/DEBUG-GUIDE.md)"
+  sh "echo '${comment}' > ${JENKINS_HOME}/jobs/${JOB_NAME}/builds/${BUILD_NUMBER}/summary"
 }
 
 def clone_mig_e2e() {
@@ -308,9 +319,9 @@ def teardown_e2e_purge_pv(kubeconfig) {
   }
 }
 
-def run_debug(kubeconfig) {
+def run_debug(kubeconfig, title) {
   withEnv([ "KUBECONFIG=${kubeconfig}" ]) {
-    sh "${DEBUG_SCRIPT} ${DEBUG_SCRIPT_ARGS} || true"
+    sh script: "${DEBUG_SCRIPT} ${DEBUG_SCRIPT_ARGS} || true", label: "Debug ${title}"
   }
 }
 

@@ -15,7 +15,7 @@ string(defaultValue: 'e2e_smoke.yml', description: 'e2e test playbook to run, se
 string(defaultValue: 'all', description: 'e2e test tags to run, see https://github.com/konveyor/mig-e2e for details, space delimited', name: 'E2E_TESTS', trim: false),
 string(defaultValue: 'latest', description: 'Mig Operator/CAM release to deploy', name: 'MIG_OPERATOR_RELEASE', trim: false),
 string(defaultValue: 'scripts/mig_debug.sh', description: 'Relative file path to debug script on MIG CI repo', name: 'DEBUG_SCRIPT', trim: false),
-string(defaultValue: '', description: 'Extra debug script arguments', name: 'DEBUG_SCRIPT_ARGS', trim: false),
+string(defaultValue: '-w -o', description: 'Extra debug script arguments', name: 'DEBUG_SCRIPT_ARGS', trim: false),
 string(defaultValue: '', description: 'PR comment string from GHPRB', name: 'COMMENT_TEXT', trim: false),
 string(defaultValue: 'quay.io/konveyor_ci/mig-controller', description: 'Repo for quay io for custom mig-controller images, only used by GHPRB', name: 'QUAYIO_CI_REPO', trim: false),
 string(defaultValue: 'quay.io/konveyor_ci/mig-operator-container', description: 'Repo for quay io for custom mig-controller images, only used by GHPRB', name: 'QUAYIO_CI_REPO_OPERATOR', trim: false),
@@ -31,7 +31,7 @@ booleanParam(defaultValue: false, description: 'Deploy e2e applications and prep
 booleanParam(defaultValue: true, description: 'Deploy mig controller UI on destination cluster', name: 'MIG_CONTROLLER_UI'),
 booleanParam(defaultValue: true, description: 'Deploy mig operator using OLM on OCP4', name: 'USE_OLM'),
 booleanParam(defaultValue: false, description: 'Deploy using downstream images', name: 'USE_DOWNSTREAM'),
-booleanParam(defaultValue: false, description: 'Enable debugging', name: 'DEBUG'),
+booleanParam(defaultValue: true, description: 'Enable debugging', name: 'DEBUG'),
 booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE')])])
 
 
@@ -67,35 +67,49 @@ node {
 
         utils.parse_comment_message(COMMENT_TEXT)
 
+        // prepare for tests
         stage('Setup e2e environment') {
             steps_finished << 'Setup e2e environment'
 
             utils.prepare_workspace(SRC_CLUSTER_VERSION, DEST_CLUSTER_VERSION)
             utils.clone_mig_e2e()
-            if (env.MIG_CONTROLLER_REPO != 'https://github.com/konveyor/mig-controller.git' || 
-                env.MIG_CONTROLLER_BRANCH != 'master') {
-              utils.clone_mig_controller()
-            }
         }
-          
+
+        // login to cluster
+        withCredentials([
+            [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP3_CREDENTIALS}", usernameVariable: 'OCP3_ADMIN_USER', passwordVariable: 'OCP3_ADMIN_PASSWD'],
+            [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP4_CREDENTIALS}", usernameVariable: 'OCP4_ADMIN_USER', passwordVariable: 'OCP4_ADMIN_PASSWD']
+            ]) {
+                common_stages.login_cluster("${SRC_CLUSTER_URL}", "${OCP3_ADMIN_USER}", "${OCP3_ADMIN_PASSWD}", "${SRC_CLUSTER_VERSION}", SOURCE_KUBECONFIG).call()
+                common_stages.login_cluster("${DEST_CLUSTER_URL}", "${OCP4_ADMIN_USER}", "${OCP4_ADMIN_PASSWD}", "${DEST_CLUSTER_VERSION}", TARGET_KUBECONFIG).call()
+               }
+
+        // clean up old stuff
+        stage('Prepare for tests') {
+            utils.teardown_mig_controller(SOURCE_KUBECONFIG)
+            utils.teardown_mig_controller(TARGET_KUBECONFIG)
+        }
+
+        // build mig-controller image when not using default latest image
+        if (env.MIG_CONTROLLER_REPO != 'https://github.com/konveyor/mig-controller.git' || 
+            env.MIG_CONTROLLER_BRANCH != 'master') {
+          utils.clone_mig_controller()
+          common_stages.build_mig_controller().call()
+        }
+
+        // build mig-operator image when not using default latest image
         if (MIG_OPERATOR_BUILD_CUSTOM) { 
           utils.checkout_pr(MIG_OPERATOR_REPO, MIG_OPERATOR_PR_NO, 'mig-operator')
-          common_stages.build_custom_operator().call()
+          common_stages.build_mig_operator().call()
         }
 
-        withCredentials([
-          [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP3_CREDENTIALS}", usernameVariable: 'OCP3_ADMIN_USER', passwordVariable: 'OCP3_ADMIN_PASSWD'],
-          [$class: 'UsernamePasswordMultiBinding', credentialsId: "${OCP4_CREDENTIALS}", usernameVariable: 'OCP4_ADMIN_USER', passwordVariable: 'OCP4_ADMIN_PASSWD']
-          ]) {
-              common_stages.login_cluster("${SRC_CLUSTER_URL}", "${OCP3_ADMIN_USER}", "${OCP3_ADMIN_PASSWD}", "${SRC_CLUSTER_VERSION}", SOURCE_KUBECONFIG).call()
-              common_stages.login_cluster("${DEST_CLUSTER_URL}", "${OCP4_ADMIN_USER}", "${OCP4_ADMIN_PASSWD}", "${DEST_CLUSTER_VERSION}", TARGET_KUBECONFIG).call()
-             }
-        // Always ensure mig controller environment is clean before deployment
-        utils.teardown_mig_controller(SOURCE_KUBECONFIG)
-        utils.teardown_mig_controller(TARGET_KUBECONFIG)
+        // deploy mig-operator and mig-controller on source
+        common_stages.deploy_mig_operator(SOURCE_KUBECONFIG, false, SRC_CLUSTER_VERSION).call()
+        common_stages.deploy_mig_controller(SOURCE_KUBECONFIG, false, SRC_CLUSTER_VERSION).call()
 
-        // Deploy mig controller and begin tests
-        common_stages.deploy_mig_controller_on_both(SOURCE_KUBECONFIG, TARGET_KUBECONFIG, false, true).call()
+        // deploy mig-operator and mig-controller on destination
+        common_stages.deploy_mig_operator(TARGET_KUBECONFIG, true, DEST_CLUSTER_VERSION).call()
+        common_stages.deploy_mig_controller(TARGET_KUBECONFIG, true, DEST_CLUSTER_VERSION).call()
 
         // Execute migration
         common_stages.execute_migration(E2E_TESTS, SOURCE_KUBECONFIG, TARGET_KUBECONFIG).call()
@@ -105,10 +119,13 @@ node {
     } finally {
         // Success or failure, always send notifications
         utils.notifyBuild(currentBuild.result)
-	if (DEBUG) {
-          utils.run_debug(SOURCE_KUBECONFIG)
-          utils.run_debug(TARGET_KUBECONFIG)
-	}
+	      if (DEBUG) {
+          stage('Gather debug info from both environments') {
+            utils.run_debug(SOURCE_KUBECONFIG, 'Source')
+            utils.run_debug(TARGET_KUBECONFIG, 'Destination')
+          }
+	      }
+        
         stage('Clean Up Environment') {
           // Always attempt to remove s3 buckets
           utils.teardown_s3_bucket()

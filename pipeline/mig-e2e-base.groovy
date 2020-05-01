@@ -28,7 +28,7 @@ booleanParam(defaultValue: false, description: 'Deploy e2e applications and prep
 booleanParam(defaultValue: true, description: 'Deploy mig operator using OLM on OCP4', name: 'USE_OLM'),
 booleanParam(defaultValue: false, description: 'Deploy using downstream images', name: 'USE_DOWNSTREAM'),
 booleanParam(defaultValue: false, description: 'Deploy CAM disconnected, not used on non-deployment pipelines', name: 'USE_DISCONNECTED'),
-booleanParam(defaultValue: true, description: 'Deploy mig controller UI on destination cluster', name: 'MIG_CONTROLLER_UI'),
+booleanParam(defaultValue: true, description: 'Deploy controller UI on host cluster', name: 'MIG_CONTROLLER_UI'),
 booleanParam(defaultValue: false, description: 'Enable debugging', name: 'DEBUG'),
 booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE')])])
 

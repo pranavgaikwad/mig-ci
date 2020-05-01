@@ -60,7 +60,7 @@ booleanParam(defaultValue: true, description: 'Clean up workspace after build', 
 booleanParam(defaultValue: false, description: 'Persistent cluster builds with fixed hostname', name: 'PERSISTENT'),
 booleanParam(defaultValue: false, description: 'Enable debugging', name: 'DEBUG'),
 booleanParam(defaultValue: true, description: 'EC2 terminate instances after build', name: 'EC2_TERMINATE_INSTANCES'),
-booleanParam(defaultValue: true, description: 'Deploy mig controller UI on destination cluster', name: 'MIG_CONTROLLER_UI')])])
+booleanParam(defaultValue: true, description: 'Deploy controller UI on host cluster', name: 'MIG_CONTROLLER_UI')])])
 
 // true/false build parameter that defines if CAM is deployed
 def DEPLOY_CAM = params.DEPLOY_CAM

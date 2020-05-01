@@ -12,7 +12,7 @@ mig_controller_repo: "{{ lookup('env', 'MIG_CONTROLLER_REPO') or 'https://github
 mig_controller_branch: "{{ lookup('env', 'MIG_CONTROLLER_BRANCH') or 'master' }}"
 mig_controller_host_cluster: true
 mig_controller_velero: true
-mig_controller_ui: true
+mig_controller_ui: false
 mig_controller_remote_cluster_online: true
 mig_migration_namespace: openshift-migration
 rh_sub_user: "{{ lookup('env', 'SUB_USER') }}"

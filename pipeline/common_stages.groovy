@@ -426,7 +426,7 @@ def deploy_mig_controller(kubeconfig, is_host, cluster_version) {
 
       def mig_controller_deployment_args = is_host ?
         "-e mig_controller_host_cluster='true' -e mig_controller_ui=${MIG_CONTROLLER_UI}" : 
-        "-e mig_controller_host_cluster='false' -e mig_controller_ui=${MIG_CONTROLLER_UI}"
+        "-e mig_controller_host_cluster='false'"
 
       withCredentials([
         string(credentialsId: "$EC2_SUB_USER", variable: 'SUB_USER'),

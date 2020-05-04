@@ -9,7 +9,6 @@ def notifyBuild(String buildStatus = 'STARTED') {
   def subject = "${buildStatus}: Job '${env.JOB_NAME}, build [${env.BUILD_NUMBER}]'"
   def summary = "${subject}\nLink: (${env.BUILD_URL})\n"
   def body = ""
-  def message = "${summary}${body}"
   def results = []
 
   for (i = 0; i < steps_finished.size() - 1; i++) {
@@ -33,6 +32,8 @@ def notifyBuild(String buildStatus = 'STARTED') {
     }
   }
 
+  def message = "${summary}${body}"
+  
   update_build_status(body)
 
   // Send notifications

@@ -1,7 +1,7 @@
 // parallel-base.groovy
 properties([
-parameters([choice(choices: ['3.7', '3.9', '3.10', '3.11', '4.1', '4.2', '4.3', 'pre-4.4', 'nightly'], description: 'OCP version to deploy on source cluster', name: 'SRC_CLUSTER_VERSION'),
-choice(choices: ['4.3', '3.11', '3.10', '3.9', '3.7', '4.1', '4.2', 'pre-4.4', 'nightly'], description: 'OCP version to deploy on destination cluster', name: 'DEST_CLUSTER_VERSION'),
+parameters([choice(choices: ['3.7', '3.9', '3.10', '3.11', '4.1', '4.2', '4.3', '4.4', 'nightly'], description: 'OCP version to deploy on source cluster', name: 'SRC_CLUSTER_VERSION'),
+choice(choices: ['4.3', '3.11', '3.10', '3.9', '3.7', '4.1', '4.2', '4.4', 'nightly'], description: 'OCP version to deploy on destination cluster', name: 'DEST_CLUSTER_VERSION'),
 string(defaultValue: 'jenkins-ci-parallel-base', description: 'Cluster name to deploy', name: 'CLUSTER_NAME', trim: false),
 string(defaultValue: 'mig-ci@redhat.com', description: 'Email to register the deployment', name: 'EMAIL', trim: false),
 string(defaultValue: '1', description: 'OCP3 master instance count', name: 'OCP3_MASTER_INSTANCE_COUNT', trim: false),

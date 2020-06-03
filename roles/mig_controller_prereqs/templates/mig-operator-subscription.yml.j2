@@ -9,7 +9,6 @@ metadata:
   namespace: {{ mig_migration_namespace }}
 spec:
   channel: release-{{ mig_operator_release }}
-{% endif %}
   installPlanApproval: Automatic
 {% if mig_operator_use_downstream|bool is sameas true %}
   name: cam-operator

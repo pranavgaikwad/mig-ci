@@ -1,26 +1,5 @@
 ---
-- name: "Obtain latest konveyor release"
-  block:
-
-    - name: "Fetch available non-olm konveyor releases"
-      find: 
-        path: "{{ mig_operator_location }}/deploy/non-olm" 
-        patterns: "v*" 
-        file_type: "directory"
-      register: releases
-
-    - name: "Extract latest konveyor release path"
-      set_fact:
-        konveyor_latest_dir: "{{ releases.files | sort(attribute='path') | map(attribute='path') | list | last }}"
-
-    - name: "Deploy non-olm mig upstream latest operator"
-      k8s:
-        state : present
-        definition: "{{ lookup('file', '{{ konveyor_latest_dir }}/operator.yml' )}}"
-  when: mig_operator_release == 'latest'
-
 - name: "Deploy non-olm mig upstream operator"
   k8s:
     state : present
     definition: "{{ lookup('file', '{{ mig_operator_location }}/deploy/non-olm/{{ mig_operator_release }}/operator.yml' )}}"
-  when: mig_operator_release != 'latest'

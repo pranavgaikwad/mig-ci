@@ -8,7 +8,11 @@ metadata:
 {% endif %}
   namespace: {{ mig_migration_namespace }}
 spec:
+{% if mig_operator_release == 'latest' %}
+  channel: latest
+{% else %}
   channel: release-{{ mig_operator_release }}
+{% endif %}
   installPlanApproval: Automatic
 {% if mig_operator_use_downstream|bool is sameas true %}
   name: cam-operator

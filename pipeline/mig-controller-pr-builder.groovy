@@ -32,7 +32,7 @@ booleanParam(defaultValue: false, description: 'Deploy e2e applications and prep
 booleanParam(defaultValue: true, description: 'Deploy controller UI on host cluster', name: 'MIG_CONTROLLER_UI'),
 booleanParam(defaultValue: true, description: 'Deploy mig operator using OLM on OCP4', name: 'USE_OLM'),
 booleanParam(defaultValue: false, description: 'Deploy using downstream images', name: 'USE_DOWNSTREAM'),
-booleanParam(defaultValue: false, description: 'Enable debugging', name: 'DEBUG'),
+booleanParam(defaultValue: true, description: 'Enable debugging', name: 'DEBUG'),
 booleanParam(defaultValue: false, description: 'Enable Slack notifications', name: 'NOTIF_ENABLED'),
 booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE')])])
 

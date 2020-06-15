@@ -42,17 +42,6 @@ def notifyBuild(String buildStatus = 'STARTED') {
   }
 }
 
-/*
-  Sends build email to pre-defined set of recipients
-  Primarily used to send must-gather logs
-*/
-def send_email() {
-  emailext attachLog: true, attachmentsPattern: "must-gather.zip",
-    body: "${currentBuild.currentResult}: Job ${env.JOB_NAME} build ${env.BUILD_NUMBER}\nUh oh! Looks like you made mig-ci unhappy. Please check the attached must-gather logs for more info."
-    recipientProviders: [recipients()]
-    subject: "mig-ci ${currentBuild.currentResult} : Job ${env.JOB_NAME}"
-}
-
 def update_build_status(body) {
   // def mention = PR_AUTHOR ? "${PR_AUTHOR}\n" : ""
   comment = body +

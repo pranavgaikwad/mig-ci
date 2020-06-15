@@ -37,8 +37,8 @@ def notifyBuild(String buildStatus = 'STARTED') {
   update_build_status(body)
 
   // Send notifications
-  if "$NOTIF_ENABLED" {
-    slackSend (color: colorCode, channel: "$SLACK_CHANNEL", message: message)
+  if (NOTIF_ENABLED) {
+    slackSend (color: colorCode, channel: "${SLACK_CHANNEL}", message: message)
   }
 }
 

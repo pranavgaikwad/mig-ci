@@ -569,6 +569,7 @@ def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig, extra_arg
 
           if (!E2E_DEPLOY_ONLY) {
             try {
+              error "Failing for no reason"
               withEnv([
                 "KUBECONFIG=${target_kubeconfig}",
                 "PATH+EXTRA=~/bin"]) {

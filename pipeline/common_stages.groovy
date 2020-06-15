@@ -569,7 +569,6 @@ def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig, extra_arg
 
           if (!E2E_DEPLOY_ONLY) {
             try {
-              error "Failing for no reason"
               withEnv([
                 "KUBECONFIG=${target_kubeconfig}",
                 "PATH+EXTRA=~/bin"]) {
@@ -587,8 +586,7 @@ def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig, extra_arg
                 dir("${WORKSPACE}") {
                   sh "mkdir must-gather"
                   sh "${OC_BINARY} adm must-gather --image=quay.io/konveyor/must-gather:latest --dest-dir=./must-gather"
-                  zip zipFile: 'must-gather.zip', dir: './must-gather'
-                  archiveArtifacts artifacts: 'must-gather.zip'
+                  archiveArtifacts artifacts: './must-gather'
                 }
               }
               error "Migration test case ${e2e_tests[i]} failed"

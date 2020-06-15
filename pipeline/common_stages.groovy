@@ -568,18 +568,31 @@ def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig, extra_arg
           }
 
           if (!E2E_DEPLOY_ONLY) {
-            withEnv([
-              "KUBECONFIG=${target_kubeconfig}",
-              "PATH+EXTRA=~/bin"]) {
-              ansiColor('xterm') {
-                ansiblePlaybook(
-                  playbook: "${env.E2E_PLAY}",
-                  hostKeyChecking: false,
-                  extras: "-e 'with_deploy=false'",
-                  tags: "${e2e_tests[i]}",
-                  colorized: true)
+            try {
+              withEnv([
+                "KUBECONFIG=${target_kubeconfig}",
+                "PATH+EXTRA=~/bin"]) {
+                ansiColor('xterm') {
+                  ansiblePlaybook(
+                    playbook: "${env.E2E_PLAY}",
+                    hostKeyChecking: false,
+                    extras: "-e 'with_deploy=false'",
+                    tags: "${e2e_tests[i]}",
+                    colorized: true)
+                }
               }
+            } catch (Exception ex) {
+              withEnv(["KUBECONFIG=${TARGET_KUBECONFIG}"]) {
+                dir("${WORKSPACE}") {
+                  sh "mkdir must-gather"
+                  sh "${OC_BINARY} adm must-gather --image=quay.io/konveyor/must-gather:latest --dest-dir=./must-gather"
+                  zip zipFile: 'must-gather.zip', dir: './must-gather'
+                  archiveArtifacts artifacts: 'must-gather.zip'
+                }
+              }
+              error "Migration test case ${e2e_tests[i]} failed"
             }
+            
           }
         }
       }

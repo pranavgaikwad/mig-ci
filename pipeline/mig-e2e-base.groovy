@@ -111,6 +111,7 @@ node {
     } finally {
         // Success or failure, always send notifications
         utils.notifyBuild(currentBuild.result)
+        utils.send_email()
 	if (DEBUG) {
           utils.run_debug(SOURCE_KUBECONFIG, 'Source')
           utils.run_debug(TARGET_KUBECONFIG, 'Destination')

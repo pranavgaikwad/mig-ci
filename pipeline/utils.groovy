@@ -58,6 +58,11 @@ def clone_mig_controller() {
   checkout([$class: 'GitSCM', branches: [[name: "${MIG_CONTROLLER_BRANCH}"]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'mig-controller']], submoduleCfg: [], userRemoteConfigs: [[url: "${MIG_CONTROLLER_REPO}"]]])
 }
 
+def clone_mig_operator() {
+  echo 'Cloning mig-operator repo'
+  checkout([$class: 'GitSCM', branches: [[name: "${MIG_OPERATOR_BRANCH}"]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'mig-operator']], submoduleCfg: [], userRemoteConfigs: [[url: "${MIG_OPERATOR_REPO}"]]])
+}
+
 def prepare_agnosticd() {
   sh 'test -e ~/.local/bin/aws || pip install awscli --upgrade --user'
 

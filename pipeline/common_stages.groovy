@@ -586,7 +586,7 @@ def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig, extra_arg
                 dir("${WORKSPACE}") {
                   sh "mkdir must-gather"
                   sh "${OC_BINARY} adm must-gather --image=quay.io/konveyor/must-gather:latest --dest-dir=./must-gather"
-                  archiveArtifacts artifacts: './must-gather'
+                  archiveArtifacts artifacts: 'must-gather'
                 }
               }
               error "Migration test case ${e2e_tests[i]} failed"

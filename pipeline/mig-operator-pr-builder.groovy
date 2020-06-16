@@ -67,6 +67,8 @@ node {
 
         utils.notifyBuild('STARTED')
 
+        MIG_OPERATOR_BUILD_CUSTOM = true
+
         // prepare for tests
         stage('Setup e2e environment') {
             steps_finished << 'Setup e2e environment'

@@ -52,6 +52,7 @@ def PERSISTENT = params.PERSISTENT
 // variables from operator PR trigger
 MIG_OPERATOR_BUILD_CUSTOM = true
 MIG_OPERATOR_PR_NO = params.PR_NO
+MIG_CONTROLLER_BUILD_CUSTOM = false
 
 def common_stages
 def utils

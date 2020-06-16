@@ -17,6 +17,7 @@ string(defaultValue: 'latest', description: 'Mig Operator/CAM release to deploy'
 string(defaultValue: 'scripts/mig_debug.sh', description: 'Relative file path to debug script on MIG CI repo', name: 'DEBUG_SCRIPT', trim: false),
 string(defaultValue: '-w -o', description: 'Extra debug script arguments', name: 'DEBUG_SCRIPT_ARGS', trim: false),
 string(defaultValue: '', description: 'PR comment string from GHPRB', name: 'COMMENT_TEXT', trim: false),
+string(defaultValue: '', description: 'PR number from GHPRB', name: 'PR_NO', trim: false),
 string(defaultValue: '#forum-mig-ci', description: 'Slack Channel for notifications', name: 'SLACK_CHANNEL', trim: false),
 string(defaultValue: 'quay.io/konveyor_ci/mig-controller', description: 'Repo for quay io for custom mig-controller images, only used by GHPRB', name: 'QUAYIO_CI_REPO', trim: false),
 string(defaultValue: 'quay.io/konveyor_ci/mig-operator-container', description: 'Repo for quay io for custom mig-controller images, only used by GHPRB', name: 'QUAYIO_CI_REPO_OPERATOR', trim: false),
@@ -48,6 +49,10 @@ def E2E_TESTS = params.E2E_TESTS.split(' ')
 // true/false enable debugging
 def DEBUG = params.DEBUG
 def PERSISTENT = params.PERSISTENT
+// variables from operator PR trigger
+MIG_OPERATOR_BUILD_CUSTOM = true
+MIG_OPERATOR_PR_NO = params.PR_NO
+
 def common_stages
 def utils
 
@@ -66,8 +71,6 @@ node {
         utils = load "${WORKSPACE}/pipeline/utils.groovy"
 
         utils.notifyBuild('STARTED')
-
-        MIG_OPERATOR_BUILD_CUSTOM = true
 
         // prepare for tests
         stage('Setup e2e environment') {

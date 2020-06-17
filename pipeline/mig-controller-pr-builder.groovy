@@ -17,6 +17,7 @@ string(defaultValue: 'latest', description: 'Mig Operator/CAM release to deploy'
 string(defaultValue: 'scripts/mig_debug.sh', description: 'Relative file path to debug script on MIG CI repo', name: 'DEBUG_SCRIPT', trim: false),
 string(defaultValue: '-w -o', description: 'Extra debug script arguments', name: 'DEBUG_SCRIPT_ARGS', trim: false),
 string(defaultValue: '', description: 'PR comment string from GHPRB', name: 'COMMENT_TEXT', trim: false),
+string(defaultValue: '#forum-mig-ci', description: 'Slack channel to send notification', name: 'SLACK_CHANNEL', trim: false),
 string(defaultValue: 'quay.io/konveyor_ci/mig-controller', description: 'Repo for quay io for custom mig-controller images, only used by GHPRB', name: 'QUAYIO_CI_REPO', trim: false),
 string(defaultValue: 'quay.io/konveyor_ci/mig-operator-container', description: 'Repo for quay io for custom mig-controller images, only used by GHPRB', name: 'QUAYIO_CI_REPO_OPERATOR', trim: false),
 string(defaultValue: '/opt/virtualenvs/python3-operator/venv/bin/operator-courier', description: 'Operator courier binary', name: 'MIG_CI_OPERATOR_COURIER_BINARY', trim: false),
@@ -32,6 +33,7 @@ booleanParam(defaultValue: true, description: 'Deploy controller UI on host clus
 booleanParam(defaultValue: true, description: 'Deploy mig operator using OLM on OCP4', name: 'USE_OLM'),
 booleanParam(defaultValue: false, description: 'Deploy using downstream images', name: 'USE_DOWNSTREAM'),
 booleanParam(defaultValue: true, description: 'Enable debugging', name: 'DEBUG'),
+booleanParam(defaultValue: false, description: 'Enable Slack notifications', name: 'NOTIF_ENABLED'),
 booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE')])])
 
 

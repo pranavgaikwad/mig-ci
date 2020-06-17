@@ -16,6 +16,7 @@ string(defaultValue: 'all', description: 'e2e test tags to run, see https://gith
 string(defaultValue: 'latest', description: 'Mig Operator/CAM release to deploy', name: 'MIG_OPERATOR_RELEASE', trim: false),
 string(defaultValue: 'scripts/mig_debug.sh', description: 'Relative file path to debug script on MIG CI repo', name: 'DEBUG_SCRIPT', trim: false),
 string(defaultValue: '', description: 'Extra debug script arguments', name: 'DEBUG_SCRIPT_ARGS', trim: false),
+string(defaultValue: '#forum-mig-ci', description: 'Slack channel to send notification', name: 'SLACK_CHANNEL', trim: false),
 string(defaultValue: 'quay.io/fbladilo/mig-controller', description: 'Repo for quay io for custom mig-controller images, only used by GHPRB', name: 'QUAYIO_CI_REPO', trim: false),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.UsernamePasswordMultiBinding', defaultValue: 'ci_quay_credentials', description: 'Credentials for quay.io container storage, used by mig-controller to push and pull images', name: 'QUAYIO_CREDENTIALS', required: true),
 credentials(credentialType: 'org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl', defaultValue: 'ci_aws_access_key_id', description: 'EC2 access key ID for auth purposes', name: 'EC2_ACCESS_KEY_ID', required: true),
@@ -30,6 +31,7 @@ booleanParam(defaultValue: false, description: 'Deploy using downstream images',
 booleanParam(defaultValue: false, description: 'Deploy CAM disconnected, not used on non-deployment pipelines', name: 'USE_DISCONNECTED'),
 booleanParam(defaultValue: true, description: 'Deploy controller UI on host cluster', name: 'MIG_CONTROLLER_UI'),
 booleanParam(defaultValue: false, description: 'Enable debugging', name: 'DEBUG'),
+booleanParam(defaultValue: false, description: 'Enable Slack notifications', name: 'NOTIF_ENABLED'),
 booleanParam(defaultValue: true, description: 'Clean up workspace after build', name: 'CLEAN_WORKSPACE')])])
 
 

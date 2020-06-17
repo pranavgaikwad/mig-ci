@@ -587,6 +587,16 @@ def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig, extra_arg
                   sh "mkdir must-gather"
                   sh "${OC_BINARY} adm must-gather --image=quay.io/konveyor/must-gather:latest --dest-dir=./must-gather"
                   archiveArtifacts artifacts: 'must-gather'
+                  s3Upload consoleLogLevel: 'INFO', 
+                    dontSetBuildResultOnFailure: true,
+                    entries: [
+                      [
+                        bucket: 'mig-ci-artifacts-do-not-delete',
+                        managedArtifacts: true,
+                        sourceFile: 'must-gather/*', 
+                        userMetadata: [[key: 'BuildNo', value: "${BUILD_NUMBER}"]]
+                      ]
+                    ], profileName: 'mig-ci-robot'
                 }
               }
               error "Migration test case ${e2e_tests[i]} failed"

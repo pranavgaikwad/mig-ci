@@ -3,6 +3,8 @@ def notifyBuild(String buildStatus = 'STARTED') {
   // build status of null means successful
   buildStatus =  buildStatus ?: 'SUCCESSFUL'
 
+  mustGatherLink = binding.hasVariable('MUST_GATHER_LINK') ? 'Must-Gather Link : ${MUST_GATHER_LINK}\n' : ''
+
   // Default values
   def colorName = 'RED'
   def colorCode = '#FF0000'
@@ -32,7 +34,7 @@ def notifyBuild(String buildStatus = 'STARTED') {
     }
   }
 
-  def message = "${summary}${body}"
+  def message = "${summary}\n${mustGatherLink}${body}"
   
   update_build_status(body)
 

@@ -572,7 +572,6 @@ def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig, extra_arg
               withEnv([
                 "KUBECONFIG=${target_kubeconfig}",
                 "PATH+EXTRA=~/bin"]) {
-                error "Failed"
                 ansiColor('xterm') {
                   ansiblePlaybook(
                     playbook: "${env.E2E_PLAY}",

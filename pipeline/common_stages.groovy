@@ -568,18 +568,36 @@ def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig, extra_arg
           }
 
           if (!E2E_DEPLOY_ONLY) {
-            withEnv([
-              "KUBECONFIG=${target_kubeconfig}",
-              "PATH+EXTRA=~/bin"]) {
-              ansiColor('xterm') {
-                ansiblePlaybook(
-                  playbook: "${env.E2E_PLAY}",
-                  hostKeyChecking: false,
-                  extras: "-e 'with_deploy=false'",
-                  tags: "${e2e_tests[i]}",
-                  colorized: true)
+            try {
+              withEnv([
+                "KUBECONFIG=${target_kubeconfig}",
+                "PATH+EXTRA=~/bin"]) {
+                ansiColor('xterm') {
+                  ansiblePlaybook(
+                    playbook: "${env.E2E_PLAY}",
+                    hostKeyChecking: false,
+                    extras: "-e 'with_deploy=false'",
+                    tags: "${e2e_tests[i]}",
+                    colorized: true)
+                }
               }
+            } catch (Exception ex) {
+              withEnv(["KUBECONFIG=${TARGET_KUBECONFIG}"]) {
+                dir("${WORKSPACE}") {
+                  sh "mkdir must-gather"
+                  sh "${OC_BINARY} adm must-gather --image=quay.io/konveyor/must-gather:latest --dest-dir=./must-gather"
+                  sh """#!/bin/bash +x
+                  aws s3 sync ./must-gather/ s3://mig-ci-build-artifacts-do-not-delete/${JOB_NAME}/${BUILD_NUMBER}/
+                  """
+                  MUST_GATHER_LINK=sh(
+                    script: "aws s3 presign s3://mig-ci-build-artifacts-do-not-delete/${JOB_NAME}/${BUILD_NUMBER}/",
+                    returnStdout: true
+                  )
+                }
+              }
+              error "Migration test case ${e2e_tests[i]} failed"
             }
+
           }
         }
       }

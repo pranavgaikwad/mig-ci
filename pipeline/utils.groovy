@@ -34,7 +34,7 @@ def notifyBuild(String buildStatus = 'STARTED') {
     }
   }
 
-  def message = "${summary}\n${mustGatherLink}${body}"
+  def message = "${summary}${body}"
   
   update_build_status(body)
 

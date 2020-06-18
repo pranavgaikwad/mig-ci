@@ -1,3 +1,23 @@
+# Downloading must-gather logs for your build
+
+We collect `must-gather` logs when any of the test case fails. You can download the archive using s3 cli.
+
+For mig-controller PR pipeline :
+
+```sh
+aws s3 sync s3://mig-ci-build-artifcats-do-not-delete/mig-controller-pr-builder-base/<BUILD_NUMBER>/ ./<DESTINATION_DIR>/
+```
+
+For mig-operator PR pipeline :
+
+```sh
+aws s3 sync s3://mig-ci-build-artifcats-do-not-delete/mig-operator-pr-builder-base/<BUILD_NUMBER>/ ./<DESTINATION_DIR>/
+```
+
+`<BUILD_NUMBER>` can be easily found on the Jenkins log page in the upper left corner.
+
+![mig-ci-build-number](https://user-images.githubusercontent.com/9839757/85067369-91e63400-b17e-11ea-8a43-b700b4a09b67.jpeg)
+
 # How to decrypt Mig CI debug log?
 
 The `mig-ci` build proceeds in different steps. You can try to find details of the step that failed. If it isn't any useful, `mig-ci` also displays debug information as a separate step in the build process. This document helps users comprehend that cryptic debug log.

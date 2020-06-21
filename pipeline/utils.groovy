@@ -4,6 +4,7 @@ def notifyBuild(String buildStatus = 'STARTED') {
   buildStatus =  buildStatus ?: 'SUCCESSFUL'
 
   mustGatherLink = binding.hasVariable('MUST_GATHER_LINK') ? 'Must-Gather Link : ${MUST_GATHER_LINK}\n' : ''
+  slackChannel = binding.hasVariable('SLACK_CHANNEL') ? '${SLACK_CHANNEL}' : '#forum-mig-ci'
 
   // Default values
   def colorName = 'RED'
@@ -40,7 +41,7 @@ def notifyBuild(String buildStatus = 'STARTED') {
 
   // Send notifications
   if (params.NOTIF_ENABLED) {
-    slackSend (color: colorCode, channel: "${SLACK_CHANNEL}", message: message)
+    slackSend (color: colorCode, channel: slackChannel, message: message)
   }
 }
 

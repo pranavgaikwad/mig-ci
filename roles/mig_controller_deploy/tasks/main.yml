@@ -7,6 +7,11 @@
     - "{{ playbook_dir }}/roles/mig_controller_prereqs/defaults/main.yml"
     - "{{ playbook_dir }}/config/velero_aws_creds.yml"
 
+- include_role:
+    name: get_ocp_version
+  vars:
+    - show_cluster_api: true
+
 - name: Deploy mig controller
   import_tasks: deploy.yml
 

@@ -22,10 +22,8 @@ spec:
   mig_controller_version: {{ mig_controller_version }}
 {% endif %}
 {% endif %}
-{% if olm_cluster_version is defined %}
-{% if '4.1' in olm_cluster_version|string %}
+{% if cluster_version == '4.1' %}
   deprecated_cors_configuration: true
-{% endif %}
 {% endif %}
   #To install the controller on Openshift 3 you will need to configure the API endpoint:
   #mig_ui_cluster_api_endpoint: https://replace-with-openshift-cluster-hostname:8443

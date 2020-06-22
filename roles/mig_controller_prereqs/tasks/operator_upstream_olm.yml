@@ -1,17 +1,6 @@
 - name: "Deploy upstream mig operator using OLM"
   block:
 
-    - name: "Include required vars"
-      include_vars:  "{{ lookup('first_found', olm_files) }}"
-      vars:
-        olm_files:
-          - "{{ playbook_dir }}/olm/olm_vars.yml"
-          - "{{ playbook_dir }}/roles/mig_controller_deploy/defaults/olm_vars.yml"
-
-    - debug:
-        msg:
-          - "OLM cluster version: {{ olm_cluster_version }}"
-
     - name: "Create OperatorSource"
       k8s:
         state: present
@@ -24,7 +13,7 @@
     - name: "Define OperatorSource pod label"
       set_fact:
         mig_operator_label: "marketplace.catalogSourceConfig=migration-operator"
-      when: olm_cluster_version is version('4.1', '<=')
+      when: cluster_version is version('4.1', '<=')
 
     - name: "Define OperatorSource pod label"
       set_fact:
@@ -32,7 +21,7 @@
           'marketplace.operatorSource=konveyor-ci-operators' if mig_operator_build_custom|bool 
           else 'marketplace.operatorSource=migration-operator' 
         }}"
-      when: not olm_cluster_version is version('4.1', '<=')
+      when: not cluster_version is version('4.1', '<=')
 
     - name: "Wait for OLM to reconcile OperatorSource creation"
       k8s_facts:

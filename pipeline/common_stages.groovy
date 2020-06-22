@@ -62,13 +62,6 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
     stage('Deploy agnosticd OCP workshop ' + cluster_version + OLM_TEXT) {
       steps_finished << 'Deploy agnosticd OCP workshop ' + cluster_version + OLM_TEXT
 
-        dir("olm") {
-          def olm_vars = [
-            'olm_cluster_version': "${cluster_version}"
-          ]
-          writeYaml file: 'olm_vars.yml', data: olm_vars
-        }
-
         dir("mig-agnosticd/${cluster_version}") {
           def my_vars = [
             'email': "${EMAIL}",
@@ -276,7 +269,7 @@ def deploy_workload(workload,cluster_version,status) {
   }
   return {
     if (status == 'true') {
-      stage('Deploy ${workload} workload on ' + cluster_version) {
+      stage("Deploy ${workload} workload on ${cluster_version}") {
         steps_finished << 'Deploy ${workload} workload on ' + cluster_version
         sh 'sleep 180'
         dir("mig-agnosticd/workloads") {

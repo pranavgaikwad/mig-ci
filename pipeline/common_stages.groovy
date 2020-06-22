@@ -525,6 +525,19 @@ def build_mig_operator() {
   }
 }
 
+/* 
+  pre-requisite setup to invoke non-admin tests
+*/
+def prepare_non_admin(kubeconfig, is_host) {
+  return {
+    def type = !is_host ? 'source' : 'destination'
+    stage("Preparing ${type} for non-admin tests") {
+      // TODO: Give non-admin user access
+
+      // TODO: collect non-admin token
+    }
+  }
+}
 
 def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig, extra_args=null) {
   return {

@@ -56,11 +56,7 @@ The migration controller e2e tests are supplied in the [mig-e2e repo](https://gi
 
 ### Debugging CI jobs
 
-The `EC2_TERMINATE_INSTANCES` and `CLEAN_WORKSPACE` boolean parameters can be used to **avoid** the termination of clusters and the cleanup of Jenkins workspace in case you want to debug a migration job after the run: 
-
-1) SSH to jenkins host
-2) Go to `/var/lib/jenkins/workspace`, and enter the `<job-id>-${BUILD_NUMBER}` dir. The `kubeconfigs` directory will contain `KUBECONFIG` files with active sessions for both source and target clusters. You can utilize them by `export KUBECONFIG=$(pwd)/kubeconfigs/ocp-<version>-kubeconfig`.
-3) Once done debugging, you can clean up resources manually by executing `./destroy_env.sh`.
+Check out our [Debug Guide](./DEBUG-GUIDE.md) for detailed instructions on debugging CI jobs.
 
 ## External NFS server setup on AWS
 

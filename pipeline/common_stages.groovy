@@ -264,7 +264,7 @@ def deploy_ocp3_agnosticd(kubeconfig, cluster_version) {
 
 def deploy_workload(workload,cluster_version,status) {
   def short_version = cluster_version.tokenize(".")[0]
-  if (cluster_version == "nightly") {
+  if (!cluster_version.startsWith("3.")) {
     short_version = '4'
   }
   return {

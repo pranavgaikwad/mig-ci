@@ -1,10 +1,10 @@
-- name: Check that oc binary is installed
+- name: "Check that oc binary is installed"
   stat:
     path: "{{ oc_binary }}"
   register: oc_installed
 
 - block:
-  - name: Fetch page content for latest client binary archive 
+  - name: "Fetch page content for latest client binary archive"
     uri: 
       url: "{{ release_url }}"
       return_content: yes
@@ -13,7 +13,7 @@
     retries: 12
     delay: 10
 
-  - name: Determine latest client binary archive release
+  - name: "Determine latest client binary archive release"
     set_fact:
       release_ver: "{{ client_page.content | regex_findall('<a.*openshift-client-linux[^<]+?>') | first | regex_search('o.*\\d[-.0-9]+\\d') }}"
 
@@ -22,7 +22,7 @@
       oc_release_url: "{{ release_url }}/{{ release_ver }}.tar.gz"
       oc_arch: "{{ oc_target_location }}/{{ release_ver }}/client.tar.gz"
     
-  - name: Create binary directory
+  - name: "Create binary directory"
     file:
         path: "{{ item }}"
         recurse: true
@@ -31,7 +31,7 @@
       - "{{ oc_target_location }}"
       - "{{ oc_arch | dirname }}"
 
-  - name: Get client binary archive
+  - name: "Get client binary archive"
     get_url:
       url: "{{ oc_release_url }}"
       dest: "{{ oc_arch }}"
@@ -46,12 +46,18 @@
       dest: "{{ oc_arch | dirname }}"
       remote_src: yes
 
-  - name: Install newly downloaded oc binary
+  - name: "Install newly downloaded oc binary"
     copy:
       src: "{{ oc_arch | dirname }}/oc"
       dest: "{{ oc_binary }}"
       mode: 0755
       remote_src: True
+
+  - name: "Remove oc binary archive directory"
+    file:
+      path: "{{ oc_arch | dirname }}"
+      state: absent
+
   when: not oc_installed.stat.exists
 
 - name: Ensure source kubeconfig dir was created

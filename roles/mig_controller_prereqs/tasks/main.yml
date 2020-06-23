@@ -3,5 +3,10 @@
 - name: Create AWS backup storage
   import_tasks: create_aws_backup_storage.yml
 
+- include_role:
+    name: get_ocp_version
+  vars:
+    - show_cluster_api: true
+
 - name: Deploy mig operator
   import_tasks: deploy_operator.yml

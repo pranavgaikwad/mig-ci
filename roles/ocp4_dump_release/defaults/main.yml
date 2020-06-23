@@ -1,4 +1,4 @@
 openshift_installer_release: "{{ lookup('env', 'OCP4_RELEASE') or 'latest' }}"
 openshift_installer_release_prefix_url: "https://mirror.openshift.com/pub/openshift-v4/clients"
-openshift_parent_dir_choices: { latest-4.1: 'ocp', latest-4.2: 'ocp', latest-4.3: 'ocp', latest-4.4: 'ocp', latest: 'ocp', nightly: 'ocp-dev-preview' }
-openshift_parent_subdir_choices: { latest-4.1: 'latest-4.1', latest-4.2: 'latest-4.2', latest-4.3: 'latest-4.3', latest-4.4: 'latest-4.4', latest: 'latest', nightly: 'latest' }
+openshift_parent_dir_choices: { latest-4.1: 'ocp', latest-4.2: 'ocp', latest-4.3: 'ocp', latest-4.4: 'ocp', pre-4.5: 'ocp', latest: 'ocp', nightly: 'ocp-dev-preview' }
+openshift_parent_subdir_choices: { latest-4.1: 'latest-4.1', latest-4.2: 'latest-4.2', latest-4.3: 'latest-4.3', latest-4.4: 'latest-4.4', pre-4.5: 'candidate-4.5', latest: 'latest', nightly: 'latest' }

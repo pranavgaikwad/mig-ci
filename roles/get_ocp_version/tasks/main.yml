@@ -14,7 +14,8 @@
       '4.1' if k8s_minor_version is version('13', '=') else
       '4.2' if k8s_minor_version is version('14', '=') else
       '4.3' if k8s_minor_version is version('16', '=') else
-      '4.4' if k8s_minor_version is version('17', '>=') }}"
+      '4.4' if k8s_minor_version is version('17', '=') else
+      '4.5' if k8s_minor_version is version('18', '>=') }}"
 
 - set_fact:
     cluster_version: "{{ cluster_version|replace('\"', '') }}"

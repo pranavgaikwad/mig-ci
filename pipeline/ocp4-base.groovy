@@ -67,7 +67,7 @@ node {
           utils.prepare_agnosticd()
         }
           common_stages.deploy_ocp4_agnosticd(SOURCE_KUBECONFIG, SRC_CLUSTER_VERSION).call()
-          common_stages.deploy_workload('ocs-operator',SRC_CLUSTER_VERSION,OCS).call()
+          common_stages.deploy_workload('ocs-poc',SRC_CLUSTER_VERSION,OCS).call()
 
     } catch (Exception ex) {
         currentBuild.result = "FAILED"

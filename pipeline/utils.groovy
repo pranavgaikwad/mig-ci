@@ -91,7 +91,7 @@ def prepare_agnosticd() {
             'aws_secret_access_key': "${AWS_SECRET_ACCESS_KEY}",
             'redhat_registry_user': "${SUB_USER}",
             'redhat_registry_password': "${SUB_PASS}",
-            'ocp4_token': "${pull_secret}",
+            'ocp4_pull_secret': "${pull_secret}",
             'own_repo_path': "${OWN_REPO}/{{ osrelease }}/"
           ]
         writeYaml file: 'secret.yml', data: secret_vars

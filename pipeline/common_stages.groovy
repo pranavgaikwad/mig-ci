@@ -7,10 +7,10 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
   // GA OCP releases
   // ocp4_installer_version instructs agnosticd the directory containing the installer/client on https://mirror.openshift.com/pub/openshift-v4/clients/ocp/
   def releases = [
-    '4.1': "4.1.38",
-    '4.2': "4.2.23",
-    '4.3': "4.3.10",
-    '4.4': "4.4.6",
+    '4.1': "4.1.41",
+    '4.2': "4.2.36",
+    '4.3': "4.3.29",
+    '4.4': "4.4.14",
   ]
   def ocp4_installer_version = releases["${cluster_version}"]
   def full_cluster_name = ''

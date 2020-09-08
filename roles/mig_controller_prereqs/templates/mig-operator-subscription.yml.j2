@@ -9,7 +9,7 @@ metadata:
   namespace: {{ mig_migration_namespace }}
 spec:
 {% if mig_operator_release == 'latest' %}
-  channel: latest
+  channel: development
 {% else %}
   channel: release-{{ mig_operator_release }}
 {% endif %}

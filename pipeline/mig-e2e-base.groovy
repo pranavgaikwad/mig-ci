@@ -1,7 +1,7 @@
 // mig-e2e-base.groovy
 properties([
-parameters([choice(choices: ['3.7', '3.9', '3.10', '3.11', '4.1', '4.2', '4.3', '4.4', 'pre-4.5', 'nightly'], description: 'Source cluster version to test', name: 'SRC_CLUSTER_VERSION'),
-choice(choices: ['4.3', '3.11', '3.10', '3.9', '3.7', '4.1', '4.2', '4.4', 'pre-4.5', 'nightly'], description: 'Destination cluster version to test', name: 'DEST_CLUSTER_VERSION'),
+parameters([choice(choices: ['3.7', '3.9', '3.10', '3.11', '4.1', '4.2', '4.3', '4.4', '4.5', 'nightly'], description: 'Source cluster version to test', name: 'SRC_CLUSTER_VERSION'),
+choice(choices: ['4.5', '3.11', '3.10', '3.9', '3.7', '4.1', '4.2', '4.3', '4.4', 'nightly'], description: 'Destination cluster version to test', name: 'DEST_CLUSTER_VERSION'),
 string(defaultValue: '', description: 'Source cluster API endpoint', name: 'SRC_CLUSTER_URL', trim: false),
 string(defaultValue: '', description: 'Destination cluster API endpoint', name: 'DEST_CLUSTER_URL', trim: false),
 string(defaultValue: '', description: 'AWS region where clusters are deployed', name: 'AWS_REGION', trim: false),

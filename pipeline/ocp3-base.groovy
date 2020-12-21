@@ -63,6 +63,7 @@ node {
         stage('Setup Build Environment OCP3') {
             steps_finished << 'Setup Build Environment OCP3 ' + SRC_CLUSTER_VERSION
             utils.prepare_workspace(SRC_CLUSTER_VERSION, '')
+            utils.prepare_persistent()
             utils.copy_private_keys()
             utils.prepare_agnosticd()
         }

@@ -1,7 +1,7 @@
 // common_stages.groovy
 def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
 
-  def repo_version = "4.1.0" // Must map to a valid version in `own_repo_path:`
+  def repo_version = "4.5.0" // Must map to a valid version in `own_repo_path:`
   def short_version = cluster_version.replace(".", "")
 
   // GA OCP releases

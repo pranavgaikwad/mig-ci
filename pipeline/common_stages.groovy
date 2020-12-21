@@ -9,10 +9,10 @@ def deploy_ocp4_agnosticd(kubeconfig, cluster_version) {
   def releases = [
     '4.1': "4.1.41",
     '4.2': "4.2.36",
-    '4.3': "4.3.29",
-    '4.4': "4.4.14",
-    '4.5': "4.5.16",
-    '4.6': "4.6.3",
+    '4.3': "4.3.40",
+    '4.4': "4.4.31",
+    '4.5': "4.5.23",
+    '4.6': "4.6.8",
   ]
   def ocp4_installer_version = releases["${cluster_version}"]
   def full_cluster_name = ''

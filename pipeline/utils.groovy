@@ -69,7 +69,7 @@ def prepare_agnosticd() {
 // Fix checkout to commit before boto removal on agnosticd development branch , see https://github.com/fusor/mig-agnosticd/issues/95
   checkout([$class: 'GitSCM', branches: [[name: 'f9801a0aa9386d0f70290fc295a65ed620f45ab1']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'agnosticd']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/redhat-cop/agnosticd.git']]])
 
-  checkout([$class: 'GitSCM', branches: [[name: "${MIG_AGNOSTICD_BRACH}"]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'mig-agnosticd']], submoduleCfg: [], userRemoteConfigs: [[url: "${MIG_AGNOSTICD_REPO}"]]])
+  checkout([$class: 'GitSCM', branches: [[name: "${MIG_AGNOSTICD_BRANCH}"]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'mig-agnosticd']], submoduleCfg: [], userRemoteConfigs: [[url: "${MIG_AGNOSTICD_REPO}"]]])
   // Set agnosticd HOME and add to destroy script
   AGNOSTICD_HOME = "${env.WORKSPACE}/agnosticd"
   sh "echo 'export AGNOSTICD_HOME=${AGNOSTICD_HOME}' >> destroy_env.sh"

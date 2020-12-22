@@ -25,6 +25,8 @@ string(defaultValue: 'https://github.com/konveyor/mig-operator.git', description
 string(defaultValue: 'master', description: 'Mig operator branch to test', name: 'MIG_OPERATOR_BRANCH', trim: false),
 string(defaultValue: 'https://github.com/konveyor/mig-controller.git', description: 'Mig controller repo to test, only used by GHPRB', name: 'MIG_CONTROLLER_REPO', trim: false),
 string(defaultValue: 'master', description: 'Mig controller repo branch to test', name: 'MIG_CONTROLLER_BRANCH', trim: false),
+string(defaultValue: 'https://github.com/konveyor/mig-agnosticd.git', description: 'Mig agnosticd repo to clone', name: 'MIG_AGNOSTICD_REPO', trim: false),
+string(defaultValue: 'master', description: 'Mig agnosticd repo branch to test', name: 'MIG_AGNOSTICD_BRANCH', trim: false),
 string(defaultValue: 'https://github.com/konveyor/mig-e2e.git', description: 'Mig e2e repo to test', name: 'MIG_E2E_REPO', trim: false),
 string(defaultValue: 'master', description: 'Mig e2e repo branch to test', name: 'MIG_E2E_BRANCH', trim: false),
 string(defaultValue: 'e2e_mig_samples.yml', description: 'e2e test playbook to run, see https://github.com/konveyor/mig-e2e for details', name: 'E2E_PLAY', trim: false),

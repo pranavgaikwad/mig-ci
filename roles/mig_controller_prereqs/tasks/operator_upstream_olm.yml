@@ -9,6 +9,17 @@
       until: mig_operator_source_created is succeeded
       retries: 30
       delay: 30
+      when: cluster_version is version('4.4', '<=')
+
+    - name: "Create CatalogSource"
+      k8s:
+        state: present
+        definition: "{{ lookup('file', '{{ mig_operator_location }}/mig-operator-bundle.yaml' )}}"
+      register: mig_operator_bundle_created
+      until: mig_operator_bundle_created is succeeded
+      retries: 30
+      delay: 30
+      when: cluster_version is version('4.4', '>')
 
     - name: "Define OperatorSource pod label"
       set_fact:
@@ -21,7 +32,15 @@
           'marketplace.operatorSource=konveyor-ci-operators' if mig_operator_build_custom|bool 
           else 'marketplace.operatorSource=migration-operator' 
         }}"
-      when: not cluster_version is version('4.1', '<=')
+      when: cluster_version is version('4.1', '>') and cluster_version is version('4.4', '<=')
+
+    - name: "Define OperatorSource pod label"
+      set_fact:
+        mig_operator_label: "{{ 
+          'olm.catalogSource=konveyor-ci-operators' if mig_operator_build_custom|bool 
+          else 'olm.catalogSource=konveyor-for-containers-bundle' 
+        }}"
+      when: cluster_version is version('4.4', '>')
 
     - name: "Wait for OLM to reconcile OperatorSource creation"
       k8s_facts:
@@ -34,10 +53,12 @@
       delay: 10
 
     - name: "Confirm OperatorSource service availability"
+      vars:
+        service_name: "{{ 'konveyor-ci-operators' if mig_operator_build_custom|bool else 'konveyor-for-containers-bundle' if cluster_version is version('4.4', '>') else migration-operator }}"
       k8s_facts:
         kind: Service
         namespace: openshift-marketplace
-        name: "{{ 'konveyor-ci-operators' if mig_operator_build_custom|bool else 'migration-operator' }}"
+        name: "{{ service_name }}"
       register: service
       until: "'grpc' in (service | json_query('resources[].spec.ports[].name'))"
       retries: 18

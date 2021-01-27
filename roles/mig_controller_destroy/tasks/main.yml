@@ -51,5 +51,38 @@
   with_items: "{{ mig_cluster_roles }}"
   ignore_errors: true
 
+- name: "Destroy CatalogSources"
+  k8s:
+    state: absent
+    api_version: operators.coreos.com/v1alpha1
+    kind: CatalogSource
+    name: "{{ item }}"
+    namespace: openshift-marketplace
+    wait: yes
+  with_items:
+    - migration-operator
+    - konveyor-for-containers-bundle
+    - konveyor-ci-operators
+  ignore_errors: true
+  when: cluster_version is version('4.4', '>')
+
+- name: "Destroy OperatorSources"
+  k8s:
+    state: absent
+    api_version: operators.coreos.com/v1
+    kind: OperatorSource
+    name: "{{ item }}" 
+    namespace: openshift-marketplace
+    wait: yes
+  with_items:
+    - migration-operator
+    - konveyor-for-containers-bundle
+    - konveyor-ci-operators
+  ignore_errors: true
+  when:
+  - cluster_version is version('4.4', '<=')
+  - cluster_version is version('4.0', '>=')
+
+
 - name: Destroy s3 bucket if present
   include: destroy_s3_bucket.yml

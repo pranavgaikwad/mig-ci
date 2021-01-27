@@ -26,5 +26,11 @@
     - debug:
         msg: "Remote cluster URL set to: {{ remote_cluster_url }}"
 
+    - name: "Extract registry URL from remote cluster"
+      shell: "{{ oc_binary }} get route -n default docker-registry -o go-template='{{ '{{' }} .spec.host {{ '}}' }}{{ '{{' }} println {{ '}}' }}'"
+      register: output
+
+    - set_fact:
+        registry_route: "{{ output.stdout }}"
   environment:
     KUBECONFIG: "{{ source_kubeconfig }}"

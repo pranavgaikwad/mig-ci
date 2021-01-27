@@ -4,3 +4,4 @@ mig_controller_aws_secret_key: {{ velero_aws_secret_key | b64encode }}
 mig_controller_aws_bucket_name: {{ velero_aws_bucket_name }}
 mig_controller_aws_bucket_region: {{ ec2_region }}
 mig_controller_sa_token: {{ sa_token }}
+mig_controller_remote_cluster_registry_url: {{ registry_route }}

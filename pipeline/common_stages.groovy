@@ -499,34 +499,46 @@ def build_mig_operator() {
     stage('Build mig-operator image') {
       steps_finished << 'Build mig-operator image'
       withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "${QUAYIO_CREDENTIALS}", usernameVariable: 'QUAY_USERNAME', passwordVariable: 'QUAY_PASSWORD']]) {
-        withEnv(["IMG=${QUAYIO_CI_REPO_OPERATOR}:PR-${MIG_OPERATOR_PR_NO}"]) {
+        withEnv([
+          "CONTAINER_IMG=${QUAYIO_CI_REPO_OPERATOR}:PR-${MIG_OPERATOR_PR_NO}", 
+          "TAG=${MIG_OPERATOR_PR_NO}",
+          "BUNDLE_IMG=${QUAYIO_CI_REPO_OPERATOR_BUNDLE}:PR-${MIG_OPERATOR_PR_NO}",
+          "INDEX_IMG=${QUAYIO_CI_REPO_OPERATOR_INDEX}:PR-${MIG_OPERATOR_PR_NO}"]) {
           dir(directory) {
             sh 'docker login quay.io -u $QUAY_USERNAME -p $QUAY_PASSWORD'
-            sh 'docker build -t $IMG -f build/Dockerfile .'
-            sh 'docker push $IMG'
-
             // update metadata
-            sh "find ./deploy/olm-catalog/konveyor-operator/ -name '*.clusterserviceversion.*' -exec sed -E -i -e 's,image: quay.io/(.*)/mig-operator-container:(.*),image: ${IMG},g' {} \\;"
-            sh "find ./deploy/non-olm/ -name '*operator.yml*' -exec sed -E -i -e 's,image: quay.io/(.*)/mig-operator-container:(.*),image: ${IMG},g' {} \\;"
-            sh "sed -E -i -e 's,name: (.*),name: konveyor-ci-operators,g' mig-operator-source.yaml"
-            sh "sed -E -i -e 's,registryNamespace: (.*),registryNamespace: konveyor_ci,g' mig-operator-source.yaml"
+            sh "find ./deploy/olm-catalog/bundle/manifests -name '*.clusterserviceversion.*' -exec sed -E -i -e 's,image: quay.io/(.*)/mig-operator-container:(.*),image: ${CONTAINER_IMG},g' {} \\;"
+            sh "find ./deploy/non-olm/ -name '*operator.yml*' -exec sed -E -i -e 's,image: quay.io/(.*)/mig-operator-container:(.*),image: ${CONTAINER_IMG},g' {} \\;"
+
+            // build and push bundle image
+            sh 'docker build -t $BUNDLE_IMG -f build/Dockerfile.bundle .'
+            sh 'docker push $BUNDLE_IMG'
+            // build and push index image
+            sh 'opm index add --container-tool docker --bundles $BUNDLE_IMG --tag $INDEX_IMG'
+            sh 'docker push $INDEX_IMG'
+            sh 'opm index export --container-tool docker -i $INDEX_IMG konveyor-operator'
 
             // push application
             sh """#!/bin/bash +x
-              last_version=\$(curl -s https://quay.io/cnr/api/v1/packages?namespace=konveyor_ci | jq '.[] | select(.name=\"konveyor_ci/konveyor-operator\") | .default')
+              last_version=\$(curl -s https://quay.io/cnr/api/v1/packages?namespace=konveyor_ci | jq '.[] | select(.name==\"konveyor_ci/mtc-operator\") | .default')
               last_patch=\$(echo \$last_version | sed -e 's/\"//g' | cut -d. -f3)
               let current_ver=\$last_patch+1
               AUTH_TOKEN=\$(curl -sH \"Content-Type: application/json\" -XPOST https://quay.io/cnr/api/v1/users/login -d \
               '{\"user\": {\"username\": \"${QUAY_USERNAME}\", \"password\": \"${QUAY_PASSWORD}\"}}' | jq -r '.token')
-              ${MIG_CI_OPERATOR_COURIER_BINARY} --verbose push ./deploy/olm-catalog/konveyor-operator/ konveyor_ci konveyor-operator 0.0.\${current_ver} "\$AUTH_TOKEN"
+              ${MIG_CI_OPERATOR_COURIER_BINARY} --verbose push ./downloaded/mtc-operator konveyor_ci mtc-operator 0.0.\${current_ver} "\$AUTH_TOKEN"
             """
+
+            // create catalogsource
+            sh """#!/bin/bash +x
+              sed -E -i -e 's,image: quay.io/(.*)/mig-operator-index:(.*),image: ${INDEX_IMG},g' ./mig-operator-bundle.yaml
+              sed -E -i -e 's,name: (.*),name: konveyor-ci-operators,g' ./mig-operator-bundle.yaml
+            """ 
           }
         }
       }
     }
   }
 }
-
 
 def execute_migration(e2e_tests, source_kubeconfig, target_kubeconfig, extra_args=null) {
   return {

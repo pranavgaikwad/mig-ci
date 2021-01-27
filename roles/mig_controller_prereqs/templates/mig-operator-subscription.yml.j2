@@ -2,7 +2,7 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
 {% if mig_operator_use_downstream|bool is sameas true %}
-  name: cam-operator
+  name: mtc-operator
 {% else %}
   name: konveyor-operator
 {% endif %}
@@ -15,7 +15,7 @@ spec:
 {% endif %}
   installPlanApproval: Automatic
 {% if mig_operator_use_downstream|bool is sameas true %}
-  name: cam-operator
+  name: mtc-operator
 {% if mig_operator_use_disconnected|bool is sameas true %}
   source: catalog
   sourceNamespace: openshift-migration
@@ -24,11 +24,15 @@ spec:
   sourceNamespace: openshift-marketplace
 {% endif %}
 {% else %}
-  name: konveyor-operator
+  name: mtc-operator
 {% if mig_operator_build_custom|bool is sameas true %}
   source: konveyor-ci-operators
 {% else %}
+{% if cluster_version is defined and cluster_version is version('4.4', '>') %}
+  source: konveyor-for-containers-bundle
+{% else %}
   source: migration-operator
+{% endif %}
 {% endif %}
   sourceNamespace: openshift-marketplace
 {% endif %}

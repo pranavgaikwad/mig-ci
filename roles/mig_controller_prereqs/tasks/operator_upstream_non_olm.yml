@@ -2,4 +2,4 @@
 - name: "Deploy non-olm mig upstream operator"
   k8s:
     state : present
-    definition: "{{ lookup('file', '{{ mig_operator_location }}/deploy/non-olm/{{ mig_operator_release }}/operator.yml' )}}"
+    definition: "{{ lookup('file', '{{ mig_operator_location }}/deploy/non-olm/operator.yml' )}}"

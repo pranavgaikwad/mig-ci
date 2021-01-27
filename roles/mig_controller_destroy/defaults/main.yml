@@ -4,7 +4,6 @@ velero_crds:
   - backupstoragelocations.velero.io
   - deletebackuprequests.velero.io
   - downloadrequests.velero.io
-  - migrationcontrollers.migration.openshift.io
   - podvolumebackups.velero.io
   - podvolumerestores.velero.io
   - resticrepositories.velero.io
@@ -12,6 +11,17 @@ velero_crds:
   - schedules.velero.io
   - serverstatusrequests.velero.io
   - volumesnapshotlocations.velero.io
+  - directimagemigrations.migration.openshift.io
+  - directimagestreammigrations.migration.openshift.io
+  - directvolumemigrationprogresses.migration.openshift.io
+  - directvolumemigrations.migration.openshift.io
+  - miganalytics.migration.openshift.io
+  - migrationcontrollers.migration.openshift.io
+  - migstorages.migration.openshift.io
+  - migmigrations.migration.openshift.io
+  - migplans.migration.openshift.io
+  - mighooks.migration.openshift.io
+  - migclusters.migration.openshift.io
 mig_cluster_role_bindings:
   - migration-operator
   - migration-controller
